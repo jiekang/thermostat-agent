@@ -53,6 +53,9 @@
         At least one filtering criteria option must be specified. These are any of the options switches listed
         which do not begin with "--show" and which take an argument.
       </description>
+      <command-groups>
+        <command-group>vm-info</command-group>
+      </command-groups>
       <options>
         <option>
           <long>agentId</long>

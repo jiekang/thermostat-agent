@@ -46,6 +46,9 @@
       <description>
       Populates storage with dummy data.
       </description>
+      <command-groups>
+        <command-group>database-util</command-group>
+      </command-groups>
       <options>
         <option>
           <long>config</long>

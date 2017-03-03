@@ -225,7 +225,12 @@ public class CliTest extends IntegrationTest {
     private void verifyShellHelpOutput(String actual) {
         String expected = SHELL_USAGE_STRING + "\n"
                         + "thermostat shell\n"
-                        + "     --help    show usage of command\n";
+                        + "     --help    show usage of command\n"
+                        + "\n"
+                        + "See also:\n"
+                        + "  agent, gui, local, platform, service, setup, storage, web-storage,\n"
+                        + "  web-storage-service\n";
+                ;
         assertEquals(expected, actual);
     }
 
@@ -237,7 +242,11 @@ public class CliTest extends IntegrationTest {
         String expectedOut = "Could not parse options: Unrecognized option: --foo\n"
                            + SHELL_USAGE_STRING + "\n"
                            + "thermostat shell\n"
-                           + "     --help    show usage of command\n";
+                           + "     --help    show usage of command\n"
+                           + "\n"
+                           + "See also:\n"
+                           + "  agent, gui, local, platform, service, setup, storage, web-storage,\n"
+                           + "  web-storage-service\n";
         assertEquals(expectedOut, stdOut);
     }
 

@@ -44,6 +44,9 @@
       <name>validate</name>
       <summary>validate a thermostat plug-in XML file</summary>
       <description>Validate a thermostat plug-in XML file against the standard schema and report any issues.</description>
+      <command-groups>
+        <command-group>devtools</command-group>
+      </command-groups>
       <environments>
         <environment>cli</environment>
         <environment>shell</environment>

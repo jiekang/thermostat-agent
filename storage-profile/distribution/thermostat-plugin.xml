@@ -48,6 +48,9 @@
       exercies various aspects of storage to see how well it performs for that
       given workload.
       </description>
+      <command-groups>
+        <command-group>database-util</command-group>
+      </command-groups>
       <options>
         <option common="true">
           <long>dbUrl</long>

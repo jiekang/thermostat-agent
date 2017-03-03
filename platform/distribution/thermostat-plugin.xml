@@ -41,6 +41,9 @@
             <name>platform</name>
             <summary>launches a bare bone Platform Client</summary>            
             <description>launches a bare bone Platform Client</description>
+            <command-groups>
+                <command-group>thermostat-core</command-group>
+            </command-groups>
             <options>
                 <option>
                     <long>launch</long>

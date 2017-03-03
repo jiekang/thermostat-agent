@@ -49,6 +49,9 @@
             'start' and 'stop') can take a while for programs with lots of
             classes.
             </description>
+            <command-groups>
+                <command-group>vm-instrumentation</command-group>
+            </command-groups>
             <subcommands>
                 <subcommand>
                     <name>start</name>
@@ -90,6 +93,13 @@
             </bundles>
         </command>
     </commands>
+    <command-group-metadatas>
+        <command-group-metadata>
+            <name>vm-instrumentation</name>
+            <description>Virtual Machine Instrumentation</description>
+            <sort-order>3</sort-order>
+        </command-group-metadata>
+    </command-group-metadatas>
     <extensions>
         <extension>
             <name>gui</name>

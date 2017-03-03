@@ -44,6 +44,9 @@
       <name>notifications</name>
       <summary>manage JMX notifications on the given VM</summary>
       <description>Manage JMX notification monitoring on the given JVM.</description>
+      <command-groups>
+        <command-group>vm-info</command-group>
+      </command-groups>
       <subcommands>
         <subcommand>
           <name>status</name>

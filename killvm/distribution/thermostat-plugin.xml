@@ -44,6 +44,9 @@
       <name>kill-vm</name>
       <summary>kill the specified vm</summary>
       <description>Kill the specified vm.</description>
+      <command-groups>
+        <command-group>vm-instrumentation</command-group>
+      </command-groups>
       <options>
         <option>
           <long>vmId</long>

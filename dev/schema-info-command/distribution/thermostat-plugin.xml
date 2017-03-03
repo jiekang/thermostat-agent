@@ -44,6 +44,9 @@
       <name>list-categories</name>
       <summary>list all registered categories</summary>
       <description>List all registered categories in the Storage.</description>
+      <command-groups>
+        <command-group>database-util</command-group>
+      </command-groups>
       <environments>
         <environment>cli</environment>
         <environment>shell</environment>
@@ -56,4 +59,11 @@
       </bundles>
     </command>
   </commands>
+  <command-group-metadatas>
+    <command-group-metadata>
+      <name>database-util</name>
+      <description>Database Utilities</description>
+      <sort-order>50</sort-order>
+    </command-group-metadata>
+  </command-group-metadatas>
 </plugin>

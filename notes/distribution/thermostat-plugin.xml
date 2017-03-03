@@ -44,6 +44,10 @@
       <name>notes</name>
       <summary>manipulate notes on Hosts or VMs</summary>
       <description>Add, remove, update, and list notes for Hosts and VMs</description>
+      <command-groups>
+        <command-group>vm-info</command-group>
+        <command-group>agent-info</command-group>
+      </command-groups>
 
       <subcommands>
         <subcommand>

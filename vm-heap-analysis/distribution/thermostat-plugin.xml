@@ -44,6 +44,9 @@
       <name>dump-heap</name>
       <summary>trigger a heap dump on the VM</summary>
       <description>Trigger a heap dump on the VM.</description>
+      <command-groups>
+        <command-group>vm-heap</command-group>
+      </command-groups>
       <options>
         <option>
           <long>vmId</long>
@@ -76,6 +79,9 @@
       <name>find-objects</name>
       <summary>find objects in a heapdump</summary>
       <description>Find objects in a heapdump.</description>
+      <command-groups>
+        <command-group>vm-heap</command-group>
+      </command-groups>
       <arguments>
         <argument>pattern</argument>
       </arguments>
@@ -118,6 +124,9 @@
       <name>find-root</name>
       <summary>find the shortest path from an object to a GC root</summary>
       <description>Find the shortest path, or all paths, from an object to a GC root.</description>
+      <command-groups>
+        <command-group>vm-heap</command-group>
+      </command-groups>
       <options>
         <option>
           <long>heapId</long>
@@ -163,6 +172,9 @@
       <name>list-heap-dumps</name>
       <summary>list all heap dumps</summary>
       <description>List all heap dumps, or all dumps from a particular agent or VM.</description>
+      <command-groups>
+        <command-group>vm-heap</command-group>
+      </command-groups>
       <options>
         <option>
           <long>agentId</long>
@@ -202,6 +214,9 @@
       <name>object-info</name>
       <summary>show information about an object in a heap dump</summary>
       <description>Show information about an object in a heap dump.</description>
+      <command-groups>
+        <command-group>vm-heap</command-group>
+      </command-groups>
       <options>
         <option>
           <long>heapId</long>
@@ -241,6 +256,9 @@
       <name>save-heap-dump-to-file</name>
       <summary>save a heap dump to a local file</summary>
       <description>Save a heap dump to a local file.</description>
+      <command-groups>
+        <command-group>vm-heap</command-group>
+      </command-groups>
       <options>
         <option>
           <long>heapId</long>
@@ -280,6 +298,9 @@
       <name>show-heap-histogram</name>
       <summary>show the heap histogram</summary>
       <description>Show the heap histogram for a given heapId.</description>
+      <command-groups>
+        <command-group>vm-heap</command-group>
+      </command-groups>
       <options>
         <option>
           <long>heapId</long>
@@ -309,6 +330,13 @@
       </bundles>
     </command>
   </commands>
+  <command-group-metadatas>
+    <command-group-metadata>
+      <name>vm-heap</name>
+      <description>JVM Heap Analysis</description>
+      <sort-order>5</sort-order>
+    </command-group-metadata>
+  </command-group-metadatas>
   <extensions>
     <extension>
       <name>gui</name>

@@ -44,6 +44,9 @@
             <description>
             Instrument a target VM with Byteman rules.
             </description>
+            <command-groups>
+                <command-group>vm-instrumentation</command-group>
+            </command-groups>
             <subcommands>
                 <subcommand>
                     <name>load</name>

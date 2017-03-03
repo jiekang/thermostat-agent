@@ -48,6 +48,9 @@
         archive deployed and then connect an agent to this web endpoint. Do all
         this as a foreground process. On exit, shut them all down.
       </description>
+      <command-groups>
+        <command-group>thermostat-core</command-group>
+      </command-groups>
       <environments>
         <environment>cli</environment>
       </environments>
@@ -68,6 +71,9 @@
         Start mongodb storage, an embedded servlet container with the web
         archive deployed as a foreground process. On exit, shut them down.
       </description>
+      <command-groups>
+        <command-group>thermostat-core</command-group>
+      </command-groups>
       <environments>
         <environment>cli</environment>
       </environments>
