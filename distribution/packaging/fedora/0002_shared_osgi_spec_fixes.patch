@@ -938,7 +938,7 @@ diff --git a/pom.xml b/pom.xml
 --- a/pom.xml
 +++ b/pom.xml
 @@ -293,14 +293,26 @@
-     <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
+     <lucene-core.maven-coords>org.apache.servicemix.bundles:org.apache.servicemix.bundles.lucene</lucene-core.maven-coords>
      <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
      <!--
 -         felix 4.0 is compliant with osgi 4.3

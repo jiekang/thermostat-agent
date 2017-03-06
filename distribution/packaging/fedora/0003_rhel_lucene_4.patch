@@ -11,7 +11,7 @@ diff --git a/pom.xml b/pom.xml
 +    <lucene.osgi-version>4.7.0.1</lucene.osgi-version>
      <byteman.version>3.0.5</byteman.version>
      <byteman.osgi-version>3.0.5</byteman.osgi-version>
-     <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
+     <lucene-analysis.maven-coords>org.apache.servicemix.bundles:org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.maven-coords>
 diff --git a/vm-heap-analysis/common/src/main/java/com/redhat/thermostat/vm/heap/analysis/common/HeapDump.java b/vm-heap-analysis/common/src/main/java/com/redhat/thermostat/vm/heap/analysis/common/HeapDump.java
 --- a/vm-heap-analysis/common/src/main/java/com/redhat/thermostat/vm/heap/analysis/common/HeapDump.java
 +++ b/vm-heap-analysis/common/src/main/java/com/redhat/thermostat/vm/heap/analysis/common/HeapDump.java

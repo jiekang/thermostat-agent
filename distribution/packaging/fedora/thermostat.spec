@@ -749,7 +749,9 @@ popd
                  -Djansi.version=%{jansi_version} \
                  -Djcommon.osgi.version=%{jcommon_bundle_version} \
                  -Djfreechart.osgi.version=%{jfreechart_bundle_version} \
+                 -Dlucene-core.maven-coords=org.apache.lucene:lucene-core \
                  -Dlucene-core.bundle.symbolic-name=org.apache.lucene.core \
+                 -Dlucene-analysis.maven-coords=org.apache.lucene:lucene-analyzers \
                  -Dlucene-analysis.bundle.symbolic-name=%{lucene_analysis_core_bsn} \
                  -Dosgi.compendium.bundle.symbolic-name=org.osgi.compendium \
                  -Dosgi.compendium.osgi-version=4.1.0 \
