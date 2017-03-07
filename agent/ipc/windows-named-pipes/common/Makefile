@@ -12,7 +12,12 @@ SO_SUFFIX  = .so
 
 INCLUDE    = -I $(TARGET_DIR) -I "$(JAVA_HOME)/include/" -I "$(JAVA_HOME)/include/$(JNI_PLATFORM)"
 
+ifeq ($(JNI_PLATFORM),win32)
 WINHELPER_SOURCES    = src/main/native/WinPipesNativeHelper.c
+else
+WINHELPER_SOURCES    = src/main/native/WinPipesNativeHelperStub.c
+endif
+
 WINHELPER_TARGET     = $(TARGET_DIR)/WinPipesNativeHelper.c
 WINHELPER_OBJECTS    = $(WINHELPER_TARGET:.c=.o)
 WINHELPER_EXECUTABLE = $(SO_PREFIX)WinPipesNativeWrapper$(SO_SUFFIX)

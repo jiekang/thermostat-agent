@@ -36,76 +36,26 @@
 
 package com.redhat.thermostat.agent.ipc.winpipes.server.internal;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.nio.channels.spi.AbstractSelector;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.UserPrincipalLookupService;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
-import com.redhat.thermostat.agent.ipc.winpipes.common.internal.WinPipesIPCProperties;
 import org.junit.Before;
 
-import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
-import com.redhat.thermostat.agent.ipc.winpipes.server.internal.WinPipesServerTransport.ChannelUtils;
 
 public class WinPipesServerTransportTest {
-    
-    private static final String SERVER_NAME = "test";
-    
-    private WinPipesServerTransport transport;
+
     private SelectorProvider provider;
     private AbstractSelector selector;
-    private ExecutorService execService;
-    private PipenameValidator validator;
-    private Path socketDirPath;
-    private FileAttribute<Set<PosixFilePermission>> fileAttr;
-    private Path socketPath;
-    private ThermostatIPCCallbacks callbacks;
-    private ChannelUtils channelUtils;
-    private WinPipesServerChannelImpl channel;
-    private WinPipesIPCProperties props;
-    private UserPrincipalLookupService lookup;
 
-    @SuppressWarnings("unchecked")
+
     @Before
     public void setup() throws Exception {
         provider = mock(SelectorProvider.class);
         selector = mock(AbstractSelector.class);
         when(provider.openSelector()).thenReturn(selector);
-        
-        props = mock(WinPipesIPCProperties.class);
-        File sockDirFile = mock(File.class);
-      //  when(props.getPipePrefix()).thenReturn(sockDirFile);
-        socketDirPath = mock(Path.class);
-        when(socketDirPath.toAbsolutePath()).thenReturn(socketDirPath);
-        when(socketDirPath.normalize()).thenReturn(socketDirPath);
-        when(sockDirFile.toPath()).thenReturn(socketDirPath);
-        socketPath = mock(Path.class);
-        //when(socketDirPath.resolve(WinPipesServerTransport. + SERVER_NAME)).thenReturn(socketPath);
-        
-
-        
-        execService = mock(ExecutorService.class);
-        validator = mock(PipenameValidator.class);
-        when(validator.validate(any(String.class))).thenReturn(true);
-
-        
-        channelUtils = mock(ChannelUtils.class);
-        channel = mock(WinPipesServerChannelImpl.class);
-        File socketFile = mock(File.class);
-        when(socketFile.toPath()).thenReturn(socketPath);
-
-        
-        callbacks = mock(ThermostatIPCCallbacks.class);
-
     }
 
 }

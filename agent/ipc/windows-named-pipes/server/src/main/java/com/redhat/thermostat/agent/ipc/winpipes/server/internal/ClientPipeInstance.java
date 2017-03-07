@@ -43,7 +43,6 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
@@ -91,8 +90,8 @@ class ClientPipeInstance implements WritableByteChannel, PipeManager {
             throw new IOException("can't create Windows named pipe " + name + " err=" + clientHandlerCreator.getLastError());
         }
 
-        this.readHandler = new ReadPipeImpl(this, name, pipeHandle, bufsize);
-        this.writeHandler = new WritePipeImpl(this, name, pipeHandle, bufsize);
+        this.readHandler = cpiHelper.createPipeReader(this, name, pipeHandle, bufsize);
+        this.writeHandler = cpiHelper.createPipeWriter(this, name, pipeHandle, bufsize);
     }
 
     public String toString() {
@@ -188,5 +187,14 @@ class ClientPipeInstance implements WritableByteChannel, PipeManager {
         int getLastError() {
             return helper.getLastError();
         }
+
+        ReadPipeImpl createPipeReader(ClientPipeInstance obj, String name, long pipeHandle, int bufsize) throws IOException {
+            return new ReadPipeImpl(obj, name, pipeHandle, bufsize);
+        }
+
+        WritePipeImpl createPipeWriter(ClientPipeInstance obj, String name, long pipeHandle, int bufsize) throws IOException {
+            return new WritePipeImpl(obj, name, pipeHandle, bufsize);
+        }
+
     }
 }

@@ -41,6 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.winpipes.common.internal.MessageLimits;
 import com.redhat.thermostat.agent.ipc.winpipes.common.internal.WinPipe;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -55,8 +56,10 @@ class AcceptThread extends Thread {
     // buffer size
     private static final int BUFSIZE = new MessageLimits().getBufferSize();
 
+    private final TestHelper testHelper;
+
     // number of simulataneous clients
-    private final int NUM_INSTANCES = 1;
+    private final int numInstances;
 
     private final WindowsEventSelector selector;
 
@@ -65,19 +68,26 @@ class AcceptThread extends Thread {
     
     private boolean shutdown;
 
-    AcceptThread(WinPipesServerChannelImpl channel, ExecutorService execService) {
-        this.channel = channel;
-        this.execService = execService;
-        this.pipe = channel.getPipe();
-        this.shutdown = false;
-        this.selector = new WindowsEventSelector(NUM_INSTANCES);
-        this.instances = new ClientPipeInstance[NUM_INSTANCES];
+    AcceptThread(WinPipesServerChannelImpl channel, ExecutorService execService, int numInstances) {
+        this(channel, execService, numInstances, channel.getPipe(), new WindowsEventSelector(numInstances), new TestHelper());
     }
 
-    private void createInstances() throws IOException {
-        logger.info("AcceptThread '" + pipe.getPipeName() + "' creating " + NUM_INSTANCES + " pipe instances");
-        for (int i = 0; i < NUM_INSTANCES && !shutdown; i++) {
-            final ClientPipeInstance pi = new ClientPipeInstance(pipe.getPipeName(), NUM_INSTANCES, BUFSIZE, execService, channel.getCallbacks());
+    // for testing
+    AcceptThread(WinPipesServerChannelImpl channel, ExecutorService execService, int numInstances, WinPipe pipe, WindowsEventSelector selector, TestHelper hlp) {
+        this.channel = channel;
+        this.execService = execService;
+        this.pipe = pipe;
+        this.shutdown = false;
+        this.selector = selector;
+        this.numInstances = numInstances;
+        this.instances = new ClientPipeInstance[numInstances];
+        this.testHelper = hlp;
+    }
+
+    void createInstances() throws IOException {
+        logger.info("AcceptThread '" + pipe.getPipeName() + "' creating " + numInstances + " pipe instances");
+        for (int i = 0; i < numInstances && !shutdown; i++) {
+            final ClientPipeInstance pi = testHelper.createPipeInstance(pipe.getPipeName(), numInstances, BUFSIZE, execService, channel.getCallbacks());
             instances[i] = pi;
             pi.connectToNewClient();
             logger.fine("AcceptThread '" + pipe.getPipeName() + "' created " + pi);
@@ -139,4 +149,9 @@ class AcceptThread extends Thread {
         return shutdown;
     }
 
+    static class TestHelper {
+        ClientPipeInstance createPipeInstance(final String name, int instances, int bufsize, ExecutorService execService, ThermostatIPCCallbacks cb) throws IOException {
+            return new ClientPipeInstance(name, instances, bufsize, execService, cb);
+        }
+    }
 }

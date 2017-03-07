@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 class ReadPipeImpl implements WindowsEventSelector.EventHandler {
 
     private static final Logger logger = LoggingUtils.getLogger(ReadPipeImpl.class);
-    private static WinPipesNativeHelper helper = WinPipesNativeHelper.INSTANCE;
+    private final WinPipesNativeHelper helper;
 
     enum ReadPipeState { UNKNOWN_STATE, CONNECTING_STATE, READING_STATE, ERROR_STATE, CLOSED_STATE }
 
@@ -68,6 +68,21 @@ class ReadPipeImpl implements WindowsEventSelector.EventHandler {
         this.pipeName = pipeName;
         this.readState = ReadPipeState.UNKNOWN_STATE;
         this.pipeHandle = pipeHandle;
+        this.helper = WinPipesNativeHelper.INSTANCE;
+        this.readEventHandle = helper.createEvent();
+        if (this.readEventHandle == WinPipesNativeHelper.INVALID_HANDLE) {
+            throw new IOException("can't create a Windows event" + " err=" + helper.getLastError());
+        }
+        this.readOverlap = helper.createDirectOverlapStruct(readEventHandle);
+        this.readBuffer = helper.createDirectBuffer(bufsize);
+    }
+
+    ReadPipeImpl(PipeManager manager, String pipeName, long pipeHandle, int bufsize, WinPipesNativeHelper helper) throws IOException {
+        this.manager = manager;
+        this.pipeName = pipeName;
+        this.readState = ReadPipeState.UNKNOWN_STATE;
+        this.pipeHandle = pipeHandle;
+        this.helper = helper;
         this.readEventHandle = helper.createEvent();
         if (this.readEventHandle == WinPipesNativeHelper.INVALID_HANDLE) {
             throw new IOException("can't create a Windows event" + " err=" + helper.getLastError());
@@ -110,21 +125,21 @@ class ReadPipeImpl implements WindowsEventSelector.EventHandler {
      */
     boolean connectToNewClient() throws IOException {
 
-        logger.info("connectToNewClient - entered " + this);
+        logger.finest("connectToNewClient - entered " + this);
         final int ret = helper.connectNamedPipe(pipeHandle, readOverlap);
-        logger.info("connectToNewClient on " + this + " returns " + ret);
+        logger.finest("connectToNewClient on " + this + " returns " + ret);
         if (ret == WinPipesNativeHelper.ERROR_IO_PENDING) {
             readState = ReadPipeState.CONNECTING_STATE;
         } else if (ret == WinPipesNativeHelper.ERROR_SUCCESS || ret == WinPipesNativeHelper.ERROR_PIPE_CONNECTED) {
             // if it's not pending, and no exception was thrown, then we must be connected
-            logger.info("connectToNewClient switching to READING_STATE");
+            logger.finest("connectToNewClient switching to READING_STATE");
             helper.resetEvent(readEventHandle);
             clientHandler = manager.handleNewClientConnection();
             readState = ReadPipeState.READING_STATE;
         } else {
             throw new IOException("connectNamedPipe(" + pipeName + ") returns err=" + ret);
         }
-        logger.info("connectToNewClient - exitting " + this);
+        logger.finest("connectToNewClient - exitting " + this);
         return readState == ReadPipeState.CONNECTING_STATE;
     }
 
@@ -134,7 +149,7 @@ class ReadPipeImpl implements WindowsEventSelector.EventHandler {
      * - if there's more data expected for the current message, then enqueue a read.
      * @throws IOException if there's an i/o or protocol error
      */
-    private void enqueueRead() throws IOException {
+    void enqueueRead() throws IOException {
         logger.finest("enqueueRead() - entered " + this);
         readBuffer.position(0);
         readBuffer.limit(readBuffer.capacity());
@@ -161,7 +176,7 @@ class ReadPipeImpl implements WindowsEventSelector.EventHandler {
      * @return true if queueNextOperation() should be called, false otherwise
      * @throws IOException if there were any errors interacting with the pipe
      */
-    private boolean handlePendingRead() throws IOException {
+    boolean handlePendingRead() throws IOException {
         logger.finest("handlePendingRead() - entered " + this);
         if (readState == ReadPipeState.READING_STATE) {
             logger.finest("handlePendingRead() waiting for overlapped result on " + this + " state=" + readState);

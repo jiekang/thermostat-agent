@@ -78,35 +78,6 @@
         <sharedlib.prefix/>
         <sharedlib.suffix>.dll</sharedlib.suffix>
       </properties>
-      <build>
-        <plugins>
-
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <phase>compile</phase>
-                <goals>
-                  <goal>exec</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <executable>make</executable>
-              <arguments>
-                <argument>all</argument>
-                <argument>CC=${c.compiler}</argument>
-                <argument>SO_PREFIX=${sharedlib.prefix}</argument>
-                <argument>SO_SUFFIX=${sharedlib.suffix}</argument>
-                <argument>EXTRA_CFLAGS=${cflags}</argument>
-                <argument>JNI_PLATFORM=${jni.platform}</argument>
-                <argument>PLATFORM_LIBS=${platform.libs}</argument>
-              </arguments>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
     </profile>
   </profiles>
 
@@ -153,12 +124,43 @@
           </instructions>
         </configuration>
       </plugin>
+
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <executable>make</executable>
+          <arguments>
+            <argument>all</argument>
+            <argument>CC=${c.compiler}</argument>
+            <argument>SO_PREFIX=${sharedlib.prefix}</argument>
+            <argument>SO_SUFFIX=${sharedlib.suffix}</argument>
+            <argument>EXTRA_CFLAGS=${cflags}</argument>
+            <argument>JNI_PLATFORM=${jni.platform}</argument>
+            <argument>PLATFORM_LIBS=${platform.libs}</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <!-- We don't want to depend on Thermostat annotations, 
              so we override parent pom's configuration -->
-        <configuration combine.self="override" />
+        <configuration combine.self="override">
+            <systemPropertyVariables>
+              <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}</com.redhat.thermostat.shared.loader.testNativesHome>
+            </systemPropertyVariables>
+        </configuration>
       </plugin>
       <!-- This is a dependency of the Byteman helper and that needs source
            level JDK 6 in order to be able to use the helper for JVMs running

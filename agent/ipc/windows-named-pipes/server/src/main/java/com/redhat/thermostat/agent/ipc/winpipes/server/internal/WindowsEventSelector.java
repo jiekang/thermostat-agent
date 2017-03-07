@@ -57,7 +57,7 @@ class WindowsEventSelector {
 
     private static final Logger logger = LoggingUtils.getLogger(WindowsEventSelector.class);
 
-    private static final WinPipesNativeHelper helper = WinPipesNativeHelper.INSTANCE;
+    private WinPipesNativeHelper helper;
 
     private final Set<EventHandler> eventHandlers;
 
@@ -67,7 +67,13 @@ class WindowsEventSelector {
     private long[] eventHandles = null;
 
     WindowsEventSelector(int maxInstances) {
-        eventHandlers = new HashSet<>(maxInstances);
+        this(maxInstances, new HashSet<EventHandler>(maxInstances), WinPipesNativeHelper.INSTANCE);
+    }
+
+    WindowsEventSelector(int maxInstances, Set<EventHandler> ehSet, WinPipesNativeHelper helper) {
+        eventHandlers = ehSet;
+        this.helper = helper;
+        fixArray();
     }
 
     void add(EventHandler e) {
@@ -101,14 +107,18 @@ class WindowsEventSelector {
      */
     EventHandler waitForEvent() throws IOException {
         logger.finest("WinPipe waiting for one of " + eventHandles.length + " events");
-        final int pipeNum = helper.waitForMultipleObjects(eventHandles.length, eventHandles, false, (int)WinPipesNativeHelper.INFINITE) - (int)WinPipesNativeHelper.WAIT_OBJECT_0;
-        if (pipeNum >= 0 && pipeNum < eventHandles.length) {
-            logger.finest("WinPipe got event on handle " + ehArray.get(pipeNum) + " err=" + helper.getLastError());
-            return ehArray.get(pipeNum);
+        final int pipeIdx = helper.waitForMultipleObjects(eventHandles.length, eventHandles, false, (int) WinPipesNativeHelper.INFINITE) - (int) WinPipesNativeHelper.WAIT_OBJECT_0;
+        if (pipeIdx >= 0 && pipeIdx < eventHandles.length) {
+            logger.finest("WinPipe got event on handle " + ehArray.get(pipeIdx));
+            return ehArray.get(pipeIdx);
         } else {
-            final String msg = "WinPipe waitForMultipleObjects returned " + pipeNum + " err=" + helper.getLastError();
+            final String msg = "WinPipe waitForMultipleObjects returned " + pipeIdx + " err=" + helper.getLastError();
             logger.info(msg);
             throw new IOException(msg);
         }
+    }
+
+    public String toString() {
+        return "WindowsEventSelector(" + eventHandlers + " array=" + ehArray + ")";
     }
 }

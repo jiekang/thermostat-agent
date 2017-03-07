@@ -36,11 +36,8 @@
 
 package com.redhat.thermostat.agent.ipc.winpipes.server.internal;
 
-import static com.redhat.thermostat.shared.config.CommonPaths.THERMOSTAT_HOME;
-import static com.redhat.thermostat.shared.config.CommonPaths.USER_THERMOSTAT_HOME;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -49,12 +46,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.util.concurrent.ExecutorService;
 
-import com.redhat.thermostat.shared.config.NativeLibraryResolver;
-import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -78,10 +71,6 @@ public class ClientHandlerTest {
     
     @Before
     public void setup() throws Exception {
-
-        System.setProperty(THERMOSTAT_HOME, ".");
-        System.setProperty(USER_THERMOSTAT_HOME, ".");
-        NativeLibraryResolver.setCommonPaths(new CommonPathsImpl());
         client = mock(ClientPipeInstance.class);
         callbacks = mock(ThermostatIPCCallbacks.class);
         reader = mock(AsyncMessageReader.class);

@@ -75,7 +75,7 @@ class WinPipesServerChannelImpl {
         this.callbacks = callbacks;
         this.channelHelper = helper;
         ExecutorService execService = Executors.newFixedThreadPool(determineDefaultThreadPoolSize(), new CountingThreadFactory());
-        AcceptThread acceptThread = threadCreator.createAcceptThread(this, execService);
+        AcceptThread acceptThread = threadCreator.createAcceptThread(this, execService, 1);
         acceptThread.start();
     }
 
@@ -113,8 +113,8 @@ class WinPipesServerChannelImpl {
 
     /* For testing purposes */
     static class ThreadCreator {
-        AcceptThread createAcceptThread(WinPipesServerChannelImpl channel, ExecutorService execService) {
-            return new AcceptThread(channel, execService);
+        AcceptThread createAcceptThread(WinPipesServerChannelImpl channel, ExecutorService execService, int numInstances) {
+            return new AcceptThread(channel, execService, numInstances);
         }
     }
 

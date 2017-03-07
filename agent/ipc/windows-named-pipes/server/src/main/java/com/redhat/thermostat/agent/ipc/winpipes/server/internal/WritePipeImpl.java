@@ -48,7 +48,7 @@ import java.util.logging.Logger;
 class WritePipeImpl implements WindowsEventSelector.EventHandler {
 
     private static final Logger logger = LoggingUtils.getLogger(WritePipeImpl.class);
-    private static WinPipesNativeHelper helper = WinPipesNativeHelper.INSTANCE;
+    private WinPipesNativeHelper helper;
 
     enum WritePipeState { QUIET_STATE, WRITING_STATE, FLUSHING_WRITE, ERROR_STATE, CLOSED_STATE }
 
@@ -67,6 +67,23 @@ class WritePipeImpl implements WindowsEventSelector.EventHandler {
         this.pipeName = pipeName;
         this.writeState = WritePipeState.QUIET_STATE;
         this.pipeHandle = pipeHandle;
+        this.helper = WinPipesNativeHelper.INSTANCE;
+        this.writeEventHandle = helper.createEvent();
+        if (this.writeEventHandle == 0) {
+            throw new IOException(this.pipeName + ": can't create a Windows event" + " err=" + helper.getLastError());
+        }
+        this.writeQueue = new ArrayDeque<>();
+
+        this.writeOverlap = helper.createDirectOverlapStruct(writeEventHandle);
+        this.writeBuffer = helper.createDirectBuffer(bufsize);
+    }
+
+    WritePipeImpl(PipeManager manager, String pipeName, long pipeHandle, int bufsize, WinPipesNativeHelper hlp) throws IOException {
+        this.manager = manager;
+        this.pipeName = pipeName;
+        this.writeState = WritePipeState.QUIET_STATE;
+        this.pipeHandle = pipeHandle;
+        this.helper = hlp;
         this.writeEventHandle = helper.createEvent();
         if (this.writeEventHandle == 0) {
             throw new IOException(this.pipeName + ": can't create a Windows event" + " err=" + helper.getLastError());
@@ -79,6 +96,10 @@ class WritePipeImpl implements WindowsEventSelector.EventHandler {
 
     public String toString() {
         return "WritePipeImpl(h=" + pipeHandle + " '" + pipeName + "' " + writeState + " q=" + writeQueue.size() + ")";
+    }
+
+    public WritePipeState getWriteState() {
+        return writeState;
     }
 
     @Override
@@ -129,7 +150,7 @@ class WritePipeImpl implements WindowsEventSelector.EventHandler {
      * @return true if queueNextOperation() should be called, false otherwise
      * @throws IOException if there were any errors interacting with the pipe
      */
-    private boolean handlePendingWrite() throws IOException {
+    boolean handlePendingWrite() throws IOException {
         logger.finest("handlePendingWrite() - entered " + this);
         if (writeState != WritePipeState.QUIET_STATE) {
             logger.finest("handlePendingWrite() waiting for overlapped result on " + this + " state=" + writeState);
@@ -163,7 +184,7 @@ class WritePipeImpl implements WindowsEventSelector.EventHandler {
      * @return true if an operation was enqueued
      * @throws IOException if an IO error occurred
      */
-    private boolean enqueueWrite() throws IOException {
+    boolean enqueueWrite() throws IOException {
         logger.finest("enqueueWrite() - entered " + this);
         if (writeBuffer.remaining() == 0 && writeQueue.isEmpty()) {
             if (writeState == WritePipeState.FLUSHING_WRITE) {

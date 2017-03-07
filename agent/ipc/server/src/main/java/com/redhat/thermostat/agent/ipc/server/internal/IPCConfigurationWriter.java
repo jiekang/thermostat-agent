@@ -96,7 +96,7 @@ class IPCConfigurationWriter {
         
         Properties props = helper.createProperties();
 
-        props.setProperty(PROP_IPC_TYPE, OS.IS_UNIX ? IPCType.UNIX_SOCKET.getConfigValue() : IPCType.TCP_SOCKET.getConfigValue());
+        props.setProperty(PROP_IPC_TYPE, OS.IS_UNIX ? IPCType.UNIX_SOCKET.getConfigValue() : IPCType.WINDOWS_NAMED_PIPES.getConfigValue());
 
         // unix socket will work without configuration (creates sockets in tmp directory
         // but tcpsocket always needs ports predefined (in the future, should support service discovery)

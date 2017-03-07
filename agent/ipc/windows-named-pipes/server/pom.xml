@@ -112,6 +112,16 @@
           </instructions>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <com.redhat.thermostat.shared.loader.testNativesHome>${project.basedir}/../common/target</com.redhat.thermostat.shared.loader.testNativesHome>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
