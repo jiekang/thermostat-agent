@@ -50,6 +50,18 @@
 
   <name>Thermostat Agent Inter-Process Communication</name>
 
+  <profiles>
+  <profile>
+      <id>windows</id>
+      <activation>
+        <os><family>Windows</family></os>
+      </activation>
+      <modules>
+        <module>windows-named-pipes</module>
+      </modules>
+    </profile>
+  </profiles>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -64,7 +76,6 @@
     <module>server</module>
     <module>unix-socket</module>
     <module>tcp-socket</module>
-    <module>windows-named-pipes</module>
   </modules>
 
 </project>
