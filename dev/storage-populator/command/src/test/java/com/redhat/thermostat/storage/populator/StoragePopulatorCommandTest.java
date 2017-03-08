@@ -61,6 +61,7 @@ import java.util.Map;
 
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -145,7 +146,7 @@ public class StoragePopulatorCommandTest {
 
         command.run(ctx);
         String errorString = new String(errorBAOS.toByteArray());
-        assertEquals("Config file \"/foo/bar/config\" does not exist!\n", errorString);
+        assertEquals("Config file \"/foo/bar/config\" does not exist!" + OS.EOL, errorString);
     }
 
     @Test
@@ -164,7 +165,7 @@ public class StoragePopulatorCommandTest {
 
         command.run(ctx);
         String errorString = new String(errorBAOS.toByteArray());
-        assertEquals("Failed to parse config file.\n", errorString);
+        assertEquals("Failed to parse config file." + OS.EOL, errorString);
     }
 
     @Test
@@ -181,7 +182,7 @@ public class StoragePopulatorCommandTest {
 
         command.run(ctx);
         String errorString = new String(errorBAOS.toByteArray());
-        assertEquals("No populator for collection \"foo\" found.\n", errorString);
+        assertEquals("No populator for collection \"foo\" found." + OS.EOL, errorString);
     }
 
     @Test

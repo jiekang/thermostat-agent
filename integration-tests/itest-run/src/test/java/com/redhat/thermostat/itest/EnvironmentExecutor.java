@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.redhat.thermostat.shared.config.OS;
 import expectj.Executor;
 
 /**
@@ -86,6 +87,10 @@ class EnvironmentExecutor implements Executor {
     List<String> buildCommmands() {
         List<String> commands = new ArrayList<>(1 + args.length);
         String command = buildScriptPath();
+        if (OS.IS_WINDOWS) {
+            commands.add("cmd.exe");
+            commands.add("/c");
+        }
         commands.add(command);
         commands.addAll(Arrays.asList(args));
         return commands;

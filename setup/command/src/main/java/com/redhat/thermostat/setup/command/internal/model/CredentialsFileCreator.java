@@ -62,7 +62,10 @@ class CredentialsFileCreator {
                 // on windows, credentials may be globally visible.
                 // PosixFilePermissions don't work on windows (throws exception even!)
                 // the code below doesn't enforce this (but should)
-                final boolean success = file.createNewFile() && file.setReadable(true, true) && file.setWritable(true, true);
+
+                // during JUnit, this can be a mock.  Call the real method
+                final boolean wasCreated = new File(file.toPath().toString()).createNewFile();
+                final boolean setParams = wasCreated && file.setReadable(true, true) && file.setWritable(true, true);
             }
         }
     }

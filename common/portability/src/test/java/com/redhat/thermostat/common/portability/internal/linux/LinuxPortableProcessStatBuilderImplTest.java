@@ -38,6 +38,9 @@ package com.redhat.thermostat.common.portability.internal.linux;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -47,6 +50,7 @@ import java.io.IOException;
 import java.io.StringReader;
 
 import com.redhat.thermostat.common.portability.PortableProcessStat;
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
@@ -57,11 +61,16 @@ public class LinuxPortableProcessStatBuilderImplTest {
     public void testSimpleProcessStatus() {
         ProcDataSource dataSource = new ProcDataSource();
         PortableProcessStat stat = new LinuxPortableProcessStatBuilderImpl(dataSource).build(1);
-        assertNotNull(stat);
+        if (OS.IS_LINUX) {
+            assertNotNull(stat);
+        } else {
+            assertNull(stat);
+        }
     }
 
     @Test
     public void testKnownProcessStatus() throws IOException {
+        assumeTrue(OS.IS_LINUX);
         final int PID = 10363;
         String PROCESS_NAME = "(bash)";
         String STATE = "S";
@@ -102,6 +111,7 @@ public class LinuxPortableProcessStatBuilderImplTest {
 
     @Test
     public void testBadProcessName() throws IOException {
+        assumeTrue(OS.IS_LINUX);
         final int PID = 10363;
         String PROCESS_NAME = "(secretly-bad process sleep 10 20 ) 6)";
         String STATE = "S";

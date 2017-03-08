@@ -36,22 +36,18 @@
 
 package com.redhat.thermostat.common.portability.internal.windows;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+import com.redhat.thermostat.common.portability.internal.PortableNativeLibraryLoader;
 import com.redhat.thermostat.shared.config.OS;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Utility class to access Windows native code
  */
-public class WindowsHelperImpl {
-
-    private static final Logger logger = LoggingUtils.getLogger(WindowsHelperImpl.class);
+public class WindowsHelperImpl extends PortableNativeLibraryLoader {
 
     public static WindowsHelperImpl INSTANCE;
 
@@ -83,19 +79,7 @@ public class WindowsHelperImpl {
      */
 
     static {
-        if (OS.IS_WINDOWS) {
-            String lib = NativeLibraryResolver.getAbsoluteLibraryPath("WindowsHelperWrapper");
-            try {
-                System.load(lib);
-                INSTANCE = new WindowsHelperImpl();
-            } catch (UnsatisfiedLinkError e) {
-                logger.severe("Could not load WindowsHelperImpl DLL:" + lib);
-                INSTANCE = null;
-                // do not throw here, because you'll get a NoClassDefFound thrown when running other tests that Mock this class
-            }
-        } else {
-            INSTANCE = null;
-        }
+        INSTANCE = OS.IS_WINDOWS && isNativeLibraryLoaded() ? new WindowsHelperImpl() : null;
     }
 
     private WindowsHelperImpl() {
@@ -275,6 +259,10 @@ public class WindowsHelperImpl {
         return info;
     }
 
+    public int getLastError() {
+        return getLastError0();
+    }
+
     public long getProcessHandle(int pid) {
         return getProcessHandle0(pid);
     }
@@ -301,6 +289,8 @@ public class WindowsHelperImpl {
     private static native String getCPUString0();
     private static native int getCPUCount0();
     private static native long queryPerformanceFrequency0();
+
+    private static native int getLastError0();
 
     private static native String getProcessSID0(int pid);
     private static native String getUserName0(int pid, boolean prependDomain);

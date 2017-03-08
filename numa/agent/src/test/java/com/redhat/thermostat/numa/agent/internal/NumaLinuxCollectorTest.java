@@ -48,7 +48,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -160,6 +162,7 @@ public class NumaLinuxCollectorTest {
 
     @Test
     public void testDefaultDir() {
+        Assume.assumeTrue(OS.IS_LINUX); // tries to access a directory that's only in linux
         NumaLinuxCollectorImpl coll = new NumaLinuxCollectorImpl();
         assertEquals("/sys/devices/system/node", coll.getBaseDir());
     }

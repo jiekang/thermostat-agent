@@ -70,6 +70,12 @@
 
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-portability</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -122,13 +128,38 @@
         </configuration>
       </plugin>
 
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <overwrite>true</overwrite>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>../common/portability/target</directory>
+                  <includes>${sharedlib.prefix}thermostat-common-portability${sharedlib.suffix}</includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
-            <!-- FIXME: the test need to link to agent-core native libraries -->
+            <!-- the test needs to link to common-portability native libraries -->
             <systemPropertyVariables>
-              <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}/../../agent/core/target/</com.redhat.thermostat.shared.loader.testNativesHome>
+              <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}</com.redhat.thermostat.shared.loader.testNativesHome>
             </systemPropertyVariables>            
           </configuration>
       </plugin>      

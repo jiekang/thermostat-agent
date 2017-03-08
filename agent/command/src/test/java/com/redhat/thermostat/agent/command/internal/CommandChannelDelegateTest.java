@@ -186,7 +186,11 @@ public class CommandChannelDelegateTest {
         when(fsUtils.getOwner(scriptPath)).thenReturn(principal);
         delegate.startListening("127.0.0.1", 123);
         
-        verify(ipcService).createServer(IPC_SERVER_NAME, delegate, principal);
+        if (OS.IS_WINDOWS) {
+            verify(ipcService).createServer(IPC_SERVER_NAME, delegate);
+        } else { // Unix and macOS
+            verify(ipcService).createServer(IPC_SERVER_NAME, delegate, principal);
+        }
         verify(processCreator).startProcess(any(ProcessBuilder.class));
     }
     

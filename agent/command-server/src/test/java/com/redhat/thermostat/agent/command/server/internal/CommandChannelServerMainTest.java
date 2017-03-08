@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +63,8 @@ import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class CommandChannelServerMainTest {
-    
+
+    private static final String IGNORED_ROOT = "/";
     private CommandChannelServerImpl server;
     private ClientIPCService ipcService;
     private IPCMessageChannel agentChannel;
@@ -87,7 +89,14 @@ public class CommandChannelServerMainTest {
         
         shutdownHandler = mock(ShutdownHookHandler.class);
         sleeper = mock(Sleeper.class);
-        
+
+        if (OS.IS_WINDOWS) {
+            // Command Channel now uses a native DLL for Windows named pipes on Windows
+            // because of this, CommonPathsImpl tries to initialize.
+            System.setProperty("THERMOSTAT_HOME", IGNORED_ROOT);
+            System.setProperty("USER_THERMOSTAT_HOME", IGNORED_ROOT);
+        }
+
         CommandChannelServerMain.setIPCService(ipcService);
         CommandChannelServerMain.setSSLConfigurationParser(parser);
         CommandChannelServerMain.setServerCreator(creator);
@@ -97,6 +106,8 @@ public class CommandChannelServerMainTest {
     
     @After
     public void tearDownOnce() {
+        System.clearProperty("THERMOSTAT_HOME");
+        System.clearProperty("USER_THERMOSTAT_HOME");
         System.clearProperty(CommandChannelServerMain.CONFIG_FILE_PROP);
         CommandChannelServerMain.setIPCService(null);
         CommandChannelServerMain.setSSLConfigurationParser(new SSLConfigurationParser());

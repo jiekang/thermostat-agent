@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
 
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.testutils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,16 +94,27 @@ public class AgentProxyClientTest {
         
         // Check process arguments
         List<String> args = builder.command();
-        assertEquals(5, args.size());
+        int expectedArgCount = OS.IS_WINDOWS ? 7 : 5; // account for extra "cmd", "/c" args on Windows
+        assertEquals(expectedArgCount, args.size());
 
-        final String arg0 = TestUtils.convertWinPathToUnixPath(args.get(0));
-        final String arg3 = TestUtils.convertWinPathToUnixPath(args.get(3));
+        if (OS.IS_WINDOWS) {
+            final String arg2 = TestUtils.convertWinPathToUnixPath(args.get(2));
+            final String arg5 = TestUtils.convertWinPathToUnixPath(args.get(5));
 
-        assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy", arg0);
-        assertEquals("9000", args.get(1));
-        assertEquals("Hello", args.get(2));
-        assertEquals("/path/to/ipc/config", arg3);
-        assertEquals(SERVER_NAME, args.get(4));
+            assertEquals("cmd", args.get(0));
+            assertEquals("/C", args.get(1));
+            assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy.cmd", arg2);
+            assertEquals("9000", args.get(3));
+            assertEquals("Hello", args.get(4));
+            assertEquals("/path/to/ipc/config", arg5);
+            assertEquals(SERVER_NAME, args.get(6));
+        } else {
+            assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy", args.get(0));
+            assertEquals("9000", args.get(1));
+            assertEquals("Hello", args.get(2));
+            assertEquals("/path/to/ipc/config", args.get(3));
+            assertEquals(SERVER_NAME, args.get(4));
+        }
         
         // Check cleanup
         verify(proxy).waitFor();

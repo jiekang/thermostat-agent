@@ -52,7 +52,7 @@ import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCP
 
 public class UnixSocketIPCPropertiesTest {
     
-    private static final String SOCKET_DIR_PATH = "/path/to/sockets";
+    private static final String SOCKET_DIR_PATH = new File("/path/to/sockets").getAbsolutePath();
     
     private Properties jProps;
     private File propFile;
@@ -84,7 +84,7 @@ public class UnixSocketIPCPropertiesTest {
         when(jProps.getProperty(UnixSocketIPCProperties.PROP_UNIX_SOCKET_DIR)).thenReturn(null);
         when(pathUtils.getSystemProperty("java.io.tmpdir")).thenReturn("/path/to/tmp");
         UnixSocketIPCProperties props = new UnixSocketIPCProperties(jProps, propFile, pathUtils);
-        assertEquals("/path/to/tmp/thermostat-socks", props.getSocketDirectory().getAbsolutePath());
+        assertEquals(new File("/path/to/tmp/thermostat-socks").getAbsolutePath(), props.getSocketDirectory().getAbsolutePath());
     }
     
     @Test(expected=IOException.class)

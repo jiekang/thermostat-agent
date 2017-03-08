@@ -47,6 +47,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
@@ -78,6 +80,7 @@ public class CpuStatBuilderTest {
 
     @Test
     public void testBuildCpuStatFromFile() throws IOException {
+        Assume.assumeTrue(OS.IS_LINUX); // only Linux builds from /proc
         long CLOCK1 = 1000;
         long CLOCK2 = 2000;
 

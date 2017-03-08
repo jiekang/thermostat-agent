@@ -46,6 +46,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Properties;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +83,7 @@ public class PropertiesWriterTest {
         };
         StringBuilder rolesBuilder = new StringBuilder();
         for (int i = 0; i < roles.length - 1; i++) {
-            rolesBuilder.append(roles[i] + ", " + System.getProperty("line.separator"));
+            rolesBuilder.append(roles[i] + ", " + OS.EOL);
         }
         rolesBuilder.append(roles[roles.length - 1]);
         String value = rolesBuilder.toString();
@@ -91,9 +92,12 @@ public class PropertiesWriterTest {
         propsToStore.setProperty(key, value);
         FileOutputStream roleStream = new FileOutputStream(rolesPropertiesFile.toFile());
         propsToStore.store(new PropertiesWriter(roleStream), null);
+        roleStream.close();
 
         Properties propsToLoad = new Properties();
-        propsToLoad.load(new FileInputStream(rolesPropertiesFile.toFile()));
+        FileInputStream inRoleStream = new FileInputStream(rolesPropertiesFile.toFile());
+        propsToLoad.load(inRoleStream);
+        inRoleStream.close();
         String[] loadedRoles = propsToLoad.getProperty(key).split(",\\s+");
 
         assertTrue(Arrays.asList(roles).containsAll(Arrays.asList(loadedRoles)));

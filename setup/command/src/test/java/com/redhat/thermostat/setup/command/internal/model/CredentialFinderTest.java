@@ -36,10 +36,11 @@
 
 package com.redhat.thermostat.setup.command.internal.model;
 
-import com.redhat.thermostat.setup.command.internal.model.CredentialFinder;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -165,8 +166,9 @@ public class CredentialFinderTest {
 
     @Test
     public void verifyFileFromUserHomeIsUsedIfSystemHomeIsNotUsableAndFileDoesNotExist() throws IOException {
+        // Windows can't set a directory readonly http://bugs.java.com/view_bug.do?bug_id=6728842
+        Assume.assumeTrue(!OS.IS_WINDOWS);
         systemConfigDir.setReadOnly();
-
         CredentialFinder finder = new CredentialFinder(paths) {
             @Override
             File getConfigurationFile(File directory, String name) {

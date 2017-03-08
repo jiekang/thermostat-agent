@@ -37,12 +37,14 @@
 package com.redhat.thermostat.vm.io.agent.internal;
 
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
@@ -60,7 +62,10 @@ public class VmIoStatBuilderTest {
         Clock clock = mock(Clock.class);
         VmIoStatBuilder builder = new VmIoStatBuilderImpl(clock, writerID);
         VmIoStat result = builder.build("vmId", 0);
-        assertNull(result);
+        if (OS.IS_WINDOWS)  // on Windows implementation, pid 0 will return information for the current process
+            assertNotNull(result);
+        else
+            assertNull(result);
     }
 
 }

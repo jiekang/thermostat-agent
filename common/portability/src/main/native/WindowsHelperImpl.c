@@ -152,6 +152,12 @@ JNIEXPORT boolean JNICALL Java_com_redhat_thermostat_common_portability_internal
     return TRUE;
 }
 
+JNIEXPORT jint JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getLastError0
+  (JNIEnv *env, jclass winHelperClass)
+{
+    return GetLastError();
+}
+
 /*
  * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
  * Method:    getCPUString0
@@ -159,6 +165,7 @@ JNIEXPORT boolean JNICALL Java_com_redhat_thermostat_common_portability_internal
  */
 JNIEXPORT jstring JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getCPUString0
   (JNIEnv *env, jclass winHelperClass) {
+
     // Get extended ids.
     int CPUInfo[4] = {-1};
     __cpuid(CPUInfo, 0x80000000);
@@ -352,7 +359,7 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
     wchar_t lpDomain[MAX_NAME*2 + 1];  // room for '\' + lpName
     jstring s = NULL;
 
-    if( !LookupAccountSidW(NULL , ptu->User.Sid, lpName, &dwSize, lpDomain, &dwSize, &SidType)) {
+    if (!LookupAccountSidW(NULL , ptu->User.Sid, lpName, &dwSize, lpDomain, &dwSize, &SidType)) {
         DWORD dwResult = GetLastError();
         if(dwResult == ERROR_NONE_MAPPED) {
             wcscpy(lpName, L"NONE_MAPPED");
@@ -676,6 +683,7 @@ static unsigned __int64 convertFileTimeToInt64( const FILETIME * pFileTime ) {
  */
 JNIEXPORT jboolean JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getProcessInfo0
   (JNIEnv *env, jclass winHelperClass, jint pid, jlongArray array) {
+
     testLength(env, array, 4);
 
     HANDLE hProcess;
@@ -723,6 +731,7 @@ JNIEXPORT jboolean JNICALL Java_com_redhat_thermostat_common_portability_interna
  */
 JNIEXPORT jboolean JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getProcessIOInfo0
   (JNIEnv *env, jclass winHelperClass, jint pid, jlongArray array) {
+
     testLength(env, array, 6);
 
     HANDLE hProcess;
@@ -752,7 +761,6 @@ JNIEXPORT jboolean JNICALL Java_com_redhat_thermostat_common_portability_interna
     CloseHandle(hProcess);
     return TRUE;
 }
-
 
 /*
  * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl

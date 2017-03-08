@@ -69,7 +69,7 @@ public class BorderedTableRendererTest {
         assertEquals("+-----+-----+-----+\n" +
                 "| Foo | Bar | Baz |\n" +
                 "+-----+-----+-----+\n" +
-                "+-----+-----+-----+\n", new String(out.toByteArray()));
+                "+-----+-----+-----+\n", new String(out.toByteArray()).replace("\r", ""));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class BorderedTableRendererTest {
                 "| hello      | fluff            | world    |\n" +
                 "| looooooong | f1               | foobar   |\n" +
                 "| f2         | shoooooooooooort | poo      |\n" +
-                "+------------+------------------+----------+\n", new String(out.toByteArray()));
+                "+------------+------------------+----------+\n", new String(out.toByteArray()).replace("\r", ""));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class BorderedTableRendererTest {
                 "| hello      | fluff            | world    |\n" +
                 "| looooooong | f1               | foobar   |\n" +
                 "| f2         | shoooooooooooort | poo      |\n" +
-                "+------------+------------------+----------+\n", new String(out.toByteArray()));
+                "+------------+------------------+----------+\n", new String(out.toByteArray()).replace("\r", ""));
         btr.printLine("newwwwwwwwwwww", "line", "added");
         btr.render(out = new ByteArrayOutputStream());
         assertEquals("+----------------+------------------+----------+\n" +
@@ -111,6 +111,6 @@ public class BorderedTableRendererTest {
                 "| looooooong     | f1               | foobar   |\n" +
                 "| f2             | shoooooooooooort | poo      |\n" +
                 "| newwwwwwwwwwww | line             | added    |\n" +
-                "+----------------+------------------+----------+\n", new String(out.toByteArray()));
+                "+----------------+------------------+----------+\n", new String(out.toByteArray()).replace("\r", ""));
     }
 }

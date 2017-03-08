@@ -45,12 +45,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+
 public class LocalSocketTransportFactoryTest {
     
     private static final String IPC_SOCKET_NAME = "org.jboss.byteman.thermostat.socketName";
     private static final String IPC_SOCKET_NAME_VALUE = "someSocketName";
     private static final String IPC_CONFIG = "org.jboss.byteman.thermostat.ipcConfig";
-    private static final String IPC_CONFIG_VALUE = "/path/to/ipcConfigFile";
+    private static final String IPC_CONFIG_VALUE = new File("/path/to/ipcConfigFile").getAbsolutePath();
 
     @Before
     public void setup() {

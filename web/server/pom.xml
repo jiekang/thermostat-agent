@@ -50,6 +50,18 @@
 
   <name>Thermostat Web Server</name>
 
+  <profiles>
+    <profile>
+      <id>windows</id>
+      <activation>
+        <os><family>Windows</family></os>
+      </activation>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
+    </profile>
+  </profiles>
+
   <dependencies>
   
     <dependency>

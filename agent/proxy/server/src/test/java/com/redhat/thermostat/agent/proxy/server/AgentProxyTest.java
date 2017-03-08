@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +65,10 @@ public class AgentProxyTest {
     
     private static final String JMX_URL = "service:jmx:rmi://myHost:1099/blah";
     private static final String IPC_SERVER_NAME = "agent-proxy-8000";
-    
+    private static final String IGNORED_PATH = "/";
+    private static final String THERMOSTAT_HOME_PROP = "THERMOSTAT_HOME";
+    private static final String USER_THERMOSTAT_HOME_PROP = "USER_THERMOSTAT_HOME";
+
     private AgentProxyControlImpl control;
     private ClientIPCService ipcService;
     private IPCMessageChannel channel;
@@ -83,11 +87,21 @@ public class AgentProxyTest {
         channel = mock(IPCMessageChannel.class);
         when(ipcService.connectToServer(IPC_SERVER_NAME)).thenReturn(channel);
         AgentProxy.setIPCService(ipcService);
+
+        if (OS.IS_WINDOWS) {
+            // Agent Proxy now uses a native DLL for Windows named pipes on Windows
+            // because of this, CommonPathsImpl attempts to initialize.
+            // CommonPathsImpl has not defaults for these values
+            System.setProperty(THERMOSTAT_HOME_PROP, IGNORED_PATH);
+            System.setProperty(USER_THERMOSTAT_HOME_PROP, IGNORED_PATH);
+        }
     }
     
     @After
     public void teardown() throws Exception {
         System.clearProperty(AgentProxy.CONFIG_FILE_PROP);
+        System.clearProperty(THERMOSTAT_HOME_PROP);
+        System.clearProperty(USER_THERMOSTAT_HOME_PROP);
         AgentProxy.setControlCreator(new ControlCreator());
         AgentProxy.setIPCService(null);
     }

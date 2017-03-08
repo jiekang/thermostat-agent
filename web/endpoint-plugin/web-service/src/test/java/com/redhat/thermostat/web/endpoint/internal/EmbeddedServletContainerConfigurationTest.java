@@ -52,7 +52,6 @@ import org.junit.Test;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.web.endpoint.internal.EmbeddedServletContainerConfiguration;
 import com.redhat.thermostat.web.endpoint.internal.EmbeddedServletContainerConfiguration.ConfigKeys;
 
 public class EmbeddedServletContainerConfigurationTest {
@@ -319,7 +318,7 @@ public class EmbeddedServletContainerConfigurationTest {
         systemConfig.setProperty(ConfigKeys.REQUEST_LOG_FILENAME.name(), "logfile.log");
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
         assertTrue("Should have request log config", config.hasRequestLogConfig());
-        assertEquals("/test/userhome/logs/logfile.log", config.getAbsolutePathToRequestLog());
+        assertEquals(new File("/test/userhome/logs/logfile.log").getAbsolutePath(), config.getAbsolutePathToRequestLog());
 
         // user config only
         userConfig = new Properties();
@@ -327,7 +326,7 @@ public class EmbeddedServletContainerConfigurationTest {
         userConfig.setProperty(ConfigKeys.REQUEST_LOG_FILENAME.name(), "userlogFile.log");
         config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
         assertTrue("Should have request log config", config.hasRequestLogConfig());
-        assertEquals("/test/userhome/logs/userlogFile.log", config.getAbsolutePathToRequestLog());
+        assertEquals(new File("/test/userhome/logs/userlogFile.log").getAbsolutePath(), config.getAbsolutePathToRequestLog());
 
         // user and system config
         userConfig = new Properties();
@@ -337,7 +336,7 @@ public class EmbeddedServletContainerConfigurationTest {
         config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
         assertTrue("Should have request log config", config.hasRequestLogConfig());
         assertEquals("User config overrides system config",
-                     "/test/userhome/logs/userlogFile.log",
+                new File("/test/userhome/logs/userlogFile.log").getAbsolutePath(),
                      config.getAbsolutePathToRequestLog());
 
         // no config
@@ -386,6 +385,6 @@ public class EmbeddedServletContainerConfigurationTest {
 
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(paths, irrelevantForTest, irrelevantForTest);
         String actual = config.getAbsolutePathToJaasConfig();
-        assertEquals(fooThHome + "/thermostat_jaas.conf", actual);
+        assertEquals(new File(fooThHome + "/thermostat_jaas.conf").getAbsolutePath(), actual);
     }
 }

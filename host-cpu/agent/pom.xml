@@ -38,14 +38,17 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>thermostat-host-cpu</artifactId>
     <groupId>com.redhat.thermostat</groupId>
     <version>1.99.12-SNAPSHOT</version>
   </parent>
+
   <artifactId>thermostat-host-cpu-agent</artifactId>
   <packaging>bundle</packaging>
   <name>Thermostat Host CPU Agent plugin</name>
+
   <build>
     <plugins>
       <plugin>
@@ -66,8 +69,44 @@
           </instructions>
         </configuration>
       </plugin>
+
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <overwrite>true</overwrite>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>../../common/portability/target</directory>
+                  <includes>${sharedlib.prefix}thermostat-common-portability${sharedlib.suffix}</includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}</com.redhat.thermostat.shared.loader.testNativesHome>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -92,6 +131,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-portability</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

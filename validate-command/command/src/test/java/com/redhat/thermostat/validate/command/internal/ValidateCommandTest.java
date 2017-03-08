@@ -47,10 +47,9 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.apache.commons.cli.MissingArgumentException;
 import org.junit.Before;
 import org.junit.Test;
@@ -101,7 +100,7 @@ public class ValidateCommandTest {
         cmd.run(ctxt);
         String errorOutput = new String(errorBaos.toByteArray());
         String validateOutput = buildErrorMessage();
-        
+
         assertEquals(validateOutput, errorOutput);
         assertEquals("", new String(outputBaos.toByteArray()));
     }
@@ -114,7 +113,7 @@ public class ValidateCommandTest {
 
         cmd.run(ctxt);
         
-        String expected = "Validation successful for file " + fileName + "\n\n";
+        String expected = "Validation successful for file " + fileName + OS.EOL;
         String actual = new String(outputBaos.toByteArray());
         assertEquals(expected, actual);
         
@@ -150,8 +149,8 @@ public class ValidateCommandTest {
     }
     
     private String buildErrorMessage() {
-        String LS = System.getProperty("line.separator");
-        StringBuilder builder = new StringBuilder();
+        final String LS = OS.EOL;
+        final StringBuilder builder = new StringBuilder();
         
         
         builder.append("Error in file ").append(fileName).append(":10.60").append(LS);
@@ -186,7 +185,7 @@ public class ValidateCommandTest {
         builder.append("      </bundles>").append(LS);
         builder.append("      <dependencies>").append(LS);
         builder.append("                   ^").append(LS).append(LS);
-        builder.append("Validation failed for file ").append(fileName).append(LS).append(LS);
+        builder.append("Validation failed for file ").append(fileName).append(LS);
 
         return builder.toString();
     }
@@ -195,7 +194,8 @@ public class ValidateCommandTest {
         try {
             // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
             // as to handle cases like that.
-            return URLDecoder.decode(url.getFile(), "UTF-8");
+            final String fn = URLDecoder.decode(url.getFile(), "UTF-8");
+            return OS.IS_UNIX ? fn : fn.replace('/','\\').substring(1); // for Windows, ensure backslash, and get rid of leading '/'
         } catch (UnsupportedEncodingException e) {
             throw new AssertionError("UTF-8 not supported, huh?");
         }

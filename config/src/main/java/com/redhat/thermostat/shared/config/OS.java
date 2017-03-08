@@ -62,6 +62,11 @@ public class OS {
      */
     public static final boolean IS_MACOS;
 
+    /*
+     * the standandard line ending for this OS
+     */
+    public static final String EOL = System.getProperty("line.separator");
+
     static {
         final String osname = System.getProperty("os.name").toLowerCase();
 
@@ -70,5 +75,7 @@ public class OS {
 
         IS_MACOS = osname.contains("os x") || osname.contains("mac") || osname.contains("darwin");
         IS_LINUX = osname.contains("linux");
+
+
     }
 }

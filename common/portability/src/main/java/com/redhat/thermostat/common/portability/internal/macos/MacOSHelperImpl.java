@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.portability.internal.macos;
 
+import com.redhat.thermostat.common.portability.internal.PortableNativeLibraryLoader;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.shared.config.OS;
@@ -48,7 +49,7 @@ import java.util.logging.Logger;
 /**
  * Utility class to access Windows native code
  */
-public class MacOSHelperImpl {
+public class MacOSHelperImpl extends PortableNativeLibraryLoader {
 
     private static final Logger logger = LoggingUtils.getLogger(MacOSHelperImpl.class);
 
@@ -57,20 +58,8 @@ public class MacOSHelperImpl {
     public static MacOSHelperImpl INSTANCE;
 
     static {
-        if (OS.IS_MACOS) {
-            String lib = NativeLibraryResolver.getAbsoluteLibraryPath("MacOSHelperWrapper");
-            try {
-                System.load(lib);
-                INSTANCE = new MacOSHelperImpl();
-                pagesize = (int)getLongSysctl0("vm.pagesize");
-            } catch (UnsatisfiedLinkError e) {
-                logger.severe("Could not load MacOSHelperWrapper DLL:" + lib);
-                INSTANCE = null;
-                // do not throw here, because you'll get a NoClassDefFound thrown when running other tests that Mock this class
-            }
-        } else {
-            INSTANCE = null;
-        }
+        INSTANCE = OS.IS_MACOS && isNativeLibraryLoaded() ? new MacOSHelperImpl() : null;
+        pagesize = INSTANCE != null ? (int)getLongSysctl0("vm.pagesize") : 0;
     }
 
     private MacOSHelperImpl() {

@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.OS;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -85,9 +86,13 @@ public class Activator implements BundleActivator {
                 WriterID writerID = services.get(WriterID.class);
                 Clock clock = new SystemClock();
                 try {
-                    PageSizeProvider pageSizeProvider = new PageSizeProviderImpl();
-                    NumaMapsReaderProvider readerProvider = new NumaMapsReaderProviderImpl();
-                    backend = constructBackend(executor, clock, readerProvider, pageSizeProvider, vmNumaDAO, version, registrar, writerID);
+                    if (OS.IS_LINUX) {
+                        PageSizeProvider pageSizeProvider = new PageSizeProviderImpl();
+                        NumaMapsReaderProvider readerProvider = new NumaMapsReaderProviderImpl();
+                        backend = constructBackend(executor, clock, readerProvider, pageSizeProvider, vmNumaDAO, version, registrar, writerID);
+                    } else {
+                        backend = constructBackend(executor, clock, null, null, vmNumaDAO, version, registrar, writerID);
+                    }
                     reg = context.registerService(Backend.class, backend, null);
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "Unexpected exception retrieving Linux page sizes. NUMA counts will be disabled", e);

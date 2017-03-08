@@ -81,8 +81,7 @@ public class Activator implements BundleActivator {
         } catch (UnsatisfiedLinkError e) {
             if (OS.IS_LINUX) {
                 theKeyring = new DummyKeyringImpl();
-            }
-            else {
+            } else {
                 ServiceTracker<CommonPaths,CommonPaths> pathTracker = new ServiceTracker<CommonPaths,CommonPaths>(context,CommonPaths.class.getName(), null) {
                     @Override
                     public CommonPaths addingService(ServiceReference<CommonPaths> reference) {

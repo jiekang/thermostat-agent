@@ -46,6 +46,8 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.io.StringReader;
 
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,10 +70,13 @@ public class MemoryStatBuilderTest {
     public void testSimpleBuild() {
         MemoryStat stat = new MemoryStatBuilder(new ProcDataSource(), writerId).build();
         assertNotNull(stat);
+        assertTrue(stat.getFree() <= stat.getTotal());
+        assertTrue(stat.getSwapFree() <= stat.getSwapTotal());
     }
 
     @Test
     public void testEmptyBuild() throws IOException {
+        Assume.assumeTrue(OS.IS_LINUX);
         String memory = "";
         StringReader memoryReader = new StringReader(memory);
         ProcDataSource dataSource = mock(ProcDataSource.class);
@@ -84,6 +89,7 @@ public class MemoryStatBuilderTest {
 
     @Test
     public void testBuild() throws IOException {
+        Assume.assumeTrue(OS.IS_LINUX);
         int i = 1;
         final long TOTAL = i++;
         final long FREE = i++;

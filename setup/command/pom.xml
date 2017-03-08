@@ -71,6 +71,17 @@
           </instructions>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- the test needs to link to common-portability native libraries -->
+          <systemPropertyVariables>
+            <com.redhat.thermostat.shared.loader.testNativesHome>${root.project.directory}/common/portability/target/</com.redhat.thermostat.shared.loader.testNativesHome>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   

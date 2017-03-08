@@ -50,6 +50,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -195,7 +196,7 @@ public class CLISetupTest {
         String output = new String(bout.toByteArray());
         assertTrue("Expected client-user in output. Got: " + output, output.contains("client-user"));
         assertTrue("Expected agent-user in output. Got: " + output, output.contains("agent-user"));
-        assertEquals("Both client and agent usernames cannot be 'identical-user'!\n", new String(berr.toByteArray()));
+        assertEquals("Both client and agent usernames cannot be 'identical-user'!" + OS.EOL, new String(berr.toByteArray()));
     }
     
     @Test

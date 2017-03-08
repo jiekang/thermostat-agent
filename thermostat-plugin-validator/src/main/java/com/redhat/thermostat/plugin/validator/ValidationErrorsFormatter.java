@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.redhat.thermostat.plugin.validator.internal.LocaleResources;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.shared.locale.Translate;
 
 /**
@@ -60,6 +61,7 @@ public class ValidationErrorsFormatter {
     }
 
     private Map<ErrorType,LocaleResources> translateKeys;
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     
     public ValidationErrorsFormatter() {
@@ -80,9 +82,11 @@ public class ValidationErrorsFormatter {
     }
     
     private StringBuilder formatError(ValidationIssue ave) {
+
+        final String LS = OS.EOL;
+
         StringBuilder builder = new StringBuilder();
-        
-        String LS = System.getProperty("line.separator");
+
         String firstLine = null;
         String secondLine = null;
         String thirdLine = null;
@@ -113,7 +117,7 @@ public class ValidationErrorsFormatter {
                        translateKeys.get(ErrorType.valueOf(ave.getClass().getSimpleName().toUpperCase())),
                        absolutePath, 
                        Integer.toString(ave.getLineNumber()), 
-                       Integer.toString(ave.getColumnNumber())).getContents());
+                       Integer.toString(ave.getColumnNumber())).getContents()).append(LS);
                     
         builder.append(formatMessage(ave.getMessage())).append(LS).append(LS);
         builder.append(firstLine).append(LS);
@@ -131,7 +135,7 @@ public class ValidationErrorsFormatter {
         String output = "";
         
         for (int i = 0; i < size; i++) {
-            output=output.concat(arguments[i]);
+            output = output.concat(arguments[i]);
         }
         return output;
     }

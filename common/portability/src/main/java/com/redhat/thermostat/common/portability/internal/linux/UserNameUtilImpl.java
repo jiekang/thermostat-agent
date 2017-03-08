@@ -40,14 +40,9 @@ import java.io.IOException;
 
 import com.redhat.thermostat.common.portability.UserNameLookupException;
 import com.redhat.thermostat.common.portability.UserNameUtil;
-import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+import com.redhat.thermostat.common.portability.internal.PortableNativeLibraryLoader;
 
-public class UserNameUtilImpl implements UserNameUtil {
-    
-    static {
-        String lib = NativeLibraryResolver.getAbsoluteLibraryPath("UserNameUtilWrapper");
-        System.load(lib);
-    }
+public class UserNameUtilImpl extends PortableNativeLibraryLoader implements UserNameUtil {
     
     public String getUserName(long uid) throws UserNameLookupException {
         String username = null;

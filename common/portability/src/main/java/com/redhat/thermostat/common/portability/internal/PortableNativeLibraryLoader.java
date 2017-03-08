@@ -34,47 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+import java.util.logging.Logger;
 
-import java.io.File;
+public class PortableNativeLibraryLoader {
 
-import com.redhat.thermostat.shared.config.OS;
-import org.junit.Assume;
-import org.junit.Test;
+    private static boolean nativeLibraryLoaded;
 
-public class ProcessCheckerTest {
-
-    // only Linux (and other /proc OS) can test process.exists(pid) like this
-
-    private static final int SOME_PID = 80980;
-    
-    @Test
-    public void testProcessExists() {
-        assumeTrue(OS.IS_LINUX);
-        basicTest(true);
+    protected static boolean isNativeLibraryLoaded() {
+        return nativeLibraryLoaded;
     }
-    
-    @Test
-    public void testProcessNotExisting() {
-        assumeTrue(OS.IS_LINUX);
-        basicTest(false);
-    }
-    
-    private void basicTest(boolean expected) {
-        final File baseFile = mock(File.class);
-        when(baseFile.exists()).thenReturn(expected);
-        ProcessChecker process = new ProcessChecker() {
-            @Override
-            File mapToFile(int pid) {
-                assertEquals(SOME_PID, pid);
-                return baseFile;
-            }
-        };
-        assertEquals(expected, process.exists(SOME_PID));
+
+    static {
+        final String libfn = NativeLibraryResolver.getAbsoluteLibraryPath("thermostat-common-portability");
+        try {
+            System.load(libfn);
+            nativeLibraryLoaded = true;
+        } catch (UnsatisfiedLinkError e) {
+            nativeLibraryLoaded = false;
+            Logger logger = Logger.getLogger(PortableNativeLibraryLoader.class.getName());
+            logger.warning("Could not load thermostat-common-portability library:" + libfn);
+        }
     }
 }

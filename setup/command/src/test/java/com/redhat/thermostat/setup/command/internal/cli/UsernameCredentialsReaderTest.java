@@ -77,7 +77,7 @@ public class UsernameCredentialsReaderTest {
         String username = credsReader.read();
         assertEquals("foo-user", username);
         assertEquals("Expected no errors", "", new String(berr.toByteArray()));
-        assertEquals("tell me the username: foo-user\n", makeNewlinesConsistent(new String(bout.toByteArray())));
+        assertEquals("tell me the username: foo-user\n", bosToUnixString(bout));
     }
     
     @Test
@@ -86,8 +86,8 @@ public class UsernameCredentialsReaderTest {
         when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
         String username = credsReader.read();
         assertEquals("try-second-time", username);
-        assertEquals("Chosen username '' invalid!\n", new String(berr.toByteArray()));
-        assertEquals("tell me the username: \ntell me the username: try-second-time\n", makeNewlinesConsistent(new String(bout.toByteArray())));
+        assertEquals("Chosen username '' invalid!\n", bosToUnixString(berr));
+        assertEquals("tell me the username: \ntell me the username: try-second-time\n", bosToUnixString(bout));
     }
     
     /*
@@ -125,8 +125,8 @@ public class UsernameCredentialsReaderTest {
         return builder.toString();
     }
 
-    private String makeNewlinesConsistent(String input) {
-        return input.replace("\r\n", "\n");
+    private String bosToUnixString(ByteArrayOutputStream out) {
+        return new String(out.toByteArray()).replace("\r\n", "\n");
     }
 
 }

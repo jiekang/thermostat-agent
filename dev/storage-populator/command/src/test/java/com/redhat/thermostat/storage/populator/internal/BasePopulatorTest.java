@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -100,7 +101,7 @@ public class BasePopulatorTest {
         for (int i = 0; i < (expectedCount - 1); i++) {
             expected = expected + ".";
         }
-        expected = expected + "Items have arrived.\n";
+        expected = expected + "Items have arrived." + OS.EOL;
 
         String outputString = new String(outputBAOS.toByteArray());
         assertEquals(expected, outputString);
@@ -116,7 +117,7 @@ public class BasePopulatorTest {
 
         populator.reportSubmitted(item, totalCount, console);
 
-        String expectedString  = "Submitted " + totalCount + " " + name + " records to storage.\n";
+        String expectedString  = "Submitted " + totalCount + " " + name + " records to storage." + OS.EOL;
         String outputString = new String(outputBAOS.toByteArray());
         assertEquals(expectedString, outputString);
     }

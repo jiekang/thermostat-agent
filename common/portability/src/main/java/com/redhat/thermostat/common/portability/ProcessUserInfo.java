@@ -70,14 +70,11 @@ public class ProcessUserInfo {
         final ProcessUserInfoBuilder builder;
         if (OS.IS_LINUX) {
             builder = new LinuxProcessUserInfoBuilderImpl(source, userNameUtil);
-        }
-        else if (OS.IS_WINDOWS) {
+        } else if (OS.IS_WINDOWS) {
             builder = new WindowsUserInfoBuilderImpl();
-        }
-        else if (OS.IS_MACOS) {
+        } else if (OS.IS_MACOS) {
             builder = new MacOSUserInfoBuilderImpl();
-        }
-        else {
+        } else {
             throw new UnimplementedError("ProcessUserInfo");
         }
         return builder;
@@ -87,11 +84,9 @@ public class ProcessUserInfo {
         final ProcessUserInfoBuilder builder;
         if (OS.IS_LINUX) {
             builder = new LinuxProcessUserInfoBuilderImpl();
-        }
-        else if (OS.IS_WINDOWS) {
+        } else if (OS.IS_WINDOWS) {
             builder = new WindowsUserInfoBuilderImpl();
-        }
-        else {
+        } else {
             builder = new MacOSUserInfoBuilderImpl();
         }
         return builder;

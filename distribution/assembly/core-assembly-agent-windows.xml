@@ -88,9 +88,7 @@
       <outputDirectory>native</outputDirectory>
       <directory>${main.basedir}/common/portability/target</directory>
       <includes>
-        <include>HostNameWrapper${sharedlib.suffix}</include>
-        <include>UserNameUtilWrapper${sharedlib.suffix}</include>
-        <include>WindowsHelperWrapper${sharedlib.suffix}</include>
+        <include>${sharedlib.prefix}thermostat-common-portability${sharedlib.suffix}</include>
       </includes>
     </fileSet>
     <fileSet>

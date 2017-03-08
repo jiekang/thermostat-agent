@@ -99,8 +99,7 @@
       <outputDirectory>native</outputDirectory>
       <directory>${main.basedir}/common/portability/target</directory>
       <includes>
-        <include>libHostNameWrapper${sharedlib.suffix}</include>
-        <include>libUserNameUtilWrapper${sharedlib.suffix}</include>
+        <include>${sharedlib.prefix}thermostat-common-portability${sharedlib.suffix}</include>
       </includes>
     </fileSet>
   </fileSets>

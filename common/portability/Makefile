@@ -6,6 +6,7 @@ COPY       = cp -a
 
 CLASSPATH  = target/classes/
 TARGET_DIR = target
+EXECUTABLE = $(SO_PREFIX)thermostat-common-portability$(SO_SUFFIX)
 
 ifeq ($(JNI_PLATFORM),win32)
     JNI_PLATFORM = win32
@@ -32,40 +33,34 @@ INCLUDE    = -I $(TARGET_DIR) -I "$(JAVA_HOME)/include/" -I "$(JAVA_HOME)/includ
 HOSTNAME_SOURCES    = src/main/native/HostName.c
 HOSTNAME_TARGET     = $(TARGET_DIR)/HostName.c
 HOSTNAME_OBJECTS    = $(HOSTNAME_TARGET:.c=.o)
-HOSTNAME_EXECUTABLE = $(SO_PREFIX)HostNameWrapper$(SO_SUFFIX)
 
 USERNAME_SOURCES    = src/main/native/UserNameUtilImpl.c
 USERNAME_TARGET     = $(TARGET_DIR)/UserNameUtilImpl.c
 USERNAME_OBJECTS    = $(USERNAME_TARGET:.c=.o)
-USERNAME_EXECUTABLE = $(SO_PREFIX)UserNameUtilWrapper$(SO_SUFFIX)
 
 ifeq ($(JNI_PLATFORM),win32)
 HELPER_SOURCES    = src/main/native/WindowsHelperImpl.c
 HELPER_TARGET     = $(TARGET_DIR)/WindowsHelperImpl.c
 HELPER_OBJECTS    = $(HELPER_TARGET:.c=.o)
-HELPER_EXECUTABLE = $(SO_PREFIX)WindowsHelperWrapper$(SO_SUFFIX)
 endif
 
 ifeq ($(JNI_PLATFORM),darwin)
 HELPER_SOURCES    = src/main/native/MacOSHelperImpl.c
 HELPER_TARGET     = $(TARGET_DIR)/MacOSHelperImpl.c
 HELPER_OBJECTS    = $(HELPER_TARGET:.c=.o)
-HELPER_EXECUTABLE = $(SO_PREFIX)MacOSHelperWrapper$(SO_SUFFIX)
 endif
 
-EXECUTABLES          = $(HOSTNAME_EXECUTABLE) $(USERNAME_EXECUTABLE)
+EXECUTABLES          = $(EXECUTABLE)
 
 .PHONY:UserNameUtilImpl
 JNI_LIST = com.redhat.thermostat.common.portability.HostName com.redhat.thermostat.common.portability.internal.linux.UserNameUtilImpl
 
 ifeq ($(JNI_PLATFORM),win32)
-    EXECUTABLES  += $(HELPER_EXECUTABLE)
     JNI_LIST     +=  com.redhat.thermostat.common.portability.internal.windows.WindowsHelperImpl
     HELPER_LIBS  += -l psapi -l Netapi32
 endif
 
 ifeq ($(JNI_PLATFORM),darwin)
-    EXECUTABLES  += $(HELPER_EXECUTABLE)
     JNI_LIST     +=  com.redhat.thermostat.common.portability.internal.macos.MacOSHelperImpl
 endif
 
@@ -82,14 +77,9 @@ ifneq ($(strip $(HELPER_SOURCES)),)
 	$(COPY) $(HELPER_SOURCES) $(HELPER_TARGET)
 endif
 
-$(HOSTNAME_EXECUTABLE): $(HOSTNAME_OBJECTS)
-	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(HOSTNAME_OBJECTS) $(PLATFORM_LIBS) -o $(TARGET_DIR)/$@
+$(EXECUTABLE): $(HOSTNAME_OBJECTS) $(USERNAME_OBJECTS) $(HELPER_OBJECTS)
+	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(HOSTNAME_OBJECTS) $(USERNAME_OBJECTS) $(HELPER_OBJECTS) $(PLATFORM_LIBS) $(HELPER_LIBS) -o $(TARGET_DIR)/$@
 
-$(USERNAME_EXECUTABLE): $(USERNAME_OBJECTS)
-	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(USERNAME_OBJECTS) $(PLATFORM_LIBS) -o $(TARGET_DIR)/$@
-
-$(HELPER_EXECUTABLE): $(HELPER_OBJECTS)
-	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(HELPER_OBJECTS) $(PLATFORM_LIBS) $(HELPER_LIBS) -o $(TARGET_DIR)/$@
 
 .c.o:
 	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@
@@ -98,14 +88,12 @@ $(HELPER_EXECUTABLE): $(HELPER_OBJECTS)
 	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean-lib:
-	rm -f $(TARGET_DIR)/$(HOSTNAME_EXECUTABLE)
-	rm -f $(TARGET_DIR)/$(USERNAME_EXECUTABLE)
-	rm -f $(TARGET_DIR)/$(HELPER_EXECUTABLE)
+	rm -f $(TARGET_DIR)/$(EXECUTABLE)
 
 clean-obj:
-	rm -f $(HOSTNAME_OBJECTS) $(HOSTNAME_TARGET)
-	rm -f $(USERNAME_OBJECTS) $(USERNAME_TARGET)
-	rm -f $(HELPER_OBJECTS) $(HELPER_TARGET)
+	rm -f $(HOSTNAME_OBJECTS)
+	rm -f $(USERNAME_OBJECTS)
+	rm -f $(HELPER_OBJECTS)
 
 clean: clean-obj clean-lib
 
