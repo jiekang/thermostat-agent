@@ -61,9 +61,6 @@
   <modules>
     <module>collector</module>
     <module>harvester</module>
-    <module>client-common</module>
-    <module>client-swing</module>
-    <module>client-controllers</module>
     <module>distribution</module>
   </modules>
 </project>

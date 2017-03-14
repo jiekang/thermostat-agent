@@ -53,8 +53,6 @@
   <modules>
     <module>agent</module>
     <module>common</module>
-    <module>client-core</module>
-    <module>client-swing</module>
     <module>distribution</module>
   </modules>
 

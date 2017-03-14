@@ -1,9 +1,0 @@
-RULE Thermostat byteman template rule for %s
-CLASS %s
-METHOD main
-HELPER org.jboss.byteman.thermostat.helper.ThermostatHelper
-AT ENTRY
-IF true
-DO
-send("foo-marker", "action", "%s.main() called");
-ENDRULE

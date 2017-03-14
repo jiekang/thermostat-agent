@@ -367,21 +367,16 @@
     <module>launcher</module>
     <module>common</module>
     <module>agent</module>
-    <module>client</module>
     <module>process-handler</module>
     <module>thread</module>
     <module>killvm</module>
     <module>web</module>
     <module>system-backend</module>
     <module>storage</module>
-    <module>storage-profile</module>
-    <module>host-overview</module>
     <module>host-cpu</module>
     <module>host-memory</module>
-    <module>vm-overview</module>
     <module>vm-byteman</module>
     <module>vm-cpu</module>
-    <module>vm-find</module>
     <module>vm-gc</module>
     <module>vm-classstat</module>
     <module>vm-compiler</module>
@@ -390,22 +385,13 @@
     <module>vm-io</module>
     <module>vm-jmx</module>
     <module>vm-profiler</module>
-    <module>notes</module>
     <module>numa</module>
     <module>vm-numa</module>
     <module>keyring</module>
-    <module>laf-utils</module>
     <module>thermostat-plugin-validator</module>
-    <module>validate-command</module>
-    <module>setup</module>
     <module>config</module>
-    <module>platform</module>
-    <module>thermostat-gui</module>
-    <module>local</module>
     <!-- development related modules -->
-    <module>integration-tests</module>
     <module>dev</module>
-    <module>dependency-tool</module>
   </modules>
 
   <build>

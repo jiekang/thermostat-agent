@@ -60,7 +60,6 @@
 
   <modules>
     <module>core</module>
-    <module>cli</module>
     <module>mongo</module>
     <module>testutils</module>
   </modules>

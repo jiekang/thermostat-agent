@@ -464,42 +464,12 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-swing-components</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-command</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-osgi-living-vm-filter-swing</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-storage-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -538,11 +508,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-killvm-client-swing</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
@@ -560,11 +525,6 @@
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-process-handler</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-laf-utils</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -604,37 +564,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-validate-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-setup-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-memory-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-local-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-overview-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-notes-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
@@ -667,18 +597,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-storage-profile-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-storage-populator-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-thread-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
@@ -698,12 +616,6 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-cpu-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-find-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
@@ -739,12 +651,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-overview-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-profiler-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
@@ -761,30 +667,7 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-platform-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-platform-swing-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-gui-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-dependency-tool-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
+
     <!-- list-categories command -->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
