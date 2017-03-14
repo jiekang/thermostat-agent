@@ -368,28 +368,13 @@
     <module>common</module>
     <module>agent</module>
     <module>process-handler</module>
-    <module>thread</module>
-    <module>killvm</module>
     <module>web</module>
     <module>system-backend</module>
     <module>storage</module>
-    <module>host-cpu</module>
-    <module>host-memory</module>
-    <module>vm-byteman</module>
-    <module>vm-cpu</module>
-    <module>vm-gc</module>
-    <module>vm-classstat</module>
-    <module>vm-compiler</module>
-    <module>vm-memory</module>
-    <module>vm-heap-analysis</module>
-    <module>vm-io</module>
-    <module>vm-jmx</module>
-    <module>vm-profiler</module>
-    <module>numa</module>
-    <module>vm-numa</module>
     <module>keyring</module>
     <module>thermostat-plugin-validator</module>
     <module>config</module>
+    <module>plugins</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>
@@ -614,7 +599,7 @@
            <excludes>
              <exclude>**/src/test/resources/**</exclude>
              <exclude>**/archetype-resources/**</exclude>
-             <exclude>vm-heap-analysis/hprof/**</exclude>
+             <exclude>plugins/vm-heap-analysis/hprof/**</exclude>
            </excludes>
          </configuration>
          <executions>
