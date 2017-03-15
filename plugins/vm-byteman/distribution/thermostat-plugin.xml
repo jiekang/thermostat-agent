@@ -37,85 +37,12 @@
 
 -->
 <plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 http://icedtea.classpath.org/thermostat/docs/1.0/thermostat-plugin.xsd">
-    <commands>
-        <command>
-            <name>byteman</name>
-            <summary>instrument a target VM with Byteman rules</summary>
-            <description>
-            Instrument a target VM with Byteman rules.
-            </description>
-            <command-groups>
-                <command-group>vm-instrumentation</command-group>
-            </command-groups>
-            <subcommands>
-                <subcommand>
-                    <name>load</name>
-                    <description>loads rules into a vm</description>
-                    <options>
-                        <option>
-                            <long>rules</long>
-                            <short>r</short>
-                            <argument>file</argument>
-                            <required>true</required>
-                            <description>a file with rules to load into a VM</description>
-                        </option>
-                    </options>
-                </subcommand>
-                <subcommand>
-                    <name>unload</name>
-                    <description>unloads all rules from a VM</description>
-                </subcommand>
-                <subcommand>
-                    <name>status</name>
-                    <description>show the currently loaded rules for a VM</description>
-                </subcommand>
-                <subcommand>
-                    <name>show-metrics</name>
-                    <description>displays raw metrics gathered via an injected Byteman rule</description>
-                </subcommand>
-            </subcommands>
-            <options>
-              <option>
-                <long>vmId</long>
-                <short>v</short>
-                <argument>vm</argument>
-                <required>true</required>
-                <description>the ID of the VM to instrument</description>
-              </option>
-              <option>
-                <long>show</long>
-                <short>s</short>
-                <argument>name</argument>
-                <required>false</required>
-                <description>the name of a metric to show retrieved data for</description>
-              </option>
-            </options>
-            <environments>
-                <environment>cli</environment>
-                <environment>shell</environment>
-            </environments>
-            <bundles>
-                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.common</symbolic-name><version>${project.version}</version></bundle>
-                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.client.cli</symbolic-name><version>${project.version}</version></bundle>
-                <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
-                <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
-                <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-            </bundles>
-        </command>
-    </commands>
     <extensions>
         <extension>
             <name>agent</name>
             <bundles>
                 <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.common</symbolic-name><version>${project.version}</version></bundle>
                 <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.agent</symbolic-name><version>${project.version}</version></bundle>
-            </bundles>
-        </extension>
-        <extension>
-            <name>gui</name>
-            <bundles>
-                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.common</symbolic-name><version>${project.version}</version></bundle>
-                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.client.swing</symbolic-name><version>${project.version}</version></bundle>
             </bundles>
         </extension>
     </extensions>

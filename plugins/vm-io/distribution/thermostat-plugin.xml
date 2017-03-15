@@ -41,26 +41,10 @@
   xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
   <extensions>
     <extension>
-      <name>gui</name>
-      <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.io.common</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.io.client.core</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.io.client.swing</symbolic-name><version>${project.version}</version></bundle>
-      </bundles>
-    </extension>
-    <extension>
       <name>agent</name>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.io.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.io.agent</symbolic-name><version>${project.version}</version></bundle>
-      </bundles>
-    </extension>
-    <extension>
-      <name>vm-stat</name>
-      <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.io.common</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.io.client.core</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.io.client.cli</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

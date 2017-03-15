@@ -60,7 +60,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>assemblies/plugin-assembly${thermostat.assemblyconfig}.xml</descriptor>
+            <descriptor>assemblies/plugin-assembly.xml</descriptor>
           </descriptors>
           <appendAssemblyId>false</appendAssemblyId>
         </configuration>
@@ -77,31 +77,11 @@
     </plugins>
   </build>
   
-  <!-- Explicitly list all plug-in artifacts, transitive dependencies
-       are not included in assembly. -->
   <dependencies>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-heap-analysis-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-heap-analysis-hprof</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-heap-analysis-agent</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.lucene</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.lucene-analyzers-common</artifactId>
     </dependency>
   </dependencies>
 
