@@ -51,35 +51,20 @@
       <includes>
         <include>com.redhat.thermostat:thermostat-host-cpu-distribution</include>
         <include>com.redhat.thermostat:thermostat-host-memory-distribution</include>
-        <include>com.redhat.thermostat:thermostat-host-overview-distribution</include>
-        <include>com.redhat.thermostat:thermostat-notes-distribution</include>
         <include>com.redhat.thermostat:thermostat-numa-distribution</include>
-        <include>com.redhat.thermostat:thermostat-storage-profile-distribution</include>
-        <include>com.redhat.thermostat:thermostat-storage-populator-distribution</include>
         <include>com.redhat.thermostat:thermostat-thread-distribution</include>
-        <include>com.redhat.thermostat:thermostat-validate-distribution</include>
-        <include>com.redhat.thermostat:thermostat-setup-distribution</include>
-        <include>com.redhat.thermostat:thermostat-local-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-byteman-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-classstat-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-compiler-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-cpu-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-find-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-gc-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-heap-analysis-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-io-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-jmx-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-overview-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-profiler-distribution</include>
-        <include>com.redhat.thermostat:thermostat-schema-info-distribution</include>
-        <include>com.redhat.thermostat:thermostat-web-endpoint-distribution</include>
         <include>com.redhat.thermostat:thermostat-killvm-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-numa-distribution</include>
-        <include>com.redhat.thermostat:thermostat-platform-distribution</include>
-        <include>com.redhat.thermostat:thermostat-platform-swing-distribution</include>
-        <include>com.redhat.thermostat:thermostat-dependency-tool-distribution</include>
-        <include>com.redhat.thermostat:thermostat-gui-distribution</include>
       </includes>
     </dependencySet>  
   </dependencySets>

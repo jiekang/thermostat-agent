@@ -47,20 +47,9 @@ __init
 
 echo "Testing bash completions..."
 
-# sample bad test:
-# __check_completion "thermostat g" "gc"
-
 __check_completion "thermostat --v" "--version"
 __check_completion "thermostat --p" "--print-osgi-info"
 
-__check_completion "thermostat c" "clean-data"
-__check_completion "thermostat list-a" "list-agents"
-__check_completion "thermostat list-v" "list-vms"
-
-__check_completion "thermostat g" $'gc\ngui'
-
-__check_completion "thermostat o" "object-info"
-
-__check_completion "thermostat web" $'web-storage\nweb-storage-service'
+__check_completion "thermostat ag" "agent"
 
 exit $errors

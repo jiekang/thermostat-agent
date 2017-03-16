@@ -48,14 +48,11 @@
     <fileSet>
       <outputDirectory>bin</outputDirectory>
       <directory>scripts</directory>
-      <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
-      <outputDirectory>libs</outputDirectory>
-      <directory>libs</directory>
-      <includes>
-        <include>create-user.js</include>
-      </includes>
+      <excludes>
+        <exclude>thermostat-webservice</exclude>
+        <exclude>thermostat-setup</exclude>
+        <exclude>thermostat-devsetup</exclude>
+      </excludes>
       <filtered>true</filtered>
     </fileSet>
     <fileSet>
@@ -63,53 +60,17 @@
       <directory>config</directory>
       <includes>
         <include>agent.properties</include>
-        <include>web-storage-service.properties</include>
         <include>agent.auth</include>
-        <include>web.auth</include>
         <include>ssl.properties</include>
         <include>thermostatrc</include>
-        <include>thermostat-users.properties</include>
-        <include>thermostat-roles.properties</include>
-        <include>thermostat_jaas.conf</include>
-        <include>devsetup.input</include>
-        <include>db.properties</include>
         <include>logging.properties</include>
         <include>bash-complete-logging.properties</include>
         <include>osgi-export.properties</include>
-        <include>commands/*.properties</include>
-      </includes>
-      <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
-      <outputDirectory>etc/examples</outputDirectory>
-      <directory>config/examples</directory>
-      <includes>
-        <!-- Example files with real users. agent-tester and client-tester -->
-        <include>thermostat-users-example.properties</include>
-        <include>thermostat-roles-example.properties</include> 
-      </includes>
-      <filtered>false</filtered>
-    </fileSet>
-    <fileSet>
-      <outputDirectory>etc/plugins.d</outputDirectory>
-      <directory>config</directory>
-      <includes>
-        <include>shell-command/shell-prompt.conf</include>
-        <include>storage-populator/*.json</include>
+        <include>commands/agent.properties</include>
+        <include>commands/help.properties</include>
       </includes>
       <filtered>true</filtered>
     </fileSet>
   </fileSets>
-  <!-- Application descriptors used by Platform -->
-  <files>
-    <file>
-      <source>${main.basedir}/platform/swing/core/target/generated-sources/annotations/template.json</source>
-      <outputDirectory>etc/plugins.d/platform</outputDirectory>
-    </file>
-    <file>
-      <source>${main.basedir}/thermostat-gui/core/target/generated-sources/annotations/gui.json</source>
-      <outputDirectory>etc/plugins.d/platform</outputDirectory>
-    </file>
-  </files> 
 </assembly>
 

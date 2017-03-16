@@ -51,11 +51,6 @@
       <includes>
         <include>com.redhat.thermostat:thermostat-main</include>
         <include>com.redhat.thermostat:thermostat-launcher</include>
-        <include>com.redhat.thermostat:thermostat-client-swing</include>
-        <include>com.redhat.thermostat:thermostat-swing-components</include>
-        <include>com.redhat.thermostat:thermostat-client-command</include>
-        <include>com.redhat.thermostat:thermostat-client-cli</include>
-        <include>com.redhat.thermostat:thermostat-osgi-living-vm-filter-swing</include>
         <include>com.redhat.thermostat:thermostat-agent-core</include>
         <include>com.redhat.thermostat:thermostat-agent-cli</include>
         <include>com.redhat.thermostat:thermostat-agent-command</include>
@@ -69,14 +64,16 @@
         <include>com.redhat.thermostat:thermostat-common-command</include>
         <include>com.redhat.thermostat:thermostat-common-portability</include>
         <include>com.redhat.thermostat:thermostat-process-handler</include>
-        <include>com.redhat.thermostat:thermostat-storage-cli</include>
+        <include>com.redhat.thermostat:thermostat-storage-core</include>
         <include>com.redhat.thermostat:thermostat-storage-mongodb</include>
         <include>com.redhat.thermostat:thermostat-keyring</include>
         <include>com.redhat.thermostat:thermostat-web-client</include>
         <include>com.redhat.thermostat:thermostat-system-backend</include>
-        <include>com.redhat.thermostat:thermostat-laf-utils</include>
         <include>org.osgi:org.osgi.compendium</include>
         <include>org.apache:org.apache.felix.scr</include>
+        <include>io.netty:netty-handler</include>
+        <include>commons-codec:commons-codec</include>
+        <include>org.apache.httpcomponents:httpclient-osgi</include>
         <!-- Remove once upstream has OSGi metadata -->
         <include>com.redhat.thermostat:jnr-x86asm</include>
       </includes>
@@ -103,13 +100,6 @@
       <directory>${main.basedir}/common/portability/target</directory>
       <includes>
         <include>${sharedlib.prefix}thermostat-common-portability${sharedlib.suffix}</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <outputDirectory>native</outputDirectory>
-      <directory>${main.basedir}/laf-utils/target</directory>
-      <includes>
-        <include>libGTKThemeUtils${sharedlib.suffix}</include>
       </includes>
     </fileSet>
   </fileSets>
