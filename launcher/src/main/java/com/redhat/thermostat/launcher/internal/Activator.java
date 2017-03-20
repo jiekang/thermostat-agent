@@ -56,7 +56,6 @@ import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnviron
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.utils.keyring.Keyring;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -91,7 +90,6 @@ public class Activator implements BundleActivator {
         @Override
         public void dependenciesAvailable(DependencyProvider services) {
             CommonPaths paths = services.get(CommonPaths.class);
-            Keyring keyring = services.get(Keyring.class);
             ClientPreferences prefs = new ClientPreferences(paths);
             SSLConfiguration sslConf = services.get(SSLConfiguration.class);
 
@@ -122,7 +120,7 @@ public class Activator implements BundleActivator {
 
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             LauncherImpl launcher = new LauncherImpl(context, new CommandContextFactory(context),
-                    bundleService, commands, env, prefs, keyring, paths, sslConf);
+                    bundleService, commands, env, prefs, paths, sslConf);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);
@@ -159,7 +157,6 @@ public class Activator implements BundleActivator {
         CurrentEnvironment environment = new CurrentEnvironment(Environment.CLI);
 
         Class[] launcherDeps = new Class[]{
-            Keyring.class,
             CommonPaths.class,
             SSLConfiguration.class,
         };

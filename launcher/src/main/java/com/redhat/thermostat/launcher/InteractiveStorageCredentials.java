@@ -46,7 +46,6 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.internal.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.StorageCredentials;
-import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class InteractiveStorageCredentials implements StorageCredentials {
 
@@ -54,13 +53,11 @@ public class InteractiveStorageCredentials implements StorageCredentials {
     private static final Logger logger = LoggingUtils.getLogger(InteractiveStorageCredentials.class);
 
     private ClientPreferences prefs;
-    private Keyring keyring;
     private String url;
     private StorageAuthInfoGetter getter;
 
-    public InteractiveStorageCredentials(ClientPreferences prefs, Keyring keyring, String url, Console console) {
+    public InteractiveStorageCredentials(ClientPreferences prefs, String url, Console console) {
         this.prefs = prefs;
-        this.keyring = keyring;
         this.url = url;
         try {
             this.getter = new StorageAuthInfoGetter(console);
@@ -95,15 +92,10 @@ public class InteractiveStorageCredentials implements StorageCredentials {
     @Override
     public char[] getPassword() {
         char[] password = null;
-        if (url.equals(prefs.getConnectionUrl())) {
-            password = keyring.getPassword(url, prefs.getUserName());
-        }
-        if (password == null) {
-            try {
-                password = getter.getPassword(url);
-            } catch (IOException e) {
-                throw new InteractiveException(t.localize(LocaleResources.LAUNCHER_USER_AUTH_PROMPT_ERROR).getContents(), e);
-            }
+        try {
+            password = getter.getPassword(url);
+        } catch (IOException e) {
+            throw new InteractiveException(t.localize(LocaleResources.LAUNCHER_USER_AUTH_PROMPT_ERROR).getContents(), e);
         }
         // getter.getPassword() might return null on short input
         if (password == null) {

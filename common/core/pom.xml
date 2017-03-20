@@ -196,11 +196,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-keyring</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
-    <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-shared-config</artifactId>
         <version>${project.version}</version>

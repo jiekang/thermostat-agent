@@ -309,23 +309,9 @@ BuildRequires: %{?scl_prefix_maven}maven-antrun-plugin
 BuildRequires: %{?scl_prefix_maven}maven-archetype-packaging
 BuildRequires: %{?scl_prefix_maven}mvn(org.apache.maven.plugins:maven-archetype-plugin)
 }
-%if 0%{?is_rhel_6}
-BuildRequires: gnome-keyring-devel
-%else
-# Use libsecret on Fedora
-%{!?scl:
-BuildRequires: libsecret-devel
-}
-%{?scl:
-BuildRequires: libgnome-keyring-devel
-}
-%endif
-# Keyring JNI uses autotools
 BuildRequires: autoconf
 BuildRequires: automake
 BuildRequires: libtool
-# laf-utils JNI need pkconfig files for gtk2+
-BuildRequires: gtk2-devel
 # maven-scr-plugin is needed for DS annotation processing at build-time
 BuildRequires: %{?scl_prefix}mvn(org.apache.felix:maven-scr-plugin)
 # DS annotation processing at build-time (felix annotations)
@@ -428,17 +414,6 @@ Requires: java-1.7.0-openjdk-devel
 Requires: %{?scl_prefix_mongodb}mongodb-server
 # Fedora's thermostat-setup uses mongo directly
 Requires: %{?scl_prefix_mongodb}mongodb
-%endif
-%if 0%{?is_rhel_6}
-Requires: gnome-keyring
-%else
-# Use libsecret on Fedora
-%{?!scl:
-Requires: libsecret
-}
-%{?scl:
-Requires: libgnome-keyring
-}
 %endif
 %if 0%{?is_rhel_6}
 Requires(post): /sbin/chkconfig
@@ -575,8 +550,6 @@ cp %{SOURCE4} distribution/config/thermostatrc
 # Don't use maven-exec-plugin. We do things manually in order to avoid this
 # additional dep. It's used in common/portability/pom.xml et.al.
 %pom_remove_plugin org.codehaus.mojo:exec-maven-plugin common/portability
-%pom_remove_plugin org.codehaus.mojo:exec-maven-plugin keyring
-%pom_remove_plugin org.codehaus.mojo:exec-maven-plugin laf-utils
 
 # Remove license plugin in main pom.xml
 %pom_remove_plugin com.mycila:license-maven-plugin
@@ -706,23 +679,6 @@ pushd common/portability
          src/main/java/com/redhat/thermostat/common/portability/internal/windows/WindowsHelperImpl.java
   make all
 popd
-pushd keyring
-  mkdir -p target/classes
-  javac -cp ../config/target/classes:../annotations/target/classes \
-        -d target/classes \
-           src/main/java/com/redhat/thermostat/utils/keyring/Keyring.java \
-           src/main/java/com/redhat/thermostat/utils/keyring/KeyringException.java \
-           src/main/java/com/redhat/thermostat/utils/keyring/internal/KeyringImpl.java
-  autoreconf --install
-  ./configure
-  make all
-popd
-pushd laf-utils
-  mkdir -p target/classes
-  javac -cp ../config/target/classes \
-        -d target/classes src/main/java/com/redhat/thermostat/internal/utils/laf/gtk/GTKThemeUtils.java
-  make all
-popd
 ################## Build JNI bits (end) ##################
 
 # This is roughly equivalent to:
@@ -811,15 +767,8 @@ pushd distribution/target/image/libs
 # JNI jars need to be in %{_jnidir}, we symlink to
 # %{_libdir}/%{pkg_name} files. Files are moved to
 # %{_libdir}/%{pkg_name} next.
-for i in thermostat-keyring-*.jar \
-    thermostat-agent-core-*.jar \
-    thermostat-laf-utils-*.jar; do
-  ln -s %{_libdir}/%{pkg_name}/$i %{buildroot}%{_jnidir}/$i
-done
 # JNI files are in %{_libdir}
-mv thermostat-keyring-*.jar \
-   thermostat-agent-core-*.jar \
-   thermostat-laf-utils-*.jar \
+mv thermostat-agent-core-*.jar \
    %{buildroot}%{_libdir}/%{pkg_name}
 # Make native libs executable so that debuginfos get properly
 # generated
@@ -1245,6 +1194,9 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
+* Fri Mar 17 2017 Mario Torre <neugens@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-__RELEASE__
+- Remove keyring and laf utils
+
 * Fri Feb 19 2016 Elliott Baron <ebaron@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-__RELEASE__
 - Add jnr-unixsocket dependencies for IPC service.
 - Update mongo-java-driver version.

@@ -50,7 +50,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class InteractiveStorageCredentialsTest {
     
@@ -75,29 +74,11 @@ public class InteractiveStorageCredentialsTest {
         ClientPreferences prefs = mock(ClientPreferences.class);
         when(prefs.getUserName()).thenReturn(username);
         when(prefs.getConnectionUrl()).thenReturn(URL);
-        Keyring keyring = mock(Keyring.class);
-        InteractiveStorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, URL, console);
+        InteractiveStorageCredentials creds = new InteractiveStorageCredentials(prefs, URL, console);
         String actual = creds.getUsername();
         assertEquals(username, actual);
     }
-    
-    @Test
-    public void canGetPasswordFromKeyring() {
-        String input = ""; // should never be used
-        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
-        String password = "testme";
-        String username = "foouser";
-        ClientPreferences prefs = mock(ClientPreferences.class);
-        when(prefs.getUserName()).thenReturn(username);
-        when(prefs.getConnectionUrl()).thenReturn(URL);
-        Keyring keyring = mock(Keyring.class);
-        when(keyring.getPassword(URL, username)).thenReturn(password.toCharArray());
-        InteractiveStorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, URL, console);
-        char[] actual = creds.getPassword();
-        assertNotNull("expected password from keyring", actual);
-        assertEquals(password, new String(actual));
-    }
-    
+
     @Test
     public void promptsForUsernameIfNotPresentInPreferences() {
         String username = "someuser";
@@ -105,8 +86,7 @@ public class InteractiveStorageCredentialsTest {
         when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
         ClientPreferences prefs = mock(ClientPreferences.class);
         when(prefs.getConnectionUrl()).thenReturn(DIFFERENT_URL); // something *not* URL
-        Keyring keyring = mock(Keyring.class);
-        InteractiveStorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, URL, console);
+        InteractiveStorageCredentials creds = new InteractiveStorageCredentials(prefs, URL, console);
         String actual = creds.getUsername();
         assertEquals(username, actual);
     }
@@ -118,8 +98,7 @@ public class InteractiveStorageCredentialsTest {
         when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
         ClientPreferences prefs = mock(ClientPreferences.class);
         when(prefs.getConnectionUrl()).thenReturn(DIFFERENT_URL); // something *not* URL
-        Keyring keyring = mock(Keyring.class);
-        InteractiveStorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, URL, console);
+        InteractiveStorageCredentials creds = new InteractiveStorageCredentials(prefs, URL, console);
         char[] actual = creds.getPassword();
         assertNotNull("expected password to be read from prompt", actual);
         assertEquals(password, new String(actual));

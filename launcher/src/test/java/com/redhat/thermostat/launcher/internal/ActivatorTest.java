@@ -49,7 +49,6 @@ import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.keyring.Keyring;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -137,7 +136,7 @@ public class ActivatorTest {
         tracker = mock(MultipleServiceTracker.class);
         whenNew(MultipleServiceTracker.class).
                 withParameterTypes(BundleContext.class, Class[].class, Action.class).
-                withArguments(eq(context), eq(new Class[] {BundleManager.class, Keyring.class}),
+                withArguments(eq(context), eq(new Class[] {BundleManager.class}),
                         isA(Action.class)).thenReturn(tracker);
     }
 
@@ -169,7 +168,6 @@ public class ActivatorTest {
         ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
         MultipleServiceTracker launcherDepsTracker = mock(MultipleServiceTracker.class);
         Class<?>[] launcherDeps = new Class[] {
-                Keyring.class,
                 CommonPaths.class,
                 SSLConfiguration.class,
         };
@@ -202,7 +200,6 @@ public class ActivatorTest {
                 eq(helpCommandDeps), actionCaptor.capture()).thenReturn(unusedTracker);
 
         Activator activator = new Activator();
-        context.registerService(Keyring.class, mock(Keyring.class), null);
         ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
         when(configurationInfoSource.getConfiguration("shell-command", "shell-prompt.conf")).thenReturn(new HashMap<String, String>());
         context.registerService(ConfigurationInfoSource.class, configurationInfoSource, null);
@@ -214,7 +211,6 @@ public class ActivatorTest {
         Action action = actionCaptor.getAllValues().get(0);
         assertNotNull(action);
         SSLConfiguration sslConfiguration = mock(SSLConfiguration.class);
-        Keyring keyringService = mock(Keyring.class);
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
@@ -227,11 +223,8 @@ public class ActivatorTest {
         when(paths.getSystemPluginConfigurationDirectory()).thenReturn(new File(""));
         when(paths.getUserPluginConfigurationDirectory()).thenReturn(new File(""));
         @SuppressWarnings("rawtypes")
-        ServiceRegistration keyringReg = context.registerService(Keyring.class, keyringService, null);
-        @SuppressWarnings("rawtypes")
         ServiceRegistration pathsReg = context.registerService(CommonPaths.class, paths, null);
         Map<String, Object> services = new HashMap<>();
-        services.put(Keyring.class.getName(), keyringService);
         services.put(CommonPaths.class.getName(), paths);
         services.put(ConfigurationInfoSource.class.getName(), configurationInfoSource);
         services.put(SSLConfiguration.class.getName(), sslConfiguration);
@@ -243,7 +236,6 @@ public class ActivatorTest {
         assertTrue(context.isServiceRegistered(ExitStatus.class.getName(), ExitStatusImpl.class));
 
         action.dependenciesUnavailable();
-        keyringReg.unregister();
         pathsReg.unregister();
         
         assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CompoundCommandInfoSource.class));
@@ -257,7 +249,6 @@ public class ActivatorTest {
         ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
         MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
         Class<?>[] launcherDeps = new Class[] {
-                Keyring.class,
                 CommonPaths.class,
                 SSLConfiguration.class,
         };

@@ -103,7 +103,6 @@ import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class LauncherImplTest {
 
@@ -289,7 +288,6 @@ public class LauncherImplTest {
         dbServiceFactory = mock(DbServiceFactory.class);
         version = mock(Version.class);
 
-        Keyring keyring = mock(Keyring.class);
         paths = mock(CommonPaths.class);
         File userConfigFile = mock(File.class);
         when(userConfigFile.isFile()).thenReturn(false);
@@ -310,7 +308,7 @@ public class LauncherImplTest {
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
         sslConf = mock(SSLConfiguration.class);
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
+                environment, dbServiceFactory, version, prefs, paths, sslConf);
     }
 
     @After
@@ -686,13 +684,12 @@ public class LauncherImplTest {
     @Test
     public void verifyPrefsAreUsed() {
         ClientPreferences prefs = mock(ClientPreferences.class);
-        Keyring keyring = mock(Keyring.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         when(prefs.getUserName()).thenReturn("user");
 
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
+                environment, dbServiceFactory, version, prefs, paths, sslConf);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
@@ -706,11 +703,10 @@ public class LauncherImplTest {
     @Test
     public void verifyUserInputUsedIfNoSavedAuthInfo() {
         ClientPreferences prefs = mock(ClientPreferences.class);
-        Keyring keyring = mock(Keyring.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
+                environment, dbServiceFactory, version, prefs, paths, sslConf);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
@@ -730,10 +726,8 @@ public class LauncherImplTest {
         char[] password = new char[] {'1', '2', '3', '4', '5'};
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         when(prefs.getUserName()).thenReturn(user);
-        Keyring keyring = mock(Keyring.class);
-        when(keyring.getPassword(dbUrl, user)).thenReturn(password);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
+                environment, dbServiceFactory, version, prefs, paths, sslConf);
 
         Command mockCmd = mock(Command.class);
         when(mockCmd.isStorageRequired()).thenReturn(true);
@@ -779,7 +773,6 @@ public class LauncherImplTest {
         TestLogHandler handler = new TestLogHandler();
         logger.addHandler(handler);
         ClientPreferences prefs = mock(ClientPreferences.class);
-        Keyring keyring = mock(Keyring.class);
         CommonPaths logPaths = mock(CommonPaths.class);
         when(logPaths.getUserThermostatHome()).thenReturn(mock(File.class));
         when(logPaths.getSystemThermostatHome()).thenReturn(mock(File.class));
@@ -794,7 +787,7 @@ public class LauncherImplTest {
             new LauncherImpl(bundleContext, ctxFactory, registry,
                     infos, new CommandSource(bundleContext),
                     environment, dbServiceFactory,
-                    version, prefs, keyring, logPaths, sslConf);
+                    version, prefs, logPaths, sslConf);
             assertTrue(handler.loggedThermostatHome);
             assertTrue(handler.loggedUserHome);
             verify(logPaths).getUserThermostatHome();
@@ -946,8 +939,7 @@ public class LauncherImplTest {
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos,
                                     new CommandSource(bundleContext), environment,
                                     dbServiceFactory, version,
-                                    mock(ClientPreferences.class),
-                                    mock(Keyring.class), setupPaths, sslConf) {
+                                    mock(ClientPreferences.class), setupPaths, sslConf) {
             @Override
             void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
                 Pair<String[], Boolean> pair = new Pair<>(args, inShell);

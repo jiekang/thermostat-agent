@@ -86,7 +86,6 @@ import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.utils.keyring.Keyring;
 
 /**
  * This class is thread-safe.
@@ -119,20 +118,19 @@ public class LauncherImpl implements Launcher {
     private final DependencyManager manager;
 
     private final ClientPreferences prefs;
-    private final Keyring keyring;
     private final SSLConfiguration sslConf;
 
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
-            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs, Keyring keyring,
+            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs,
             CommonPaths paths, SSLConfiguration sslConf) {
         this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), env,
-                new DbServiceFactory(), new Version(), prefs, keyring, paths, sslConf);
+                new DbServiceFactory(), new Version(), prefs, paths, sslConf);
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource commandInfoSource, CommandSource commandSource,
             CurrentEnvironment currentEnvironment, DbServiceFactory dbServiceFactory, Version version,
-            ClientPreferences prefs, Keyring keyring, CommonPaths paths, SSLConfiguration sslConf) {
+            ClientPreferences prefs, CommonPaths paths, SSLConfiguration sslConf) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
@@ -142,7 +140,6 @@ public class LauncherImpl implements Launcher {
         this.commandInfoSource = commandInfoSource;
         this.currentEnvironment = currentEnvironment;
         this.prefs = prefs;
-        this.keyring = keyring;
         this.paths = Objects.requireNonNull(paths);
         this.sslConf = sslConf;
         this.manager = new DependencyManager(paths);
@@ -476,7 +473,7 @@ public class LauncherImpl implements Launcher {
                 if (dbUrl == null) {
                     dbUrl = prefs.getConnectionUrl();
                 }
-                StorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, dbUrl, ctx.getConsole());
+                StorageCredentials creds = new InteractiveStorageCredentials(prefs, dbUrl, ctx.getConsole());
                 try {
                     // this may throw storage exception
                     DbService service = dbServiceFactory.createDbService(dbUrl, creds, sslConf);
