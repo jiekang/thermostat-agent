@@ -574,7 +574,6 @@ cp %{SOURCE4} distribution/config/thermostatrc
 # Disable some dev modules we don't ship
 %pom_disable_module ide-launcher dev
 %pom_disable_module schema-info-command dev
-%pom_disable_module perflog-analyzer dev
 %pom_disable_module ipc-test dev
 # Disable storage-populator in RPMs for the time being since it's mostly
 # relevant for development work.
