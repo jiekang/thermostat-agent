@@ -68,9 +68,7 @@ public class HostInfoBuilderTest {
         when(helper.getTotalMemory()).thenReturn(9876L);
     }
 
-    // TODO - This test currently fails on Windows because the helper DLL isn't on the execution path
     @Test
-    @Ignore
     public void testSimpleBuild() {
         Assume.assumeTrue(OS.IS_WINDOWS);
         HostInfo info = new HostInfoBuilderImpl(writerId).build();

@@ -65,6 +65,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
 import com.redhat.thermostat.common.internal.test.Bug;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.Storage;
 import org.junit.After;
 import org.junit.Assume;
@@ -190,6 +191,7 @@ public class WebStorageEndPointUnitTest {
     
     @Test
     public void initThrowsRuntimeExceptionIfSSLPropertiesNotReadable() throws Exception {
+        Assume.assumeTrue(!OS.IS_WINDOWS); // Windows can't set directories non-readable
         ThCreatorResult result = null;
         try {
             result = creatWorkingThermostatHome();

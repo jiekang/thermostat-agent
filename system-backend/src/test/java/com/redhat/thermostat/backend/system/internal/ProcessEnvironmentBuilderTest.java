@@ -78,9 +78,7 @@ public class ProcessEnvironmentBuilderTest {
         when(whelp.getEnvironment(eq(FAKE_PID))).thenReturn(goodMap);
     }
 
-    // TODO - This test currently fails on Windows because the helper DLL isn't on the execution path
     @Test
-    @Ignore
     public void testSimpleBuild() {
         Assume.assumeTrue(OS.IS_WINDOWS);
         final Map<String,String> info = new ProcessEnvironmentBuilderImpl().build(FAKE_PID);
