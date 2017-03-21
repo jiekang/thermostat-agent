@@ -48,27 +48,11 @@
     <fileSet>
       <outputDirectory>bin</outputDirectory>
       <directory>scripts</directory>
-      <excludes>
-        <exclude>thermostat-webservice</exclude>
-        <exclude>thermostat-setup</exclude>
-        <exclude>thermostat-devsetup</exclude>
-      </excludes>
       <filtered>true</filtered>
     </fileSet>
     <fileSet>
       <outputDirectory>etc</outputDirectory>
       <directory>config</directory>
-      <includes>
-        <include>agent.properties</include>
-        <include>agent.auth</include>
-        <include>ssl.properties</include>
-        <include>thermostatrc</include>
-        <include>logging.properties</include>
-        <include>bash-complete-logging.properties</include>
-        <include>osgi-export.properties</include>
-        <include>commands/agent.properties</include>
-        <include>commands/help.properties</include>
-      </includes>
       <filtered>true</filtered>
     </fileSet>
   </fileSets>
