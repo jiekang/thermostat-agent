@@ -485,15 +485,6 @@
         <artifactId>thermostat-web-client</artifactId>
         <version>${project.version}</version>
     </dependency>
-    <!-- depend on the web archive to be built in order
-         to be able to copy the exploded war into the
-         image directory -->
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-web-war</artifactId>
-        <version>${project.version}</version>
-        <type>war</type>
-    </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-system-backend</artifactId>
@@ -605,12 +596,6 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-profiler-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-endpoint-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
