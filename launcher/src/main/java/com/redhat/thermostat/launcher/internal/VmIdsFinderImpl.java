@@ -98,7 +98,7 @@ public class VmIdsFinderImpl implements VmIdsFinder {
         this.agentInfoDao = agentInfoDAO;
     }
 
-    void unindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
+    void unbindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
         this.agentInfoDao = null;
     }
 

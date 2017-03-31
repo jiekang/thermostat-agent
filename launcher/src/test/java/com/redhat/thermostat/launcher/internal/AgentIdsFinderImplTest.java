@@ -62,7 +62,7 @@ public class AgentIdsFinderImplTest {
     @Test
     public void testFindIds() {
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        finder.bindAgentInfoDao(agentInfoDAO);
+        finder.bindAgentInfoDAO(agentInfoDAO);
 
         String id1 = "012345-56789";
         String id2 = "111111-22222";

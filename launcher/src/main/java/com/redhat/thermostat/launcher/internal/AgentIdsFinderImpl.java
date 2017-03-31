@@ -71,11 +71,11 @@ public class AgentIdsFinderImpl implements AgentIdsFinder {
         return agentIds;
     }
 
-    public void bindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
+    public void bindAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
         this.agentInfoDAO = agentInfoDAO;
     }
 
-    public void unbindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
+    public void unbindAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
         this.agentInfoDAO = null;
     }
 
