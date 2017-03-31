@@ -75,6 +75,13 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <!--
+            Explicitly tell the bundle-plugin to pull and filter resources from maven-resources (src/main/resources)
+            and then get app-info.properties from target/classes, where it was filtered by
+            the maven resourced mechanism.
+            Doing it this way avoids using the BND filtering, which doesn't support '@' tokens.
+            -->
+            <Include-Resource>{maven-resources}, com/redhat/thermostat/app-info.properties=target/classes/com/redhat/thermostat/app-info.properties</Include-Resource>
             <Bundle-SymbolicName>com.redhat.thermostat.common.core</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.common.internal.Activator</Bundle-Activator>

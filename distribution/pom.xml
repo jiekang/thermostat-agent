@@ -123,10 +123,10 @@
       </activation>
       <properties>
         <assemblyfile.suffix>macosx</assemblyfile.suffix>
-        <agent.extra.bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
-          ${jffi-native.bundle.symbolic.name}=${jffi.version}</agent.extra.bundles>
-        <service.extra.bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
-          ${jffi-native.bundle.symbolic.name}=${jffi.version}</service.extra.bundles>
+        <agent_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</agent_extra_bundles>
+        <service_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</service_extra_bundles>
       </properties>
       <dependencies>
         <dependency>
@@ -173,8 +173,8 @@
       </activation>
       <properties>
         <assemblyfile.suffix>-windows</assemblyfile.suffix>
-        <agent.extra.bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</agent.extra.bundles>
-        <service.extra.bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</service.extra.bundles>
+        <agent_extra_bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</agent_extra_bundles>
+        <service_extra_bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</service_extra_bundles>
       </properties>
       <dependencies>
         <dependency>
