@@ -582,26 +582,6 @@ diff --git a/host-overview/client-swing/pom.xml b/host-overview/client-swing/pom
      </dependency>
      <dependency>
        <groupId>org.jfree</groupId>
-diff --git a/keyring/pom.xml b/keyring/pom.xml
---- a/keyring/pom.xml
-+++ b/keyring/pom.xml
-@@ -184,14 +184,8 @@
-     </dependency>
-
-     <dependency>
--      <groupId>org.osgi</groupId>
--      <artifactId>org.osgi.core</artifactId>
--      <scope>provided</scope>
--    </dependency>
--    <dependency>
--      <groupId>org.osgi</groupId>
--      <artifactId>org.osgi.compendium</artifactId>
--      <scope>provided</scope>
-+      <groupId>org.apache.felix</groupId>
-+      <artifactId>org.apache.felix.framework</artifactId>
-     </dependency>
- 
-     <dependency>
 diff --git a/killvm/agent/pom.xml b/killvm/agent/pom.xml
 --- a/killvm/agent/pom.xml
 +++ b/killvm/agent/pom.xml
