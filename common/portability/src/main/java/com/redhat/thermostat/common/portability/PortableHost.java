@@ -53,4 +53,15 @@ public interface PortableHost {
     long getClockTicksPerSecond();
 
     PortableMemoryStat getMemoryStat();
+
+    // size of array containing CPU statistics for idle, system and user times
+    int CPU_TIMES_SIZE = 3;
+
+    // returns an array (one row per CPU) of an array of ints (idle, system and user ticks)
+    long[][] getCPUUsageTicks();
+
+    // returns an array (one row per logical CPU) of an array of ints (idle, system and user percent)
+    // the order of the CPUs is (from outer counter to inner) group, package, chip, core, hyperthread
+    int[][] getCPUUsagePercent();
+
 }

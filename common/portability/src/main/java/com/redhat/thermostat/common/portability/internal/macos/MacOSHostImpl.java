@@ -38,6 +38,7 @@ package com.redhat.thermostat.common.portability.internal.macos;
 
 import com.redhat.thermostat.common.portability.PortableHost;
 import com.redhat.thermostat.common.portability.PortableMemoryStat;
+import com.redhat.thermostat.common.portability.internal.UnimplementedError;
 
 public class MacOSHostImpl implements PortableHost {
 
@@ -85,5 +86,15 @@ public class MacOSHostImpl implements PortableHost {
     @Override
     public PortableMemoryStat getMemoryStat() {
         return new MacOSMemoryStat();
+    }
+
+    @Override
+    public long[][] getCPUUsageTicks() {
+        throw new UnimplementedError("getCPUUsageTicks()");
+    }
+
+    @Override
+    public int[][] getCPUUsagePercent() {
+        throw new UnimplementedError("getCPUUsagePercent()");
     }
 }

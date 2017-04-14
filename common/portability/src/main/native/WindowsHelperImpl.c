@@ -38,17 +38,13 @@
 #include <jni.h>
 #include <unistd.h>
 #include <string.h>
-
-#if !defined(_WIN32)
-# include <netdb.h>
-#else // windows
-# include <winsock2.h>
-# include <psapi.h>
-# include <intrin.h>
-# include <Sddl.h>
-# include <Lm.h>
-# include <Winternl.h>
-#endif
+#include <winsock2.h>
+#include <psapi.h>
+#include <intrin.h>
+#include <Sddl.h>
+#include <Lm.h>
+#include <Winternl.h>
+#include <wbemidl.h>  // for WMI functions
 
 #if !defined(STATUS_NOT_IMPLEMENTED)
 # define STATUS_NOT_IMPLEMENTED 0xC0000002;
@@ -675,6 +671,128 @@ static unsigned __int64 convertFileTimeToInt64( const FILETIME * pFileTime ) {
 
   return largeInt.QuadPart;
 }
+
+/*
+ * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
+ * Method:    getSystemTimes0
+ * array is idle, kernel, user times
+ * Signature: ([J)V
+ */
+JNIEXPORT void JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getSystemTimes0
+  (JNIEnv *env, jclass winHelperClass, jlongArray times) {
+
+    testLength(env, times, 3);
+
+    FILETIME idleTime;
+    FILETIME kernelTime;
+    FILETIME userTime;
+
+    GetSystemTimes(&idleTime, &kernelTime, &userTime);
+
+    // Get the element pointer
+    jlong* data = (*env)->GetLongArrayElements(env, times, 0);
+
+    data[0] = convertFileTimeToInt64(&idleTime);
+    data[1] = convertFileTimeToInt64(&kernelTime);
+    data[2] = convertFileTimeToInt64(&userTime);
+
+    (*env)->ReleaseLongArrayElements(env, times, data, 0);
+ }
+
+ /*
+  * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
+  * Method:    getCPUUsagePercent0
+  * Signature: ([[I)I
+  */
+ JNIEXPORT jint JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getCPUUsagePercent0
+   (JNIEnv *env, jclass winHelperClass, jobjectArray arrayOfArrayOfInts)
+ {
+    int cpuIdx = 0;
+    const jsize arraylen = (*env)->GetArrayLength(env, arrayOfArrayOfInts);
+
+     // result code from COM calls
+     HRESULT hr = 0;
+
+     // COM interface pointers
+     IWbemLocator         *locator  = NULL;
+     IWbemServices        *services = NULL;
+     IEnumWbemClassObject *results  = NULL;
+
+     // BSTR strings we'll use (http://msdn.microsoft.com/en-us/library/ms221069.aspx)
+     BSTR resource = SysAllocString(L"ROOT\\CIMV2");
+     BSTR language = SysAllocString(L"WQL");
+     BSTR query    = SysAllocString(L"SELECT Name, PercentIdleTime, PercentPrivilegedTime, PercentUserTime FROM Win32_PerfFormattedData_Counters_ProcessorInformation");
+
+     // initialize COM
+     hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+     hr = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
+
+     // connect to WMI
+     hr = CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &locator);
+     hr = locator->lpVtbl->ConnectServer(locator, resource, NULL, NULL, NULL, 0, NULL, NULL, &services);
+
+     // issue a WMI query
+     hr = services->lpVtbl->ExecQuery(services, language, query, WBEM_FLAG_BIDIRECTIONAL, NULL, &results);
+
+     // list the query results
+     if (results != NULL) {
+         IWbemClassObject *result = NULL;
+         ULONG returnedCount = 0;
+
+         // enumerate the retrieved objects
+         while((hr = results->lpVtbl->Next(results, WBEM_INFINITE, 1, &result, &returnedCount)) == S_OK) {
+
+            if (cpuIdx >= arraylen) {
+                // we've overflowed - only return what the array can hold
+                break;
+            }
+
+             VARIANT name;
+             VARIANT idlePercent;
+ 			 VARIANT systemPercent;
+ 			 VARIANT userPercent;
+
+             // obtain the desired properties of the next result and print them out
+             hr = result->lpVtbl->Get(result, L"Name", 0, &name, 0, 0);
+
+ 			// ignore _Total rows
+ 			if (wcsstr(name.bstrVal, L"_Total") == NULL) {
+ 				hr = result->lpVtbl->Get(result, L"PercentIdleTime", 0, &idlePercent, 0, 0);
+ 				hr = result->lpVtbl->Get(result, L"PercentPrivilegedTime", 0, &systemPercent, 0, 0);
+ 				hr = result->lpVtbl->Get(result, L"PercentUserTime", 0, &userPercent, 0, 0);
+ 				const int idlePct = _wtoi(idlePercent.bstrVal);
+ 				const int sysPct = _wtoi(systemPercent.bstrVal);
+ 				const int userPct = _wtoi(userPercent.bstrVal);
+
+ 				jintArray arrayObj = (jintArray)(*env)->GetObjectArrayElement(env, arrayOfArrayOfInts, cpuIdx);
+ 				testLength(env, arrayObj, 3);
+ 				jint* array = (*env)->GetIntArrayElements(env, arrayObj, NULL);
+ 				array[0] = idlePct;
+ 				array[1] = sysPct;
+ 				array[2] = userPct;
+ 				(*env)->ReleaseIntArrayElements(env, arrayObj, array, 0);
+
+ 				cpuIdx++; // only count cpus, not totals or subtotals
+ 			}
+             // release the current result object
+             result->lpVtbl->Release(result);
+
+         }
+     }
+
+     // release WMI COM interfaces
+     results->lpVtbl->Release(results);
+     services->lpVtbl->Release(services);
+     locator->lpVtbl->Release(locator);
+
+     // unwind everything else we've allocated
+     CoUninitialize();
+
+     SysFreeString(query);
+     SysFreeString(language);
+     SysFreeString(resource);
+     return (jint)(cpuIdx);
+ }
 
 /*
  * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl

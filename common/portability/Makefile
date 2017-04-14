@@ -57,7 +57,7 @@ JNI_LIST = com.redhat.thermostat.common.portability.HostName com.redhat.thermost
 
 ifeq ($(JNI_PLATFORM),win32)
     JNI_LIST     +=  com.redhat.thermostat.common.portability.internal.windows.WindowsHelperImpl
-    HELPER_LIBS  += -l psapi -l Netapi32
+    HELPER_LIBS  += -l psapi -l Netapi32 -l ole32 -l oleaut32 -l wbemuuid -o wmi
 endif
 
 ifeq ($(JNI_PLATFORM),darwin)

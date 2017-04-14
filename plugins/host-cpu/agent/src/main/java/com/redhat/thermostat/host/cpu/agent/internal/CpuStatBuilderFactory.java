@@ -36,49 +36,31 @@
 
 package com.redhat.thermostat.host.cpu.agent.internal;
 
-import java.util.concurrent.ScheduledExecutorService;
-
-import com.redhat.thermostat.backend.HostPollingAction;
-import com.redhat.thermostat.backend.HostPollingBackend;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
+import com.redhat.thermostat.common.portability.SysConf;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 
-public class HostCpuBackend extends HostPollingBackend {
+public class CpuStatBuilderFactory {
 
-    public HostCpuBackend(ScheduledExecutorService executor,
-            CpuStatDAO cpuStatDAO, Version version, final WriterID writerId) {
-        super("Host CPU Backend",
-                "Gathers CPU statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
-        registerAction(new CpuProcBackendAction(writerId, cpuStatDAO));
+    CpuStatBuilderFactory() {
     }
 
-    private static class CpuProcBackendAction implements HostPollingAction {
-
-        private final CpuStatBuilder builder;
-        private final CpuStatDAO dao;
-
-        CpuProcBackendAction(final WriterID id, final CpuStatDAO dao) {
-            this.builder = new CpuStatBuilderFactory().build(id);
-            this.dao = dao;
-        }
-
-        @Override
-        public void run() {
-            if (!builder.isInitialized()) {
-                builder.initialize();
-            } else {
-                dao.putCpuStat(builder.build());
-            }
-        }
+    public CpuStatBuilder build(final WriterID id) {
+        return OS.IS_LINUX ? buildForLinux(id) : buildForWindows(id);
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER_CPU_GROUP;
+    private CpuStatBuilder buildForLinux(final WriterID id) {
+        final Clock clock = new SystemClock();
+        final long ticksPerSecond = SysConf.getClockTicksPerSecond();
+        final ProcDataSource source = new ProcDataSource();
+        return new LinuxCpuStatBuilder(clock, source, ticksPerSecond, id);
     }
 
+    private CpuStatBuilder buildForWindows(final WriterID id) {
+        final Clock clock = new SystemClock();
+        return new WindowsCpuStatBuilder(clock, id);
+    }
 }
-

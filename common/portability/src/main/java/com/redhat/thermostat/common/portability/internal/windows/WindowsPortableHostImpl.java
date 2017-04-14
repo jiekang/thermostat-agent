@@ -88,4 +88,19 @@ public class WindowsPortableHostImpl implements PortableHost {
     public PortableMemoryStat getMemoryStat() {
         return new WindowsMemoryStat();
     }
+
+    @Override
+    public long[][] getCPUUsageTicks() {
+        // ideally, we want to return an array (one per logical CPU) of (an array of idle/system/user ticks)
+        // unfortunateltly, Windows GetSystemTimes() returns the totals over all CPUs
+        // we return an array length 1 to represent this, instead of one element per CPU
+        final long[][] procs = new long[1][];
+        procs[0] = helper.getSystemTimes();
+        return procs;
+    }
+
+    @Override
+    public int[][] getCPUUsagePercent() {
+        return helper.getCPUUsagePercent();
+    }
 }

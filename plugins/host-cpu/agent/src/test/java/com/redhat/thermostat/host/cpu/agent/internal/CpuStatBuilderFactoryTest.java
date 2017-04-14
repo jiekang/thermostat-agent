@@ -36,49 +36,33 @@
 
 package com.redhat.thermostat.host.cpu.agent.internal;
 
-import java.util.concurrent.ScheduledExecutorService;
-
-import com.redhat.thermostat.backend.HostPollingAction;
-import com.redhat.thermostat.backend.HostPollingBackend;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
+import org.junit.Assert;
+import org.junit.Test;
 
-public class HostCpuBackend extends HostPollingBackend {
+import static org.mockito.Mockito.mock;
 
-    public HostCpuBackend(ScheduledExecutorService executor,
-            CpuStatDAO cpuStatDAO, Version version, final WriterID writerId) {
-        super("Host CPU Backend",
-                "Gathers CPU statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
-        registerAction(new CpuProcBackendAction(writerId, cpuStatDAO));
+public class CpuStatBuilderFactoryTest {
+
+    @Test
+    public void testSimpleBuild() {
+        CpuStatBuilderFactory factory = new CpuStatBuilderFactory();
+        WriterID id = mock(WriterID.class);
+        CpuStatBuilder builder = factory.build(id);
+        Assert.assertTrue(builder != null);
     }
 
-    private static class CpuProcBackendAction implements HostPollingAction {
-
-        private final CpuStatBuilder builder;
-        private final CpuStatDAO dao;
-
-        CpuProcBackendAction(final WriterID id, final CpuStatDAO dao) {
-            this.builder = new CpuStatBuilderFactory().build(id);
-            this.dao = dao;
-        }
-
-        @Override
-        public void run() {
-            if (!builder.isInitialized()) {
-                builder.initialize();
-            } else {
-                dao.putCpuStat(builder.build());
-            }
+    @Test
+    public void testCorrectBuild() {
+        WriterID id = mock(WriterID.class);
+        CpuStatBuilderFactory factory = new CpuStatBuilderFactory();
+        CpuStatBuilder builder = factory.build(id);
+        Assert.assertTrue(builder != null);
+        if (OS.IS_LINUX) {
+            Assert.assertTrue(builder instanceof LinuxCpuStatBuilder);
+        } else if (OS.IS_WINDOWS) {
+            Assert.assertTrue(builder instanceof WindowsCpuStatBuilder);
         }
     }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_CPU_GROUP;
-    }
-
 }
-

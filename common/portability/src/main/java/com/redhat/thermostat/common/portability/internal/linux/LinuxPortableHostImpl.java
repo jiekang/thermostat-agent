@@ -207,6 +207,17 @@ public class LinuxPortableHostImpl implements PortableHost {
         throw new UnimplementedError("getMemoryStat()");
     }
 
+    @Override
+    public long[][] getCPUUsageTicks() {
+        // see LinuxCpuStatBuilder class in the host-cpu plugin
+        throw new UnimplementedError("getCPUUsageTicks()");
+    }
+
+    @Override
+    public int[][] getCPUUsagePercent() {
+        throw new UnimplementedError("getCPUUsagePercent()");
+    }
+
     String getHostName(InetAddress localAddress) {
         String hostname = localAddress.getCanonicalHostName();
         logger.log(Level.FINEST, "hostname: " + hostname);

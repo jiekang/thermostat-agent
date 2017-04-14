@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.portability.internal.windows;
 
 import com.redhat.thermostat.common.portability.internal.PortableNativeLibraryLoader;
+import com.redhat.thermostat.common.portability.PortableHost;
 import com.redhat.thermostat.shared.config.OS;
 
 import java.nio.ByteBuffer;
@@ -259,6 +260,32 @@ public class WindowsHelperImpl extends PortableNativeLibraryLoader {
         return info;
     }
 
+    /**
+     * getSystemTimes()
+     * This returns consolidated ticks over all CPUs
+     * @return long[3] array of idle, system and user times (in ticks)
+     */
+    long[] getSystemTimes() {
+        final long times[] = new long[PortableHost.CPU_TIMES_SIZE];
+        getSystemTimes0(times);
+        return times;
+    }
+
+    /**
+     * getCPUUsagePercent()
+     * @return array (each row is a logical processor) of array (idle/system/uyser percents)
+     */
+    int[][] getCPUUsagePercent() {
+        final int numProcessors = getCPUCount();
+        final int[][] procs = new int[numProcessors][];
+        for (int i=0; i<numProcessors; i++) {
+            final int times[] = new int[PortableHost.CPU_TIMES_SIZE];
+            procs[i] = times;
+        }
+        getCPUUsagePercent0(procs);
+        return procs;
+    }
+
     public int getLastError() {
         return getLastError0();
     }
@@ -288,7 +315,10 @@ public class WindowsHelperImpl extends PortableNativeLibraryLoader {
     private static native boolean getGlobalMemoryStatus0(long[] info);
     private static native String getCPUString0();
     private static native int getCPUCount0();
+    private static native int getCPUUsagePercent0(int[][] percents);
+
     private static native long queryPerformanceFrequency0();
+    private static native void getSystemTimes0(long[] times); // array is idle, kernel, user times
 
     private static native int getLastError0();
 

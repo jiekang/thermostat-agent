@@ -36,49 +36,35 @@
 
 package com.redhat.thermostat.host.cpu.agent.internal;
 
-import java.util.concurrent.ScheduledExecutorService;
-
-import com.redhat.thermostat.backend.HostPollingAction;
-import com.redhat.thermostat.backend.HostPollingBackend;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
+import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
+import org.junit.Assume;
+import org.junit.Test;
 
-public class HostCpuBackend extends HostPollingBackend {
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
-    public HostCpuBackend(ScheduledExecutorService executor,
-            CpuStatDAO cpuStatDAO, Version version, final WriterID writerId) {
-        super("Host CPU Backend",
-                "Gathers CPU statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
-        registerAction(new CpuProcBackendAction(writerId, cpuStatDAO));
+public class WindowsCpuStatBuilderTest {
+
+    @Test
+    public void testSimpleBuild() {
+        Assume.assumeTrue(OS.IS_WINDOWS); // uses a method that throws UnimplementedException on Linux amd Macos
+        WriterID writerId = mock(WriterID.class);
+        CpuStatBuilder builder= new WindowsCpuStatBuilder(new SystemClock(), writerId);
+        builder.initialize();
+        CpuStat stat = builder.build();
+        assertNotNull(stat);
     }
 
-    private static class CpuProcBackendAction implements HostPollingAction {
-
-        private final CpuStatBuilder builder;
-        private final CpuStatDAO dao;
-
-        CpuProcBackendAction(final WriterID id, final CpuStatDAO dao) {
-            this.builder = new CpuStatBuilderFactory().build(id);
-            this.dao = dao;
-        }
-
-        @Override
-        public void run() {
-            if (!builder.isInitialized()) {
-                builder.initialize();
-            } else {
-                dao.putCpuStat(builder.build());
-            }
-        }
+    @Test (expected=IllegalStateException.class)
+    public void buildWithoutInitializeThrowsException() {
+        Assume.assumeTrue(OS.IS_WINDOWS); // uses a method that throws UnimplementedException on Linux amd Macos
+        Clock clock = mock(Clock.class);
+        CpuStatBuilder builder = new WindowsCpuStatBuilder(clock, null);
+        builder.build();
     }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_CPU_GROUP;
-    }
-
 }
 
