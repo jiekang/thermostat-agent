@@ -42,8 +42,6 @@ import java.util.Set;
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Countable;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
@@ -51,7 +49,7 @@ import com.redhat.thermostat.storage.model.AgentInformation;
  * Access information about agents that agents publish to storage.
  */
 @Service
-public interface AgentInfoDAO extends Countable {
+public interface AgentInfoDAO {
 
     static final Key<Long> START_TIME_KEY = new Key<>("startTime");
     static final Key<Long> STOP_TIME_KEY = new Key<>("stopTime");
@@ -75,26 +73,6 @@ public interface AgentInfoDAO extends Countable {
     List<AgentInformation> getAllAgentInformation();
 
     /**
-     * Get information about all alive agents.
-     *
-     * @return a {@link List} of {@link AgentInformation} for all alive
-     * agents who have published their information. Will be empty if there
-     * is no information or no alive agents.
-     */
-    List<AgentInformation> getAliveAgents();
-
-    /**
-     * Get information about a specific agent.
-     *
-     * @return a {@link AgentInformation} describing information about the agent
-     * indicated by {@code agentRef}. {@code null} if no information about the
-     * agent could be located.
-     */
-    
-    @Deprecated
-    AgentInformation getAgentInformation(HostRef agentRef);
-
-    /**
      * Get information about a specific agent.
      *
      * @return a {@link AgentInformation} describing information about the agent
@@ -109,12 +87,6 @@ public interface AgentInfoDAO extends Countable {
      * @return A set of AgentIds, which may be empty.
      */
     Set<AgentId> getAgentIds();
-
-    /**
-     *
-     * @return A set of alive AgentIds, which may be empty.
-     */
-    Set<AgentId> getAliveAgentIds();
 
     /**
      * Publish information about agent into the storage.
@@ -132,10 +104,5 @@ public interface AgentInfoDAO extends Countable {
      */
     void removeAgentInformation(AgentInformation agentInfo);
 
-    /**
-     *
-     * @return true if this agent is alive.
-     */
-    boolean isAlive(AgentId agentId);
 }
 

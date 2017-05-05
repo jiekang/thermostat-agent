@@ -37,84 +37,71 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
 
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
-import com.redhat.thermostat.common.Pair;
-import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.AgentInformationUpdate;
+import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.HttpHelper;
+import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.JsonHelper;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.AggregateCount;
 
 public class AgentInfoDAOTest {
 
-    private AgentInformation agentInfo1;
-    private AgentInformation agent1;
+    private static final String URL = "http://localhost:26000/api/v100/agent-config/systems/*/agents/1234";
+    private static final String SOME_JSON = "{\"some\" : \"json\"}";
+    private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
+    private static final String CONTENT_TYPE = "application/json";
+
+    private AgentInformation info;
+    private JsonHelper jsonHelper;
+    private HttpHelper httpHelper;
+    private StringContentProvider contentProvider;
+    private Request request;
+    private ContentResponse response;
 
     @Before
-    public void setUp() {
-        agentInfo1 = new AgentInformation("1234");
-        agentInfo1.setAlive(true);
-        agentInfo1.setConfigListenAddress("foobar:666");
-        agentInfo1.setStartTime(100);
-        agentInfo1.setStopTime(10);
-
-        agent1 = new AgentInformation("1234");
-        agent1.setAlive(true);
-        agent1.setConfigListenAddress("foobar:666");
-        agent1.setStartTime(100);
-        agent1.setStopTime(10);
+    public void setUp() throws Exception {
+        info = new AgentInformation("1234");
+        info.setAlive(true);
+        info.setConfigListenAddress("foobar:666");
+        info.setStartTime(100);
+        info.setStopTime(10);
+        
+        httpHelper = mock(HttpHelper.class);
+        contentProvider = mock(StringContentProvider.class);
+        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        request = mock(Request.class);
+        when(httpHelper.newRequest(anyString())).thenReturn(request);
+        response = mock(ContentResponse.class);
+        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(request.send()).thenReturn(response);
+        
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(AgentInformation.class))).thenReturn(SOME_JSON);
+        when(jsonHelper.toJson(any(AgentInformationUpdate.class))).thenReturn(SOME_OTHER_JSON);
     }
 
-    @Test
-    public void preparedQueryDescriptorsAreSane() {
-        String expectedAgentInfo = "QUERY agent-config WHERE 'agentId' = ?s";
-        assertEquals(expectedAgentInfo, AgentInfoDAOImpl.QUERY_AGENT_INFO);
-        String expectedAllAgents = "QUERY agent-config";
-        assertEquals(expectedAllAgents, AgentInfoDAOImpl.QUERY_ALL_AGENTS);
-        String expectedAliveAgents = "QUERY agent-config WHERE 'alive' = ?b";
-        assertEquals(expectedAliveAgents, AgentInfoDAOImpl.QUERY_ALIVE_AGENTS);
-        String aggregateAllAgents = "QUERY-COUNT agent-config";
-        assertEquals(aggregateAllAgents, AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS);
-        String addAgentInfo = "ADD agent-config SET 'agentId' = ?s , " +
-                                                   "'startTime' = ?l , " +
-                                                   "'stopTime' = ?l , " +
-                                                   "'alive' = ?b , " +
-                                                   "'configListenAddress' = ?s";
-        assertEquals(addAgentInfo, AgentInfoDAOImpl.DESC_ADD_AGENT_INFO);
-        String removeAgentInfo = "REMOVE agent-config WHERE 'agentId' = ?s";
-        assertEquals(removeAgentInfo, AgentInfoDAOImpl.DESC_REMOVE_AGENT_INFO);
-        String updateAgentInfo = "UPDATE agent-config SET 'startTime' = ?l , " +
-                                                         "'stopTime' = ?l , " +
-                                                         "'alive' = ?b , " +
-                                                         "'configListenAddress' = ?s " +
-                                                      "WHERE 'agentId' = ?s";
-        assertEquals(updateAgentInfo, AgentInfoDAOImpl.DESC_UPDATE_AGENT_INFO);
-    }
-    
     @Test
     public void verifyCategoryName() {
         Category<AgentInformation> category = AgentInfoDAO.CATEGORY;
@@ -142,344 +129,50 @@ public class AgentInfoDAOTest {
     }
 
     @Test
-    public void verifyGetAllAgentInformationWithOneAgentInStorage()
-            throws DescriptorParsingException, StatementExecutionException {
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
-        when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
+    public void verifyAddAgentInformation() throws Exception {
+        AgentInfoDAO dao = new AgentInfoDAOImpl(httpHelper, jsonHelper);
 
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(agentCursor);
-        AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
+        dao.addAgentInformation(info);
 
-        List<AgentInformation> allAgentInfo = dao.getAllAgentInformation();
-
-        assertEquals(1, allAgentInfo.size());
-
-        AgentInformation result = allAgentInfo.get(0);
-        AgentInformation expected = agentInfo1;
-        assertEquals(expected, result);
-    }
-    
-    @Test
-    public void testGetCount()
-            throws DescriptorParsingException, StatementExecutionException {
-        AggregateCount count = new AggregateCount();
-        count.setCount(2);
-
-        @SuppressWarnings("unchecked")
-        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
-        when(c.hasNext()).thenReturn(true).thenReturn(false);
-        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
-        when(storage.prepareStatement(desc)).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(c);
-        AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
-
-        assertEquals(2, dao.getCount());
-    }
-    
-    @SuppressWarnings("unchecked")
-    private StatementDescriptor<AgentInformation> anyDescriptor() {
-        return (StatementDescriptor<AgentInformation>) any(StatementDescriptor.class);
+        verify(httpHelper).newRequest(URL);
+        verify(request).method(HttpMethod.POST);
+        verify(jsonHelper).toJson(eq(Arrays.asList(info)));
+        verify(httpHelper).createContentProvider(SOME_JSON);
+        verify(request).content(contentProvider, CONTENT_TYPE);
+        verify(request).send();
+        verify(response).getStatus();
     }
 
     @Test
-    public void verifyGetAliveAgent() throws DescriptorParsingException, StatementExecutionException {
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
-        when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
+    public void verifyUpdateAgentInformation() throws Exception {
+        AgentInfoDAO dao = new AgentInfoDAOImpl(httpHelper, jsonHelper);
 
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(agentCursor);
+        dao.updateAgentInformation(info);
 
-        AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
-        List<AgentInformation> aliveAgents = dao.getAliveAgents();
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).executeQuery();
-        verify(stmt).setBoolean(0, true);
-        verifyNoMoreInteractions(stmt);
-
-        assertEquals(1, aliveAgents.size());
-
-        AgentInformation result = aliveAgents.get(0);
-        AgentInformation expected = agentInfo1;
-        assertEquals(expected, result);
-    }
-
-    @Test
-    public void verifyGetAgentInformationWhenStorageCantFindIt() throws DescriptorParsingException, StatementExecutionException {
-        AgentId agentId = mock(AgentId.class);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> cursor = (Cursor<AgentInformation>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(false);
-        when(cursor.next()).thenReturn(null);
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
-
-        AgentInformation computed = dao.getAgentInformation(agentId);
-
-        assertEquals(null, computed);
-    }
-
-    @Test
-    public void verifyGetAgentInformation() throws StatementExecutionException, DescriptorParsingException {
-        AgentId agentId = mock(AgentId.class);
-        when(agentId.get()).thenReturn(agentInfo1.getAgentId());
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> cursor = (Cursor<AgentInformation>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(agentInfo1).thenReturn(null);
-        when(stmt.executeQuery()).thenReturn(cursor);
-        AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
-
-        AgentInformation computed = dao.getAgentInformation(agentId);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, agentInfo1.getAgentId());
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-        AgentInformation expected = agentInfo1;
-        assertSame(expected, computed);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyAddAgentInformation() throws StatementExecutionException, DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        PreparedStatement<AgentInformation> add = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
-
-        AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
-
-        dao.addAgentInformation(agentInfo1);
-
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        verify(httpHelper).newRequest(URL);
+        verify(request).method(HttpMethod.PUT);
         
-        verify(storage).prepareStatement(captor.capture());
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(AgentInfoDAOImpl.DESC_ADD_AGENT_INFO, desc.getDescriptor());
-        verify(add).setString(0, agentInfo1.getAgentId());
-        verify(add).setLong(1, agentInfo1.getStartTime());
-        verify(add).setLong(2, agentInfo1.getStopTime());
-        verify(add).setBoolean(3, agentInfo1.isAlive());
-        verify(add).setString(4, agentInfo1.getConfigListenAddress());
-        verify(add).execute();
-        Mockito.verifyNoMoreInteractions(add);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyUpdateAgentInformation() throws DescriptorParsingException, StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        PreparedStatement<AgentInformation> update = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(update);
-        AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
-
-        dao.updateAgentInformation(agentInfo1);
-
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
-        verify(storage).prepareStatement(captor.capture());
-        
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(AgentInfoDAO.CATEGORY, desc.getCategory());
-        assertEquals(AgentInfoDAOImpl.DESC_UPDATE_AGENT_INFO, desc.getDescriptor());
-        verify(update).setLong(0, agentInfo1.getStartTime());
-        verify(update).setLong(1, agentInfo1.getStopTime());
-        verify(update).setBoolean(2, agentInfo1.isAlive());
-        verify(update).setString(3, agentInfo1.getConfigListenAddress());
-        verify(update).setString(4, agentInfo1.getAgentId());
-        verify(update).execute();
-        verifyNoMoreInteractions(update);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyRemoveAgentInformation() throws DescriptorParsingException, StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        PreparedStatement<AgentInformation> remove = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(remove);
-        
-        AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
-
-        dao.removeAgentInformation(agentInfo1);
-
-        verify(remove).setString(0, agentInfo1.getAgentId());
-        verify(remove).execute();
+        ArgumentCaptor<AgentInformationUpdate> updateCaptor = ArgumentCaptor.forClass(AgentInformationUpdate.class);
+        verify(jsonHelper).toJson(updateCaptor.capture());
+        AgentInformationUpdate update = updateCaptor.getValue();
+        assertEquals(info, update.getInfo());
+                
+        verify(httpHelper).createContentProvider(SOME_OTHER_JSON);
+        verify(request).content(contentProvider, CONTENT_TYPE);
+        verify(request).send();
+        verify(response).getStatus();
     }
 
     @Test
-    public void testGetAgentIdsSingleAgent() throws DescriptorParsingException,
-            StatementExecutionException {
+    public void verifyRemoveAgentInformation() throws Exception {
+        AgentInfoDAO dao = new AgentInfoDAOImpl(httpHelper, jsonHelper);
 
-        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageForSingleAgent();
-        Storage storage = setup.getFirst();
-        PreparedStatement<AgentInformation> stmt = setup.getSecond();
+        dao.removeAgentInformation(info);
 
-        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
-
-        assertEquals(1, agentIds.size());
-        assertTrue(agentIds.contains(new AgentId("1234")));
-        verify(stmt).executeQuery();
-    }
-
-    @Test
-    public void testGetAgentIds3Agents() throws DescriptorParsingException,
-            StatementExecutionException {
-
-        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageFor3Agents();
-        Storage storage = setup.getFirst();
-        PreparedStatement<AgentInformation> stmt = setup.getSecond();
-
-        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
-
-        assertEquals(3, agentIds.size());
-        assertTrue(agentIds.contains(new AgentId("1234")));
-        assertTrue(agentIds.contains(new AgentId("4567")));
-        assertTrue(agentIds.contains(new AgentId("8910")));
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).executeQuery();
-    }
-
-    @Test
-    public void getAliveAgentIdsSingle() throws DescriptorParsingException,
-            StatementExecutionException {
-
-        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageForSingleAgent();
-        Storage storage = setup.getFirst();
-        PreparedStatement<AgentInformation> stmt = setup.getSecond();
-
-        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-        Collection<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
-
-        assertEquals(1, agentIds.size());
-        assertTrue(agentIds.contains(new AgentId("1234")));
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setBoolean(0, true);
-        verify(stmt).executeQuery();
-    }
-
-    @Test
-    public void getAliveAgentIds3() throws DescriptorParsingException, StatementExecutionException {
-        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageFor3Agents();
-        Storage storage = setup.getFirst();
-        PreparedStatement<AgentInformation> stmt = setup.getSecond();
-
-        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-        Set<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
-
-        assertEquals(3, agentIds.size());
-        assertTrue(agentIds.contains(new AgentId("1234")));
-        assertTrue(agentIds.contains(new AgentId("4567")));
-        assertTrue(agentIds.contains(new AgentId("8910")));
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setBoolean(0, true);
-        verify(stmt).executeQuery();
-    }
-
-    @Test
-    public void getAliveAgentIdsDescriptorException() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-
-        when(storage.prepareStatement(anyDescriptor())).thenThrow(new DescriptorParsingException
-                ("testException"));
-
-        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
-
-        assertEquals(0, agentIds.size());
-    }
-
-    @Test
-    public void getAliveAgentIdsStatementException() throws DescriptorParsingException,
-            StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-
-        StatementExecutionException testException = new StatementExecutionException(new Throwable
-                ("testException"));
-        when(stmt.executeQuery()).thenThrow(testException);
-
-        Set<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
-
-        assertEquals(0, agentIds.size());
-    }
-
-    private Pair<Storage, PreparedStatement<AgentInformation>> setupStorageForSingleAgent()
-            throws DescriptorParsingException, StatementExecutionException {
-
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
-        when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(agentInfo1);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(agentCursor);
-        return new Pair<>(storage, stmt);
-    }
-
-    private Pair<Storage, PreparedStatement<AgentInformation>> setupStorageFor3Agents()
-            throws DescriptorParsingException, StatementExecutionException {
-
-        AgentInformation agentInfo2 = new AgentInformation("4567");
-        agentInfo2.setAlive(true);
-        agentInfo2.setConfigListenAddress("foobar:666");
-        agentInfo2.setStartTime(100);
-        agentInfo2.setStopTime(10);
-
-        AgentInformation agentInfo3 = new AgentInformation("8910");
-        agentInfo3.setAlive(true);
-        agentInfo3.setConfigListenAddress("foobar:666");
-        agentInfo3.setStartTime(100);
-        agentInfo3.setStopTime(10);
-
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
-        when(agentCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(agentInfo1).thenReturn(agentInfo2).thenReturn(agentInfo3);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(agentCursor);
-        return new Pair<>(storage, stmt);
+        verify(httpHelper).newRequest(URL);
+        verify(request).method(HttpMethod.DELETE);
+        verify(request).send();
+        verify(response).getStatus();
     }
 
 }
