@@ -36,238 +36,214 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpContentResponse;
+import org.eclipse.jetty.client.HttpRequest;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
-import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
-import com.redhat.thermostat.storage.dao.BaseCountable;
-import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.AggregateCount;
+import com.redhat.thermostat.storage.internal.dao.VmInfoTypeAdapter.VmInfoUpdateTypeAdapter;
 import com.redhat.thermostat.storage.model.VmInfo;
 
-public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
+public class VmInfoDAOImpl implements VmInfoDAO {
     
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
-    static final String QUERY_VM_INFO = "QUERY "
-            + vmInfoCategory.getName() + " WHERE '" 
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.VM_ID.getName() + "' = ?s LIMIT 1";
-    static final String QUERY_ALL_VMS_FOR_AGENT = "QUERY "
-            + vmInfoCategory.getName() + " WHERE '" 
-            + Key.AGENT_ID.getName() + "' = ?s";
-
-    static final String QUERY_VM_FROM_ID = "QUERY "
-            + vmInfoCategory.getName() + " WHERE '"
-            + Key.VM_ID.getName() + "' = ?s";
-
-    static final String QUERY_ALL_VMS = "QUERY " + vmInfoCategory.getName();
-    static final String AGGREGATE_COUNT_ALL_VMS = "QUERY-COUNT " + vmInfoCategory.getName();
-    // ADD vm-info SET 'agentId' = ?s , \
-    //                 'vmId' = ?s , \
-    //                 'vmPid' = ?i , \
-    //                 'startTimeStamp' = ?l , \
-    //                 'stopTimeStamp' = ?l , \
-    //                 'javaVersion' = ?s , \
-    //                 'javaHome' = ?s , \
-    //                 'mainClass' = ?s , \
-    //                 'javaCommandLine' = ?s , \
-    //                 'vmName' = ?s , \
-    //                 'vmArguments' = ?s , \
-    //                 'vmInfo' = ?s , \
-    //                 'vmVersion' = ?s , \
-    //                 'propertiesAsArray' = ?p[ , \
-    //                 'environmentAsArray' = ?p[ , \
-    //                 'loadedNativeLibraries' = ?s[ , \
-    //                 'uid' = ?l , \
-    //                 'username' = ?s
-    static final String DESC_ADD_VM_INFO = "ADD " + vmInfoCategory.getName() + " SET " +
-                        "'" + Key.AGENT_ID.getName() + "' = ?s , " +
-                        "'" + Key.VM_ID.getName() + "' = ?s , " +
-                        "'" + vmPidKey.getName() + "' = ?i , " +
-                        "'" + startTimeKey.getName() + "' = ?l , " +
-                        "'" + stopTimeKey.getName() + "' = ?l , " +
-                        "'" + runtimeVersionKey.getName() + "' = ?s , " +
-                        "'" + javaHomeKey.getName() + "' = ?s , " +
-                        "'" + mainClassKey.getName() + "' = ?s , " +
-                        "'" + commandLineKey.getName() + "' = ?s , " +
-                        "'" + vmNameKey.getName() + "' = ?s , " +
-                        "'" + vmArgumentsKey.getName() + "' = ?s , " +
-                        "'" + vmInfoKey.getName() + "' = ?s , " +
-                        "'" + vmVersionKey.getName() + "' = ?s , " +
-                        "'" + propertiesKey.getName() + "' = ?p[ , " +
-                        "'" + environmentKey.getName() + "' = ?p[ , " +
-                        "'" + librariesKey.getName() + "' = ?s[ , " +
-                        "'" + uidKey.getName() + "' = ?l , " +
-                        "'" + usernameKey.getName() + "' = ?s";
-    // UPDATE vm-info SET 'stopTimeStamp' = ?l WHERE 'vmId' = ?s
-    static final String DESC_UPDATE_VM_STOP_TIME = "UPDATE " + vmInfoCategory.getName() +
-            " SET '" + VmInfoDAO.stopTimeKey.getName() + "' = ?l" +
-            " WHERE '" + Key.VM_ID.getName() + "' = ?s";
     
-    private final Storage storage;
-    private final Category<AggregateCount> aggregateCategory;
+    private static final String GATEWAY_URL = "http://localhost:26000/api/v100"; // TODO configurable
+    private static final String GATEWAY_PATH = "/vm-info/systems/*/agents/";
+    private static final String GATEWAY_PATH_JVM_SUFFIX = "/jvms/";
+    private static final String CONTENT_TYPE = "application/json";
+    
+    private final HttpHelper httpHelper;
+    private final JsonHelper jsonHelper;
 
-    public VmInfoDAOImpl(Storage storage) {
-        this.storage = storage;
-        // Adapt category to the aggregate form
-        CategoryAdapter<VmInfo, AggregateCount> adapter = new CategoryAdapter<>(vmInfoCategory);
-        this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
-        storage.registerCategory(vmInfoCategory);
-        storage.registerCategory(aggregateCategory);
+    public VmInfoDAOImpl() throws Exception {
+        this(new HttpHelper(new HttpClient()), new JsonHelper(new VmInfoTypeAdapter(), new VmInfoUpdateTypeAdapter()));
     }
 
-    @Override
-    public List<VmInfo> getAllVmInfos() {
-        return executeQuery(new SimpleDaoQuery<>(storage, vmInfoCategory, QUERY_ALL_VMS)).asList();
+    VmInfoDAOImpl(HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+        this.jsonHelper = jsonHelper;
+        this.httpHelper = httpHelper;
+        
+        this.httpHelper.startClient();
     }
 
     @Override
     public VmInfo getVmInfo(final VmId id) {
-        return executeQuery(
-                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_VM_FROM_ID) {
-                    @Override
-                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
-                        preparedStatement.setString(0, id.get());
-                        return preparedStatement;
-                    }
-                }).head();
-    }
-
-    @Override
-    public VmInfo getVmInfo(final VmRef ref) {
-        return executeQuery(
-                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_VM_INFO) {
-                    @Override
-                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
-                        preparedStatement.setString(0, ref.getHostRef().getAgentId());
-                        preparedStatement.setString(1, ref.getVmId());
-                        return preparedStatement;
-                    }
-                }).head();
-    }
-
-    @Override
-    public Collection<VmRef> getVMs(HostRef host) {
-        AgentId agentId = new AgentId(host.getAgentId());
-
-        Collection<VmInfo> vmInfos = getAllVmInfosForAgent(agentId);
-        if (vmInfos.equals(Collections.emptyList())) {
-            return Collections.emptyList();
-        }
-
-        return buildVMsFromQuery(vmInfos, host);
-    }
-
-    @Deprecated
-    private Collection<VmRef> buildVMsFromQuery(Collection<VmInfo> vmInfos, HostRef host) {
-        List<VmRef> vmRefs = new ArrayList<>();
-        for (VmInfo vmInfo : vmInfos) {
-            VmRef vm = buildVmRefFromChunk(vmInfo, host);
-            vmRefs.add(vm);
-        }
-
-        return vmRefs;
-    }
-
-    @Deprecated
-    private VmRef buildVmRefFromChunk(VmInfo vmInfo, HostRef host) {
-        String id = vmInfo.getVmId();
-        Integer pid = vmInfo.getVmPid();
-        // TODO can we do better than the main class?
-        String mainClass = vmInfo.getMainClass();
-        return new VmRef(host, id, pid, mainClass);
+        return null; // TODO Remove once VM Id completer is removed
     }
 
     @Override
     public Set<VmId> getVmIds(AgentId agentId) {
-        Set<VmId> vmIds = new HashSet<>();
-        Collection<VmInfo> vmInfos = getAllVmInfosForAgent(agentId);
-        for (VmInfo vmInfo : vmInfos) {
-            vmIds.add(new VmId(vmInfo.getVmId()));
-        }
-
-        return vmIds;
-    }
-
-    @Override
-    public List<VmInfo> getAllVmInfosForAgent(final AgentId agentId) {
-        return executeQuery(
-                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_ALL_VMS_FOR_AGENT) {
-                    @Override
-                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
-                        preparedStatement.setString(0, agentId.get());
-                        return preparedStatement;
-                    }
-                }).asList();
-    }
-
-    @Override
-    public long getCount() {
-        return getCount(storage, aggregateCategory, AGGREGATE_COUNT_ALL_VMS);
+        return Collections.emptySet(); // TODO Remove once VM Id completer is removed
     }
 
     @Override
     public void putVmInfo(final VmInfo info) {
-        executeStatement(
-                new AbstractDaoStatement<VmInfo>(storage, vmInfoCategory, DESC_ADD_VM_INFO) {
-                    @Override
-                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
-                        preparedStatement.setString(0, info.getAgentId());
-                        preparedStatement.setString(1, info.getVmId());
-                        preparedStatement.setInt(2, info.getVmPid());
-                        preparedStatement.setLong(3, info.getStartTimeStamp());
-                        preparedStatement.setLong(4, info.getStopTimeStamp());
-                        preparedStatement.setString(5, info.getJavaVersion());
-                        preparedStatement.setString(6, info.getJavaHome());
-                        preparedStatement.setString(7, info.getMainClass());
-                        preparedStatement.setString(8, info.getJavaCommandLine());
-                        preparedStatement.setString(9, info.getVmName());
-                        preparedStatement.setString(10, info.getVmArguments());
-                        preparedStatement.setString(11, info.getVmInfo());
-                        preparedStatement.setString(12, info.getVmVersion());
-                        preparedStatement.setPojoList(13, info.getPropertiesAsArray());
-                        preparedStatement.setPojoList(14, info.getEnvironmentAsArray());
-                        preparedStatement.setStringList(15, info.getLoadedNativeLibraries());
-                        preparedStatement.setLong(16, info.getUid());
-                        preparedStatement.setString(17, info.getUsername());
-                        return preparedStatement;
-                    }
-                });
+        try {
+            // Encode as JSON and send as POST request
+            String json = jsonHelper.toJson(Arrays.asList(info));
+            StringContentProvider provider = httpHelper.createContentProvider(json);
+            
+            String url = getAddURL(info.getAgentId());
+            Request httpRequest = httpHelper.newRequest(url);
+            httpRequest.method(HttpMethod.POST);
+            httpRequest.content(provider, CONTENT_TYPE);
+            sendRequest(httpRequest);
+        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
+           logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
+        }
     }
 
     @Override
-    public void putVmStoppedTime(final String vmId, final long timestamp) {
-        executeStatement(
-                new AbstractDaoStatement<VmInfo>(storage, vmInfoCategory, DESC_UPDATE_VM_STOP_TIME) {
-                    @Override
-                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
-                        preparedStatement.setLong(0, timestamp);
-                        preparedStatement.setString(1, vmId);
-                        return preparedStatement;
-                    }
-                });
+    public void putVmStoppedTime(final String agentId, final String vmId, final long timestamp) {
+        try {
+            // Encode as JSON and send as PUT request
+            VmInfoUpdate update = new VmInfoUpdate(timestamp);
+            String json = jsonHelper.toJson(update);
+            StringContentProvider provider = httpHelper.createContentProvider(json);
+            
+            String url = getUpdateURL(agentId, vmId);
+            Request httpRequest = httpHelper.newRequest(url);
+            httpRequest.method(HttpMethod.PUT);
+            httpRequest.content(provider, CONTENT_TYPE);
+            sendRequest(httpRequest);
+        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
+           logger.log(Level.WARNING, "Failed to send JVM information update to web gateway", e);
+        }
     }
 
-    @Override
-    protected Logger getLogger() {
-        return logger;
+    private void sendRequest(Request httpRequest)
+            throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        ContentResponse resp = httpRequest.send();
+        int status = resp.getStatus();
+        if (status != HttpStatus.OK_200) {
+            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
+        }
+    }
+    
+    private String getAddURL(String agentId) {
+        StringBuilder builder = buildURL(agentId);
+        return builder.toString();
+    }
+
+    private StringBuilder buildURL(String agentId) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(GATEWAY_URL);
+        builder.append(GATEWAY_PATH);
+        builder.append(agentId);
+        return builder;
+    }
+    
+    private String getUpdateURL(String agentId, String vmId) {
+        StringBuilder builder = buildURL(agentId);
+        builder.append(GATEWAY_PATH_JVM_SUFFIX);
+        builder.append(vmId);
+        return builder.toString();
+    }
+    
+    static class VmInfoUpdate {
+        
+        private final long stoppedTime;
+        
+        VmInfoUpdate(long stoppedTime) {
+           this.stoppedTime = stoppedTime;
+        }
+        
+        long getStoppedTime() {
+            return stoppedTime;
+        }
+    }
+    
+    
+    // For testing purposes
+    static class JsonHelper {
+        
+        private final VmInfoTypeAdapter typeAdapter;
+        private final VmInfoUpdateTypeAdapter updateTypeAdapter;
+        
+        public JsonHelper(VmInfoTypeAdapter typeAdapter, VmInfoUpdateTypeAdapter updateTypeAdapter) {
+            this.typeAdapter = typeAdapter;
+            this.updateTypeAdapter = updateTypeAdapter;
+        }
+        
+        String toJson(List<VmInfo> infos) throws IOException {
+            return typeAdapter.toJson(infos);
+        }
+        
+        String toJson(VmInfoUpdate update) throws IOException {
+            return updateTypeAdapter.toJson(update);
+        }
+        
+    }
+    
+    // For testing purposes
+    static class HttpHelper {
+        
+        private final HttpClient httpClient;
+
+        HttpHelper(HttpClient httpClient) {
+            this.httpClient = httpClient;
+        }
+        
+        void startClient() throws Exception {
+            httpClient.start();
+        }
+        
+        StringContentProvider createContentProvider(String content) {
+            return new StringContentProvider(content);
+        }
+        
+        Request newRequest(String url) {
+            return new MockRequest(httpClient, URI.create(url));
+        }
+        
+    }
+    
+    // FIXME This class should be removed when the web gateway has a microservice for this DAO
+    private static class MockRequest extends HttpRequest {
+
+        MockRequest(HttpClient client, URI uri) {
+            super(client, uri);
+        }
+        
+        @Override
+        public ContentResponse send() throws InterruptedException, TimeoutException, ExecutionException {
+            return new MockResponse();
+        }
+        
+    }
+    
+    // FIXME This class should be removed when the web gateway has a microservice for this DAO
+    private static class MockResponse extends HttpContentResponse {
+
+        MockResponse() {
+            super(null, null, null);
+        }
+        
+        @Override
+        public int getStatus() {
+            return HttpStatus.OK_200;
+        }
+        
     }
 }
 

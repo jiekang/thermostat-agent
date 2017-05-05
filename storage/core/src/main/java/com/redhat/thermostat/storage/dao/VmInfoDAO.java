@@ -36,23 +36,18 @@
 
 package com.redhat.thermostat.storage.dao;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Countable;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.model.VmInfo.KeyValuePair;
 
 @Service
-public interface VmInfoDAO extends Countable {
+public interface VmInfoDAO {
 
     static final Key<Integer> vmPidKey = new Key<>("vmPid");
     static final Key<String> runtimeVersionKey = new Key<>("javaVersion");
@@ -79,27 +74,8 @@ public interface VmInfoDAO extends Countable {
             startTimeKey, stopTimeKey,
             uidKey, usernameKey);
 
-    /** @return information on all known VMs */
-    List<VmInfo> getAllVmInfos();
-
-    /** @return information on all known VMs monitored by give agent */
-    List<VmInfo> getAllVmInfosForAgent(AgentId agentId);
-
     /** @return {@code null} if no information can be found */
     VmInfo getVmInfo(VmId id);
-
-    /** @return {@code null} if no information can be found */
-    VmInfo getVmInfo(VmRef ref);
-
-    /**
-     *
-     * @param host The host to get the VM(s) for.
-     * @return A collection of the VM(s) as VmRef(s).
-     *
-     * @deprecated use {@link #getVmIds(AgentId)}
-     */
-    @Deprecated
-    Collection<VmRef> getVMs(HostRef host);
 
     /**
      *
@@ -110,6 +86,6 @@ public interface VmInfoDAO extends Countable {
 
     void putVmInfo(VmInfo info);
 
-    void putVmStoppedTime(String vmId, long since);
+    void putVmStoppedTime(String agentId, String vmId, long since);
 }
 

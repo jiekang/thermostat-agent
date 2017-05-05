@@ -171,7 +171,7 @@ class JvmStatHostListener implements HostListener {
             notifier.notifyVmStatusChange(Status.VM_STOPPED, vmId, vmPid);
 
             long stopTime = System.currentTimeMillis();
-            vmInfoDAO.putVmStoppedTime(vmId, stopTime);
+            vmInfoDAO.putVmStoppedTime(writerId.getWriterID(), vmId, stopTime);
 
             MonitoredVm vm = vmData.getSecond();
             vm.detach();
