@@ -36,17 +36,13 @@
 
 package com.redhat.thermostat.host.overview.common;
 
-import java.util.List;
-
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.host.overview.common.model.HostInfo;
-import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Countable;
 import com.redhat.thermostat.storage.core.Key;
 
 @Service
-public interface HostInfoDAO extends Countable {
+public interface HostInfoDAO {
 
     static Key<String> hostNameKey = new Key<>("hostname");
     static Key<String> osNameKey = new Key<>("osName");
@@ -58,17 +54,6 @@ public interface HostInfoDAO extends Countable {
     static final Category<HostInfo> hostInfoCategory = new Category<>("host-info", HostInfo.class,
             Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);
-
-    /** @return information on all known hosts */
-    List<HostInfo> getAllHostInfos();
-
-    /**
-     *
-     * @param agentId The Agent Id for which to get the HostInfo object for.
-     * @return The corresponding HostInfo object. May return null if the user
-     *         is not permitted to retrieve this HostInfo.
-     */
-    HostInfo getHostInfo(AgentId agentId);
 
     void putHostInfo(HostInfo info);
 

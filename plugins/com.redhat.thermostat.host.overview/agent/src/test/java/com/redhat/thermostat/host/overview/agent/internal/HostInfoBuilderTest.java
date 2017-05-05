@@ -37,15 +37,18 @@
 package com.redhat.thermostat.host.overview.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.portability.PortableHost;
 import com.redhat.thermostat.host.overview.agent.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.host.overview.common.model.HostInfo;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 
 public class HostInfoBuilderTest {

@@ -36,122 +36,150 @@
 
 package com.redhat.thermostat.host.overview.common.internal;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpContentResponse;
+import org.eclipse.jetty.client.HttpRequest;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.overview.common.HostInfoDAO;
 import com.redhat.thermostat.host.overview.common.model.HostInfo;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
-import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
-import com.redhat.thermostat.storage.dao.BaseCountable;
-import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
-import com.redhat.thermostat.storage.model.AggregateCount;
 
 @Component
 @Service(value = HostInfoDAO.class)
-public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
+public class HostInfoDAOImpl implements HostInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(HostInfoDAOImpl.class);
-    static final String QUERY_HOST_INFO = "QUERY "
-            + hostInfoCategory.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s LIMIT 1";
-    static final String QUERY_ALL_HOSTS = "QUERY " + hostInfoCategory.getName();
-    // We can use hostInfoCategory.getName() here since this query
-    // only changes the data class. When executed we use the adapted
-    // aggregate category.
-    static final String AGGREGATE_COUNT_ALL_HOSTS = "QUERY-COUNT " + hostInfoCategory.getName();
-    // ADD host-info SET 'agentId' = ?s , \
-    //                   'hostname' = ?s , \
-    //                   'osName' = ?s , \
-    //                   'osKernel' = ?s , \
-    //                   'cpuModel' = ?s , \
-    //                   'cpuCount' = ?i , \
-    //                   'totalMemory' = ?l
-    static final String DESC_ADD_HOST_INFO = "ADD " + hostInfoCategory.getName() +
-            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
-                 "'" + hostNameKey.getName() + "' = ?s , " +
-                 "'" + osNameKey.getName() + "' = ?s , " +
-                 "'" + osKernelKey.getName() + "' = ?s , " +
-                 "'" + cpuModelKey.getName() + "' = ?s , " +
-                 "'" + cpuCountKey.getName() + "' = ?i , " +
-                 "'" + hostMemoryTotalKey.getName() + "' = ?l";
-
-    private final Category<AggregateCount> aggregateCategory;
     
-    @Reference
-    private Storage storage;
+    private static final String GATEWAY_URL = "http://localhost:26000/api/v100"; // TODO configurable
+    private static final String GATEWAY_PATH = "/host-info/systems/*/agents/";
+    private static final String CONTENT_TYPE = "application/json";
 
+    private final JsonHelper jsonHelper;
+    private final HttpHelper httpHelper;
+    
     public HostInfoDAOImpl() {
-        this(null);
+        this(new HttpHelper(new HttpClient()), new JsonHelper(new HostInfoTypeAdapter()));
     }
     
-    public HostInfoDAOImpl(Storage storage) {
-        this.storage = storage;
-        // Adapt category to the aggregate form
-        CategoryAdapter<HostInfo, AggregateCount> adapter = new CategoryAdapter<>(hostInfoCategory);
-        this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
+    HostInfoDAOImpl(HttpHelper httpHelper, JsonHelper jsonHelper) {
+        this.httpHelper = httpHelper;
+        this.jsonHelper = jsonHelper;
     }
     
     @Activate
-    private void activate() {
-        storage.registerCategory(hostInfoCategory);
-        storage.registerCategory(aggregateCategory);
-    }
-
-    @Override
-    public HostInfo getHostInfo(final AgentId agentId) {
-        return executeQuery(new AbstractDaoQuery<HostInfo>(storage, hostInfoCategory, QUERY_HOST_INFO) {
-            @Override
-            public PreparedStatement<HostInfo> customize(PreparedStatement<HostInfo> preparedStatement) {
-                preparedStatement.setString(0, agentId.get());
-                return preparedStatement;
-            }
-        }).head();
+    void activate() throws Exception {
+        httpHelper.startClient();
     }
 
     @Override
     public void putHostInfo(final HostInfo info) {
-        executeStatement(new AbstractDaoStatement<HostInfo>(storage, hostInfoCategory, DESC_ADD_HOST_INFO) {
-            @Override
-            public PreparedStatement<HostInfo> customize(PreparedStatement<HostInfo> preparedStatement) {
-                preparedStatement.setString(0, info.getAgentId());
-                preparedStatement.setString(1, info.getHostname());
-                preparedStatement.setString(2, info.getOsName());
-                preparedStatement.setString(3, info.getOsKernel());
-                preparedStatement.setString(4, info.getCpuModel());
-                preparedStatement.setInt(5, info.getCpuCount());
-                preparedStatement.setLong(6, info.getTotalMemory());
-                return preparedStatement;
+        try {
+            String json = jsonHelper.toJson(Arrays.asList(info));
+            StringContentProvider provider = httpHelper.createContentProvider(json);
+            String url = getURL(info.getAgentId());
+            Request httpRequest = httpHelper.newRequest(url);
+            httpRequest.method(HttpMethod.POST);
+            httpRequest.content(provider, CONTENT_TYPE);
+            ContentResponse resp = httpRequest.send();
+            int status = resp.getStatus();
+            if (status != HttpStatus.OK_200) {
+                throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
             }
-        });
+        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
+           logger.log(Level.WARNING, "Failed to send host information to web gateway", e);
+        }
     }
 
-    @Override
-    public List<HostInfo> getAllHostInfos() {
-        return executeQuery(new SimpleDaoQuery<>(storage, hostInfoCategory, QUERY_ALL_HOSTS)).asList();
-    }
-
-    @Override
-    public long getCount() {
-        return getCount(storage, aggregateCategory, AGGREGATE_COUNT_ALL_HOSTS);
+    private String getURL(String agentId) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(GATEWAY_URL);
+        builder.append(GATEWAY_PATH);
+        builder.append(agentId);
+        return builder.toString();
     }
     
-    @Override
-    protected Logger getLogger() {
-        return logger;
+    // For testing purposes
+    static class JsonHelper {
+        
+        private final HostInfoTypeAdapter typeAdapter;
+        
+        public JsonHelper(HostInfoTypeAdapter typeAdapter) {
+            this.typeAdapter = typeAdapter;
+        }
+        
+        String toJson(List<HostInfo> infos) throws IOException {
+            return typeAdapter.toJson(infos);
+        }
+        
     }
+    
+    // For testing purposes
+    static class HttpHelper {
+        
+        private final HttpClient httpClient;
 
+        HttpHelper(HttpClient httpClient) {
+            this.httpClient = httpClient;
+        }
+        
+        void startClient() throws Exception {
+            httpClient.start();
+        }
+        
+        StringContentProvider createContentProvider(String content) {
+            return new StringContentProvider(content);
+        }
+        
+        Request newRequest(String url) {
+            return new MockRequest(httpClient, URI.create(url));
+        }
+        
+    }
+    
+    // FIXME This class should be removed when the web gateway has a microservice for this DAO
+    private static class MockRequest extends HttpRequest {
+
+        MockRequest(HttpClient client, URI uri) {
+            super(client, uri);
+        }
+        
+        @Override
+        public ContentResponse send() throws InterruptedException, TimeoutException, ExecutionException {
+            return new MockResponse();
+        }
+        
+    }
+    
+    // FIXME This class should be removed when the web gateway has a microservice for this DAO
+    private static class MockResponse extends HttpContentResponse {
+
+        MockResponse() {
+            super(null, null, null);
+        }
+        
+        @Override
+        public int getStatus() {
+            return HttpStatus.OK_200;
+        }
+        
+    }
+    
 }
 

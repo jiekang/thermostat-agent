@@ -37,30 +37,39 @@
 package com.redhat.thermostat.host.overview.common.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.host.overview.common.internal.HostInfoDAOImplStatementDescriptorRegistration;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
+import com.redhat.thermostat.host.overview.common.model.HostInfo;
 
-public class HostInfoDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public HostInfoDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, DAOImplStatementDescriptorRegistration.class);
+public class HostInfoTypeAdapterTest {
+    
+    private HostInfoTypeAdapter adapter;
+    
+    @Before
+    public void setup() {
+        adapter = new HostInfoTypeAdapter();
     }
 
     @Test
-    public void registersAllDescriptors() {
-        HostInfoDAOImplStatementDescriptorRegistration reg = new HostInfoDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
+    public void testWrite() throws Exception {
+        final String expected = "[{\"agentId\":\"myAgent1\",\"hostname\":\"myHost1\"," 
+                + "\"osName\":\"myOS1\",\"osKernel\":\"myKernel1\",\"cpuModel\":\"myCPU1\"," 
+                + "\"cpuCount\":4,\"totalMemory\":{\"$numberLong\":\"400000000\"}}," 
+                + "{\"agentId\":\"myAgent2\",\"hostname\":\"myHost2\",\"osName\":\"myOS2\"," 
+                + "\"osKernel\":\"myKernel2\",\"cpuModel\":\"myCPU2\",\"cpuCount\":2," 
+                + "\"totalMemory\":{\"$numberLong\":\"800000000\"}}]";
+        
+        HostInfo first = new HostInfo("myAgent1", "myHost1", "myOS1", "myKernel1", "myCPU1", 4, 400000000L);
+        HostInfo second = new HostInfo("myAgent2", "myHost2", "myOS2", "myKernel2", "myCPU2", 2, 800000000L);
+        List<HostInfo> infos = Arrays.asList(first, second);
+        
+        String json = adapter.toJson(infos);
+        assertEquals(expected, json);
     }
 
 }
-

@@ -37,71 +37,67 @@
 package com.redhat.thermostat.host.overview.common.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.NoSuchElementException;
 
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import com.redhat.thermostat.host.overview.common.HostInfoDAO;
+import com.redhat.thermostat.host.overview.common.internal.HostInfoDAOImpl.HttpHelper;
+import com.redhat.thermostat.host.overview.common.internal.HostInfoDAOImpl.JsonHelper;
 import com.redhat.thermostat.host.overview.common.model.HostInfo;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.AggregateCount;
 
 public class HostInfoDAOTest {
 
-    static class Triple<S, T, U> {
-        final S first;
-        final T second;
-        final U third;
-
-        public Triple(S first, T second, U third) {
-            this.first = first;
-            this.second = second;
-            this.third = third;
-        }
-    }
-
+    private static final String URL = "http://localhost:26000/api/v100/host-info/systems/*/agents/foo-agent";
+    private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final String HOST_NAME = "a host name";
     private static final String OS_NAME = "some os";
     private static final String OS_KERNEL = "some kernel";
     private static final String CPU_MODEL = "some cpu that runs fast";
     private static final int CPU_NUM = -1;
     private static final long MEMORY_TOTAL = 0xCAFEBABEl;
-
-    @Test
-    public void preparedQueryDescriptorsAreSane() {
-        String expectedHostInfo = "QUERY host-info WHERE 'agentId' = ?s LIMIT 1";
-        assertEquals(expectedHostInfo, HostInfoDAOImpl.QUERY_HOST_INFO);
-        String expectedAllHosts = "QUERY host-info";
-        assertEquals(expectedAllHosts, HostInfoDAOImpl.QUERY_ALL_HOSTS);
-        String aggregateAllHosts = "QUERY-COUNT host-info";
-        assertEquals(aggregateAllHosts, HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS);
-        String addHostInfo = "ADD host-info SET 'agentId' = ?s , " +
-                                                  "'hostname' = ?s , " +
-                                                  "'osName' = ?s , " +
-                                                  "'osKernel' = ?s , " +
-                                                  "'cpuModel' = ?s , " +
-                                                  "'cpuCount' = ?i , " +
-                                                  "'totalMemory' = ?l";
-        assertEquals(addHostInfo, HostInfoDAOImpl.DESC_ADD_HOST_INFO);
-    }
+    private static final String CONTENT_TYPE = "application/json";
     
+    private HostInfo info;
+    private JsonHelper jsonHelper;
+    private HttpHelper httpHelper;
+    private StringContentProvider contentProvider;
+    private Request request;
+    private ContentResponse response;
+    
+    @Before
+    public void setup() throws Exception {
+        info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        
+        httpHelper = mock(HttpHelper.class);
+        contentProvider = mock(StringContentProvider.class);
+        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        request = mock(Request.class);
+        when(httpHelper.newRequest(anyString())).thenReturn(request);
+        response = mock(ContentResponse.class);
+        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(request.send()).thenReturn(response);
+        
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(HostInfo.class))).thenReturn(SOME_JSON);
+    }
+
     @Test
     public void testCategory() {
         assertEquals("host-info", HostInfoDAO.hostInfoCategory.getName());
@@ -117,84 +113,19 @@ public class HostInfoDAOTest {
     }
 
     @Test
-    public void testGetHostInfoUsingAgentId() throws DescriptorParsingException, StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<HostInfo> prepared = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(prepared);
-
-        HostInfo info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        @SuppressWarnings("unchecked")
-        Cursor<HostInfo> cursor = (Cursor<HostInfo>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(info).thenReturn(null);
-        when(prepared.executeQuery()).thenReturn(cursor);
-
-        HostInfo result = new HostInfoDAOImpl(storage).getHostInfo(new AgentId("some uid"));
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(prepared).setString(0, "some uid");
-        verify(prepared).executeQuery();
-        assertSame(result, info);
-    }
-
-    @SuppressWarnings("unchecked")
-    private StatementDescriptor<HostInfo> anyDescriptor() {
-        return (StatementDescriptor<HostInfo>) any(StatementDescriptor.class);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testPutHostInfo() throws DescriptorParsingException,
-            StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        PreparedStatement<HostInfo> add = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
-
-        HostInfo info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        HostInfoDAO dao = new HostInfoDAOImpl(storage);
+    public void testPutHostInfo() throws Exception {
+        HostInfoDAOImpl dao = new HostInfoDAOImpl(httpHelper, jsonHelper);
+        dao.activate();
         dao.putHostInfo(info);
         
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
-
-        verify(storage).prepareStatement(captor.capture());
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(HostInfoDAOImpl.DESC_ADD_HOST_INFO, desc.getDescriptor());
-        
-        verify(add).setString(0, info.getAgentId());
-        verify(add).setString(1, info.getHostname());
-        verify(add).setString(2, info.getOsName());
-        verify(add).setString(3, info.getOsKernel());
-        verify(add).setString(4, info.getCpuModel());
-        verify(add).setInt(5, info.getCpuCount());
-        verify(add).setLong(6, info.getTotalMemory());
-        verify(add).execute();
-        Mockito.verifyNoMoreInteractions(add);
+        verify(httpHelper).newRequest(URL);
+        verify(request).method(HttpMethod.POST);
+        verify(jsonHelper).toJson(eq(Arrays.asList(info)));
+        verify(httpHelper).createContentProvider(SOME_JSON);
+        verify(request).content(contentProvider, CONTENT_TYPE);
+        verify(request).send();
+        verify(response).getStatus();
     }
 
-    @Test
-    public void testGetCount() throws DescriptorParsingException,
-            StatementExecutionException {
-        AggregateCount count = new AggregateCount();
-        count.setCount(2);
-
-        @SuppressWarnings("unchecked")
-        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
-        when(c.hasNext()).thenReturn(true).thenReturn(false);
-        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
-        when(storage.prepareStatement(desc)).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(c);
-        HostInfoDAOImpl dao = new HostInfoDAOImpl(storage);
-
-        assertEquals(2, dao.getCount());
-    }
-    
 }
 
