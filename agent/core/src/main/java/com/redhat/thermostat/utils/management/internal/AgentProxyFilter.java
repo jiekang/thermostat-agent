@@ -37,19 +37,17 @@
 package com.redhat.thermostat.utils.management.internal;
 
 import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.storage.core.VmRef;
 
 /**
  * Prevents Agent Proxies from being monitored, which would create
  * an infinite chain of agent proxies being created.
  */
-public class AgentProxyFilter extends Filter<VmRef> {
+public class AgentProxyFilter extends Filter<String> {
     
     private static final String AGENT_PROXY_CLASS = "com.redhat.thermostat.agent.proxy.server.AgentProxy";
 
     @Override
-    public boolean matches(VmRef toMatch) {
-        String mainClass = toMatch.getName();
+    public boolean matches(String mainClass) {
         return AGENT_PROXY_CLASS.equals(mainClass);
     }
 

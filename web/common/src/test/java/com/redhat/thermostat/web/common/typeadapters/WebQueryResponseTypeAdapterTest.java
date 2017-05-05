@@ -48,11 +48,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.WebQueryResponse;
-import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
-import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
 
 public class WebQueryResponseTypeAdapterTest {
 
@@ -189,31 +186,6 @@ public class WebQueryResponseTypeAdapterTest {
         AgentInformation actualInfo = actualList[0];
         assertEquals(false, actualInfo.isAlive());
         assertEquals("testing", actualInfo.getAgentId());
-        
-        // Do it again using HostInfo as model
-        HostInfo hostInfo = new HostInfo();
-        hostInfo.setAgentId("something");
-        hostInfo.setCpuCount(56);
-        hostInfo.setHostname("flukebox");
-        
-        HostInfo[] hostInfoResults = new HostInfo[] {
-                hostInfo
-        };
-        
-        WebQueryResponse<HostInfo> expected = new WebQueryResponse<>();
-        expected.setResultList(hostInfoResults);
-        expected.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
-        
-        jsonStr = gson.toJson(expected);
-        Type hostinfoQueryResponseType = new TypeToken<WebQueryResponse<HostInfo>>() {}.getType();
-        WebQueryResponse<HostInfo> actualResp = gson.fromJson(jsonStr, hostinfoQueryResponseType);
-        
-        assertEquals(PreparedStatementResponseCode.QUERY_SUCCESS, actualResp.getResponseCode());
-        HostInfo[] hostInfoList = actualResp.getResultList();
-        assertEquals(1, hostInfoList.length);
-        assertEquals("something", hostInfoList[0].getAgentId());
-        assertEquals(56, hostInfoList[0].getCpuCount());
-        assertEquals("flukebox", hostInfoList[0].getHostname());
     }
 }
 

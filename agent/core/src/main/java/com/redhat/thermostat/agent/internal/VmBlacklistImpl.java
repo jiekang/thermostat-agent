@@ -41,31 +41,30 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmBlacklistImpl implements VmBlacklist {
     
-    private final List<Filter<VmRef>> filters;
+    private final List<Filter<String>> filters;
     
     public VmBlacklistImpl() {
         this.filters = new CopyOnWriteArrayList<>();
     }
 
     @Override
-    public void addVmFilter(Filter<VmRef> filter) {
+    public void addVmFilter(Filter<String> filter) {
         filters.add(filter);
     }
 
     @Override
-    public void removeVmFilter(Filter<VmRef> filter) {
+    public void removeVmFilter(Filter<String> filter) {
         filters.remove(filter);
     }
 
     @Override
-    public boolean isBlacklisted(VmRef ref) {
+    public boolean isBlacklisted(String mainClass) {
         boolean result = false;
-        for (Filter<VmRef> filter : filters) {
-            if (filter.matches(ref)) {
+        for (Filter<String> filter : filters) {
+            if (filter.matches(mainClass)) {
                 result = true;
             }
         }

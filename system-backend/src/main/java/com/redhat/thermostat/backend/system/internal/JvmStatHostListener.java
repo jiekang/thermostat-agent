@@ -44,9 +44,17 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.VmBlacklist;
+import com.redhat.thermostat.agent.VmStatusListener.Status;
+import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.portability.ProcessUserInfo;
 import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
-import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
+
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;
@@ -54,16 +62,6 @@ import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
-
-import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.agent.VmStatusListener.Status;
-import com.redhat.thermostat.common.Pair;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
 
 class JvmStatHostListener implements HostListener {
 
@@ -74,17 +72,15 @@ class JvmStatHostListener implements HostListener {
     private final ProcessUserInfoBuilder userInfoBuilder;
     private final WriterID writerId;
     private Map<Integer, Pair<String, MonitoredVm>> monitoredVms  = new HashMap<>();
-    private final HostRef hostRef;
     private final VmBlacklist blacklist;
 
     JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier,
-                        ProcessUserInfoBuilder userInfoBuilder, WriterID writerId, HostRef hostRef,
+                        ProcessUserInfoBuilder userInfoBuilder, WriterID writerId,
                         VmBlacklist blacklist) {
         this.vmInfoDAO = vmInfoDAO;
         this.notifier = notifier;
         this.userInfoBuilder = userInfoBuilder;
         this.writerId = writerId;
-        this.hostRef = hostRef;
         this.blacklist = blacklist;
     }
 
@@ -136,8 +132,7 @@ class JvmStatHostListener implements HostListener {
             VmInfo info = createVmInfo(vmId, vmPid, startTime, stopTime, extractor);
 
             // Check blacklist
-            VmRef vmRef = new VmRef(hostRef, vmId, vmPid, info.getMainClass());
-            if (!blacklist.isBlacklisted(vmRef)) {
+            if (!blacklist.isBlacklisted(info.getMainClass())) {
                 vmInfoDAO.putVmInfo(info);
 
                 notifier.notifyVmStatusChange(Status.VM_STARTED, vmId, vmPid);

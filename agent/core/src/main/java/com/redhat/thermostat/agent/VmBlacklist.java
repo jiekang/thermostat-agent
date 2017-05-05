@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent;
 
 import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.storage.core.VmRef;
 
 /**
  * Maintains a list of JVM processes that Thermostat should not
@@ -46,28 +45,28 @@ import com.redhat.thermostat.storage.core.VmRef;
 public interface VmBlacklist {
     
     /**
-     * Adds a {@link Filter} to the blacklist. Virtual machines that
-     * match the filter will not be monitored.
+     * Adds a {@link Filter} to the blacklist. Virtual machines whose
+     * main class match the filter will not be monitored.
      * @param filter - a filter whose matching VMs should not be monitored
      */
-    void addVmFilter(Filter<VmRef> filter);
+    void addVmFilter(Filter<String> filter);
     
     /**
      * Removes a {@link Filter} from the blacklist. New virtual machines
      * will no longer be tested against this filter for blacklisting.
      * @param filter - a filter previously in the blacklist
      */
-    void removeVmFilter(Filter<VmRef> filter);
+    void removeVmFilter(Filter<String> filter);
     
     /**
      * Returns whether the given virtual machine should be monitored
      * by matching it against filters in the blacklist. If any filter
      * matches, then this method will return true.
-     * @param ref - a reference to the virtual machine to be tested
-     *              against the blacklist
+     * @param mainClass - a class name to check against classes covered
+     *                    by this blacklist
      * @return true if blacklisted, false otherwise
      */
-    boolean isBlacklisted(VmRef ref);
+    boolean isBlacklisted(String mainClass);
 
 }
 

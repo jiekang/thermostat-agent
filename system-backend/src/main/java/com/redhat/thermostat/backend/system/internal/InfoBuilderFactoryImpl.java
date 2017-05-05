@@ -36,14 +36,12 @@
 
 package com.redhat.thermostat.backend.system.internal;
 
+import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
+import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
 import com.redhat.thermostat.common.portability.ProcessUserInfo;
 import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.common.portability.UserNameUtil;
-import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
-import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
-import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
-import com.redhat.thermostat.storage.core.WriterID;
 
 /**
  * Allows callers to access Windows-specific builders portably
@@ -51,10 +49,6 @@ import com.redhat.thermostat.storage.core.WriterID;
 public class InfoBuilderFactoryImpl implements InfoBuilderFactory {
 
     public InfoBuilderFactoryImpl() {
-    }
-
-    public HostInfoBuilder createHostInfoBuilder(final WriterID writerID) {
-        return new HostInfoBuilderImpl(writerID);
     }
 
     public ProcessEnvironmentBuilder createProcessEnvironmentBuilder() {

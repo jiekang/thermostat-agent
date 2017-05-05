@@ -62,10 +62,6 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(BackendInfoDAOImpl.QUERY_BACKEND_INFO);
         daoDescs.add(BackendInfoDAOImpl.DESC_ADD_BACKEND_INFO);
         daoDescs.add(BackendInfoDAOImpl.DESC_REMOVE_BACKEND_INFO);
-        daoDescs.add(HostInfoDAOImpl.QUERY_HOST_INFO);
-        daoDescs.add(HostInfoDAOImpl.QUERY_ALL_HOSTS);
-        daoDescs.add(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS);
-        daoDescs.add(HostInfoDAOImpl.DESC_ADD_HOST_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.AGGREGATE_COUNT_ALL_NETWORK_INTERFACES);

@@ -56,16 +56,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.redhat.thermostat.common.portability.ProcessUserInfo;
-import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -110,9 +108,8 @@ public class JvmStatHostListenerTest {
         when(userInfoBuilder.build(any(int.class))).thenReturn(userInfo);
 
         WriterID id = mock(WriterID.class);
-        HostRef hostRef = mock(HostRef.class);
         blacklist = mock(VmBlacklist.class);
-        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, userInfoBuilder, id, hostRef, blacklist);
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, userInfoBuilder, id, blacklist);
         
         host = mock(MonitoredHost.class);
         HostIdentifier hostId = mock(HostIdentifier.class);
@@ -163,7 +160,7 @@ public class JvmStatHostListenerTest {
     
     @Test
     public void testNewVMBlackListed() throws InterruptedException, MonitorException {
-        when(blacklist.isBlacklisted(any(VmRef.class))).thenReturn(true).thenReturn(false);
+        when(blacklist.isBlacklisted(anyString())).thenReturn(true).thenReturn(false);
         startVMs();
         
         assertFalse(hostListener.getMonitoredVms().containsKey(1));

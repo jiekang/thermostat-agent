@@ -51,20 +51,14 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.SchemaInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
-import com.redhat.thermostat.storage.internal.dao.HostInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.SchemaInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
-import com.redhat.thermostat.storage.monitor.HostMonitor;
-import com.redhat.thermostat.storage.monitor.NetworkMonitor;
-import com.redhat.thermostat.storage.monitor.internal.HostMonitorImpl;
-import com.redhat.thermostat.storage.monitor.internal.NetworkMonitorImpl;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -79,7 +73,7 @@ public class ActivatorTest {
 
         // WriterID should get registered unconditionally
         assertEquals("At least WriterID service must be registered", 1, context.getAllServices().size());
-        assertEquals(2, context.getServiceListeners().size());
+        assertEquals(1, context.getServiceListeners().size());
 
         activator.stop(context);
         assertEquals(0, context.getAllServices().size());
@@ -107,7 +101,6 @@ public class ActivatorTest {
 
         assertTrue(context.isServiceRegistered(SchemaInfoDAO.class.getName(), SchemaInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
-        assertTrue(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
@@ -142,7 +135,6 @@ public class ActivatorTest {
         activator.stop(context);
         
         assertFalse(context.isServiceRegistered(SchemaInfoDAO.class.getName(), SchemaInfoDAOImpl.class));
-        assertFalse(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
         assertFalse(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertFalse(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
         assertFalse(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
@@ -171,11 +163,7 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(NetworkMonitor.class.getName(), NetworkMonitorImpl.class));
-        assertTrue(context.isServiceRegistered(HostMonitor.class.getName(), HostMonitorImpl.class));
-
         assertTrue(context.isServiceRegistered(SchemaInfoDAO.class.getName(), SchemaInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
@@ -190,10 +178,6 @@ public class ActivatorTest {
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(SchemaInfoDAO.class.getName(), SchemaInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(NetworkMonitor.class.getName(), NetworkMonitorImpl.class));
-        assertTrue(context.isServiceRegistered(HostMonitor.class.getName(), HostMonitorImpl.class));
-        
-        assertTrue(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));

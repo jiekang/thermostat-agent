@@ -41,15 +41,14 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
@@ -69,7 +68,6 @@ public class SystemBackendActivator implements BundleActivator {
         
         Class<?>[] deps = new Class<?>[] {
                 BackendService.class,
-                HostInfoDAO.class,
                 NetworkInterfaceInfoDAO.class,
                 VmInfoDAO.class,
                 UserNameUtil.class,
@@ -79,14 +77,13 @@ public class SystemBackendActivator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
             public void dependenciesAvailable(DependencyProvider services) {
-                HostInfoDAO hostInfoDAO = services.get(HostInfoDAO.class);
                 NetworkInterfaceInfoDAO netInfoDAO = services.get(NetworkInterfaceInfoDAO.class);
                 VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
                 UserNameUtil userNameUtil = services.get(UserNameUtil.class);
                 Version version = new Version(context.getBundle());
                 WriterID id = services.get(WriterID.class);
                 VmBlacklist blacklist = services.get(VmBlacklist.class);
-                backend = new SystemBackend(hostInfoDAO, netInfoDAO, vmInfoDAO, version, notifier, 
+                backend = new SystemBackend(netInfoDAO, vmInfoDAO, version, notifier, 
                         userNameUtil, id, blacklist);
                 reg = context.registerService(Backend.class, backend, null);
             }

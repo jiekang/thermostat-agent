@@ -42,36 +42,28 @@ import java.util.UUID;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
-import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.SchemaInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
-import com.redhat.thermostat.storage.internal.dao.HostInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.SchemaInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
-import com.redhat.thermostat.storage.monitor.HostMonitor;
-import com.redhat.thermostat.storage.monitor.NetworkMonitor;
-import com.redhat.thermostat.storage.monitor.internal.HostMonitorImpl;
-import com.redhat.thermostat.storage.monitor.internal.NetworkMonitorImpl;
 
 public class Activator implements BundleActivator {
     
     private static final String WRITER_UUID = UUID.randomUUID().toString();
     
-    MultipleServiceTracker tracker;
+    ServiceTracker tracker;
     List<ServiceRegistration<?>> regs;
     
     public Activator() {
@@ -82,7 +74,6 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) throws Exception {
         Class<?>[] deps = new Class<?>[] {
                 Storage.class,
-                ApplicationService.class,
         };
 
         // WriterID has to be registered unconditionally (at least not as part
@@ -92,12 +83,10 @@ public class Activator implements BundleActivator {
         final ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
         regs.add(reg);
         
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-                
-                Storage storage = services.get(Storage.class);
+        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) super.addingService(reference);
                 SchemaInfoDAO schemaInfoDAO = new SchemaInfoDAOImpl(storage);
                 ServiceRegistration<?> reg = context.registerService(SchemaInfoDAO.class.getName(), schemaInfoDAO, null);
                 regs.add(reg);
@@ -110,10 +99,6 @@ public class Activator implements BundleActivator {
                 reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
                 regs.add(reg);
                 
-                HostInfoDAO hostInfoDao = new HostInfoDAOImpl(storage, agentInfoDao);
-                reg = context.registerService(HostInfoDAO.class.getName(), hostInfoDao, null);
-                regs.add(reg);
-                
                 NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl(storage);
                 reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
                 regs.add(reg);
@@ -121,23 +106,16 @@ public class Activator implements BundleActivator {
                 VmInfoDAO vmInfoDao = new VmInfoDAOImpl(storage);
                 reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
                 regs.add(reg);
-            
-                ApplicationService appService = services.get(ApplicationService.class);
-                TimerFactory timers = appService.getTimerFactory();
-                NetworkMonitor networkMonitor = new NetworkMonitorImpl(timers, hostInfoDao);
-                reg = context.registerService(NetworkMonitor.class.getName(), networkMonitor, null);
-                regs.add(reg);
-                                
-                HostMonitor hostMonitor = new HostMonitorImpl(timers, vmInfoDao);
-                reg = context.registerService(HostMonitor.class.getName(), hostMonitor, null);
-                regs.add(reg);
+                
+                return storage;
             }
-        
+
             @Override
-            public void dependenciesUnavailable() {
+            public void removedService(ServiceReference reference, Object service) {
                 unregisterServices();
+                super.removedService(reference, service);
             }
-        });
+        };
 
         tracker.open();
     }

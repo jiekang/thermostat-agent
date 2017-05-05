@@ -51,7 +51,6 @@ import java.util.Objects;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class CategoryTest {
@@ -107,7 +106,9 @@ public class CategoryTest {
         Key<String> key3 = new Key<String>("key3");
         Category<TestObj> category = new Category<>("testEquals", TestObj.class, key1, key2, key3);
         assertTrue(category.equals(category));
-        assertFalse(category.equals(HostInfoDAO.hostInfoCategory));
+        Key<String> key4 = new Key<String>("key4");
+        Category<TestObj> otherCategory = new Category<>("testEquals2", TestObj.class, key1, key2, key4);
+        assertFalse(category.equals(otherCategory));
     }
     
     @Test

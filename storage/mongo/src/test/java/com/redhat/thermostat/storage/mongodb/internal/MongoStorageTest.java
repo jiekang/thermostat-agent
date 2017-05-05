@@ -57,7 +57,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 
-import com.redhat.thermostat.common.internal.test.Bug;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.After;
@@ -81,6 +80,7 @@ import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AggregateQuery;
@@ -103,11 +103,9 @@ import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.DistinctResult;
-import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
@@ -383,13 +381,15 @@ public class MongoStorageTest {
         @SuppressWarnings("unchecked")
         com.mongodb.client.MongoCursor<String> mockCursor = mock(com.mongodb.client.MongoCursor.class);
         when(mockIterable.iterator()).thenReturn(mockCursor);
-        storage.registerCategory(HostInfoDAO.hostInfoCategory);
-        Category<AggregateCount> countCat = new CategoryAdapter<HostInfo, AggregateCount>(HostInfoDAO.hostInfoCategory).getAdapted(AggregateCount.class);
+        Key<String> key = new Key<>("key1");
+        Category<TestObj> category = new Category<>("testRegisterCategory", TestObj.class, key);
+        storage.registerCategory(category);
+        Category<AggregateCount> countCat = new CategoryAdapter<TestObj, AggregateCount>(category).getAdapted(AggregateCount.class);
         storage.registerCategory(countCat);
         
         ArgumentCaptor<Document> msgCaptor = ArgumentCaptor.forClass(Document.class);
         ArgumentCaptor<Document> msgCaptor2 = ArgumentCaptor.forClass(Document.class);
-        Document expectedObject1 = new Document(SchemaInfo.NAME.getName(), HostInfoDAO.hostInfoCategory.getName());
+        Document expectedObject1 = new Document(SchemaInfo.NAME.getName(), category.getName());
         
         verify(testCollection).replaceOne(msgCaptor.capture(), msgCaptor2.capture(), any(UpdateOptions.class));
         
@@ -400,8 +400,12 @@ public class MongoStorageTest {
         assertTrue(resultObject2.get(SchemaInfo.NAME.getName()) != null);
         assertTrue(resultObject2.get(Key.TIMESTAMP.getName()) != null);
         
-        assertEquals(HostInfoDAO.hostInfoCategory.getName(), resultObject2.get(SchemaInfo.NAME.getName()));
+        assertEquals(category.getName(), resultObject2.get(SchemaInfo.NAME.getName()));
         assertNotNull(resultObject2.get(Key.TIMESTAMP.getName()));
+    }
+    
+    private static class TestObj implements Pojo {
+        // Dummy class for testing.
     }
 
     @Test

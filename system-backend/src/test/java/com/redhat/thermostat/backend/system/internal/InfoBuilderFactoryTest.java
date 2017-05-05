@@ -36,23 +36,15 @@
 
 package com.redhat.thermostat.backend.system.internal;
 
-import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
-import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
-import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
-import org.junit.Test;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class InfoBuilderFactoryTest {
+import org.junit.Test;
 
-    @Test
-    public void testCreateHostInfoBuilder() {
-        final InfoBuilderFactory builder = new InfoBuilderFactoryImpl();
-        final HostInfoBuilder hib = builder.createHostInfoBuilder(null);
-        assertNotNull(hib);
-        assertTrue(hib instanceof HostInfoBuilderImpl);
-    }
+import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
+import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
+
+public class InfoBuilderFactoryTest {
 
     @Test
     public void testCreateProcessEnvironmentBuilder() {
