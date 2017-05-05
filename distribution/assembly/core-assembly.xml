@@ -73,6 +73,8 @@
         <include>io.netty:netty-handler</include>
         <include>commons-codec:commons-codec</include>
         <include>org.apache.httpcomponents:httpclient-osgi</include>
+        <include>org.eclipse.jetty:jetty-client</include>
+        <include>javax.servlet:javax.servlet-api</include>
         <!-- Remove once upstream has OSGi metadata -->
         <include>com.redhat.thermostat:jnr-x86asm</include>
       </includes>

@@ -56,7 +56,7 @@ public class DAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTes
     public void registersAllQueries() {
         DAOImplStatementDescriptorRegistration reg = new DAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(21, descriptors.size());
+        assertEquals(1, descriptors.size());
         assertFalse(descriptors.contains(null));
     }
 

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -47,20 +48,15 @@ import com.redhat.thermostat.storage.dao.SchemaInfoDAO;
 import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.model.SchemaInformation;
 
+// TODO Remove this class in the near future
 public class SchemaInfoDAOImpl extends AbstractDao implements SchemaInfoDAO {
     private static final Logger logger = LoggingUtils.getLogger(SchemaInfoDAOImpl.class);
     static final String QUERY_ALL_COLLECTIONS = "QUERY "
             + SchemaInfo.CATEGORY.getName();      
-    private final Storage storage;
-    
-    public SchemaInfoDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(SchemaInfo.CATEGORY);
-    }
     
     @Override
     public List<SchemaInformation> getSchemaInfos() {
-        return executeQuery(new SimpleDaoQuery<>(storage, SchemaInfo.CATEGORY, QUERY_ALL_COLLECTIONS)).asList();
+        return Collections.emptyList();
     }
 
     @Override

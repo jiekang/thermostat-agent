@@ -63,7 +63,6 @@ public class Activator implements BundleActivator {
     
     private static final String WRITER_UUID = UUID.randomUUID().toString();
     
-    ServiceTracker tracker;
     List<ServiceRegistration<?>> regs;
     
     public Activator() {
@@ -72,52 +71,32 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-
         // WriterID has to be registered unconditionally (at least not as part
         // of the Storage.class tracker, since that is only registered once
         // storage is connected).
         final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        final ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
+        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
         regs.add(reg);
         
-        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
-            
-            public Object addingService(ServiceReference reference) {
-                Storage storage = (Storage) super.addingService(reference);
-                SchemaInfoDAO schemaInfoDAO = new SchemaInfoDAOImpl(storage);
-                ServiceRegistration<?> reg = context.registerService(SchemaInfoDAO.class.getName(), schemaInfoDAO, null);
-                regs.add(reg);
-                
-                AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl(storage);
-                reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
-                regs.add(reg);
-                
-                BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl(storage);
-                reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
-                regs.add(reg);
-                
-                NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl(storage);
-                reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
-                regs.add(reg);
-                
-                VmInfoDAO vmInfoDao = new VmInfoDAOImpl(storage);
-                reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
-                regs.add(reg);
-                
-                return storage;
-            }
+        SchemaInfoDAO schemaInfoDAO = new SchemaInfoDAOImpl();
+        reg = context.registerService(SchemaInfoDAO.class.getName(), schemaInfoDAO, null);
+        regs.add(reg);
 
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                unregisterServices();
-                super.removedService(reference, service);
-            }
-        };
+        AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl();
+        reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
+        regs.add(reg);
 
-        tracker.open();
+        BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl();
+        reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
+        regs.add(reg);
+
+        NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();
+        reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
+        regs.add(reg);
+
+        VmInfoDAO vmInfoDao = new VmInfoDAOImpl();
+        reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
+        regs.add(reg);
     }
 
     private void unregisterServices() {
@@ -130,7 +109,6 @@ public class Activator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         unregisterServices();
-        tracker.close();
     }
 }
 

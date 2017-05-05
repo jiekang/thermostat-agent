@@ -123,6 +123,20 @@
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+    </dependency>
+    <!-- This will likely have to match what jetty-project's pom uses -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>${jetty.javax.servlet.osgi.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

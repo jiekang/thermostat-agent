@@ -64,37 +64,8 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 public class ActivatorTest {
     
     @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        // WriterID should get registered unconditionally
-        assertEquals("At least WriterID service must be registered", 1, context.getAllServices().size());
-        assertEquals(1, context.getServiceListeners().size());
-
-        activator.stop(context);
-        assertEquals(0, context.getAllServices().size());
-        assertEquals(0, context.getServiceListeners().size());
-    }
-
-    @Test
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        Storage storage = mock(Storage.class);
-        
-        ApplicationService appService = mock(ApplicationService.class);
-        TimerFactory timerFactory = mock(TimerFactory.class);
-        when(appService.getTimerFactory()).thenReturn(timerFactory);
-                
-        Timer timer = mock(Timer.class);
-        when(timerFactory.createTimer()).thenReturn(timer);
-
-        context.registerService(ApplicationService.class, appService, null);
-        context.registerService(Storage.class, storage, null);
-
         Activator activator = new Activator();
 
         activator.start(context);
@@ -110,24 +81,12 @@ public class ActivatorTest {
 
         assertEquals(0, context.getServiceListeners().size());
         
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(0, context.getAllServices().size());
     }
 
     @Test
     public void verifyActivatorUnregistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        Storage storage = mock(Storage.class);
-
-        ApplicationService appService = mock(ApplicationService.class);
-        TimerFactory timerFactory = mock(TimerFactory.class);
-        when(appService.getTimerFactory()).thenReturn(timerFactory);
-                
-        Timer timer = mock(Timer.class);
-        when(timerFactory.createTimer()).thenReturn(timer);
-
-        context.registerService(Storage.class, storage, null);
-        context.registerService(ApplicationService.class, appService, null);
-
         Activator activator = new Activator();
 
         activator.start(context);
@@ -142,7 +101,7 @@ public class ActivatorTest {
         assertFalse(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
         
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(0, context.getAllServices().size());
     }
     
     @Test
