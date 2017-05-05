@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.model;
 
+import java.util.Objects;
+
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 
@@ -93,6 +95,24 @@ public class NetworkInterfaceInfo extends BasePojo {
 
     public void clearIp6Addr() {
         ip6Addr = null;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        // Super implementation should check for class and agentId equality and check for null
+        boolean equal = super.equals(obj);
+        if (equal) {
+            NetworkInterfaceInfo other = (NetworkInterfaceInfo) obj;
+            equal = Objects.equals(iFace, other.iFace) && Objects.equals(ip4Addr, other.ip4Addr)
+                    && Objects.equals(ip6Addr, other.ip6Addr);
+        }
+        return equal;
+    }
+    
+    @Override
+    public int hashCode() {
+        // Super implementation should hash agentId
+        return Objects.hash(super.hashCode(), iFace, ip4Addr, ip6Addr);
     }
 }
 

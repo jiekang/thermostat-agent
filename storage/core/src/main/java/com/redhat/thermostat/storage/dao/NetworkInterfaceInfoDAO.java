@@ -36,17 +36,13 @@
 
 package com.redhat.thermostat.storage.dao;
 
-import java.util.List;
-
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Countable;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 @Service
-public interface NetworkInterfaceInfoDAO extends Countable {
+public interface NetworkInterfaceInfoDAO {
 
     static Key<String> ifaceKey = new Key<>("interfaceName");
     static Key<String> ip4AddrKey = new Key<>("ip4Addr");
@@ -54,8 +50,6 @@ public interface NetworkInterfaceInfoDAO extends Countable {
 
     static final Category<NetworkInterfaceInfo> networkInfoCategory = new Category<>("network-info", NetworkInterfaceInfo.class,
             Key.AGENT_ID, ifaceKey, ip4AddrKey, ip6AddrKey);
-
-    public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref);
 
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info);
 }

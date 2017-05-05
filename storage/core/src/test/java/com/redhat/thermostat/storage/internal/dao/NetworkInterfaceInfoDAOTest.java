@@ -39,36 +39,78 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.model.AggregateCount;
+import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl.HttpHelper;
+import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl.JsonHelper;
+import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl.NetworkInterfaceInfoUpdate;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class NetworkInterfaceInfoDAOTest {
 
+    private static final String URL = "http://localhost:26000/api/v100/network-info/systems/*/agents/fooAgent";
+    private static final String QUERY_URL = URL + "?q=interfaceName%3D%3Dsome+interface.+maybe+eth0";
     private static final String INTERFACE_NAME = "some interface. maybe eth0";
     private static final String IPV4_ADDR = "256.256.256.256";
     private static final String IPV6_ADDR = "100:100:100::::1";
+    private static final String SOME_JSON = "{\"some\" : \"json\"}";
+    private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
+    private static final String EMPTY_JSON = "{}";
+    private static final String CONTENT_TYPE = "application/json";
 
+    private NetworkInterfaceInfo info;
+    private JsonHelper jsonHelper;
+    private HttpHelper httpHelper;
+    private StringContentProvider contentProvider;
+    private Request request;
+    private ContentResponse response;
+    
+    @Before
+    public void setup() throws Exception {
+        info = new NetworkInterfaceInfo("fooAgent", INTERFACE_NAME);
+        info.setIp4Addr(IPV4_ADDR);
+        info.setIp6Addr(IPV6_ADDR);
+        
+        httpHelper = mock(HttpHelper.class);
+        contentProvider = mock(StringContentProvider.class);
+        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        request = mock(Request.class);
+        when(httpHelper.newRequest(anyString())).thenReturn(request);
+        response = mock(ContentResponse.class);
+        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(request.send()).thenReturn(response);
+        
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(NetworkInterfaceInfo.class))).thenReturn(SOME_JSON);
+        when(jsonHelper.toJson(any(NetworkInterfaceInfoUpdate.class))).thenReturn(SOME_OTHER_JSON);
+        List<NetworkInterfaceInfo> emptyList = Collections.emptyList(); 
+        when(jsonHelper.fromJson(EMPTY_JSON)).thenReturn(emptyList);
+        when(jsonHelper.fromJson(SOME_JSON)).thenReturn(Arrays.asList(info));
+    }
+    
     @Test
     public void testCategory() {
         Collection<Key<?>> keys;
@@ -83,118 +125,78 @@ public class NetworkInterfaceInfoDAOTest {
     }
     
     @Test
-    public void preparedQueryDescriptorsAreSane() {
-        String expectedNetworkInfo = "QUERY network-info WHERE 'agentId' = ?s";
-        assertEquals(expectedNetworkInfo, NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
-        String aggregateCountAllNetworkInterfaces = "QUERY-COUNT network-info";
-        assertEquals(aggregateCountAllNetworkInterfaces,
-                NetworkInterfaceInfoDAOImpl.AGGREGATE_COUNT_ALL_NETWORK_INTERFACES);
-        String replaceNetworkInfo = "REPLACE network-info SET 'agentId' = ?s , " +
-            "'interfaceName' = ?s , " +
-            "'ip4Addr' = ?s , " +
-            "'ip6Addr' = ?s WHERE " +
-            "'agentId' = ?s AND 'interfaceName' = ?s";
-        assertEquals(replaceNetworkInfo, NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO);
-    }
-
-    @Test
-    public void testGetNetworkInterfaces() throws DescriptorParsingException, StatementExecutionException {
-
-        NetworkInterfaceInfo niInfo = new NetworkInterfaceInfo("foo-agent", INTERFACE_NAME);
-        niInfo.setIp4Addr(IPV4_ADDR);
-        niInfo.setIp6Addr(IPV6_ADDR);
-
-        @SuppressWarnings("unchecked")
-        Cursor<NetworkInterfaceInfo> cursor = (Cursor<NetworkInterfaceInfo>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(niInfo);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<NetworkInterfaceInfo> stmt = (PreparedStatement<NetworkInterfaceInfo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn("system");
-
-        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
-        List<NetworkInterfaceInfo> netInfo = dao.getNetworkInterfaces(hostRef);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, "system");
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-
-        assertEquals(1, netInfo.size());
-
-        NetworkInterfaceInfo info = netInfo.get(0);
-
-        assertEquals(INTERFACE_NAME, info.getInterfaceName());
-        assertEquals(IPV4_ADDR, info.getIp4Addr());
-        assertEquals(IPV6_ADDR, info.getIp6Addr());
-    }
-
-    @SuppressWarnings("unchecked")
-    private StatementDescriptor<NetworkInterfaceInfo> anyDescriptor() {
-        return (StatementDescriptor<NetworkInterfaceInfo>) any(StatementDescriptor.class);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testPutNetworkInterfaceInfo()
-            throws DescriptorParsingException, StatementExecutionException {
-        String agentId = "fooAgent";
-        Storage storage = mock(Storage.class);
-        PreparedStatement<NetworkInterfaceInfo> replace = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(replace);
-
-        NetworkInterfaceInfo info = new NetworkInterfaceInfo(agentId, INTERFACE_NAME);
-        info.setIp4Addr(IPV4_ADDR);
-        info.setIp6Addr(IPV6_ADDR);
-        
-        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
+    public void testPutNetworkInterfaceInfoAdd() throws Exception {
+        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(httpHelper, jsonHelper);
+        when(response.getContentAsString()).thenReturn(EMPTY_JSON);
         dao.putNetworkInterfaceInfo(info);
+        
+        // Check query first
+        verify(httpHelper).newRequest(QUERY_URL);
+        verify(request).method(HttpMethod.GET);
+        verify(jsonHelper).fromJson(EMPTY_JSON);
 
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        // Check data added
+        verify(httpHelper).newRequest(URL);
+        verify(request).method(HttpMethod.POST);
+        verify(jsonHelper).toJson(eq(Arrays.asList(info)));
+        verify(httpHelper).createContentProvider(SOME_JSON);
+        verify(request).content(contentProvider, CONTENT_TYPE);
         
-        verify(storage).prepareStatement(captor.capture());
+        verify(request, times(2)).send();
+        verify(response, times(2)).getStatus();
+    }
+    
+    @Test
+    public void testPutNetworkInterfaceInfoUpdate() throws Exception {
+        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(httpHelper, jsonHelper);
         
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO, desc.getDescriptor());
+        when(response.getContentAsString()).thenReturn(SOME_JSON);
+        NetworkInterfaceInfo other = new NetworkInterfaceInfo("fooAgent", INTERFACE_NAME);
+        other.setIp4Addr("1.2.3.4");
+        other.setIp6Addr(IPV6_ADDR);
+        when(jsonHelper.fromJson(SOME_JSON)).thenReturn(Arrays.asList(other));
+        dao.putNetworkInterfaceInfo(info);
         
-        verify(replace).setString(0, info.getAgentId());
-        verify(replace).setString(1, info.getInterfaceName());
-        verify(replace).setString(2, info.getIp4Addr());
-        verify(replace).setString(3, info.getIp6Addr());
-        verify(replace).setString(4, info.getAgentId());
-        verify(replace).setString(5, info.getInterfaceName());
-        verify(replace).execute();
-        verifyNoMoreInteractions(replace);
+        // Check query first
+        verify(request).method(HttpMethod.GET);
+        verify(jsonHelper).fromJson(SOME_JSON);
+
+        // Check data updated
+        verify(httpHelper, times(2)).newRequest(QUERY_URL);
+        verify(request).method(HttpMethod.PUT);
+        
+        ArgumentCaptor<NetworkInterfaceInfoUpdate> updateCaptor = ArgumentCaptor.forClass(NetworkInterfaceInfoUpdate.class);
+        verify(jsonHelper).toJson(updateCaptor.capture());
+        NetworkInterfaceInfoUpdate update = updateCaptor.getValue();
+        assertEquals(IPV4_ADDR, update.getIPv4Addr());
+        assertEquals(IPV6_ADDR, update.getIPv6Addr());
+        
+        verify(httpHelper).createContentProvider(SOME_OTHER_JSON);
+        verify(request).content(contentProvider, CONTENT_TYPE);
+        
+        verify(request, times(2)).send();
+        verify(response, times(2)).getStatus();
     }
 
     @Test
-    public void testGetCount()
-            throws DescriptorParsingException, StatementExecutionException {
-        AggregateCount count = new AggregateCount();
-        count.setCount(2);
+    public void testPutNetworkInterfaceInfoNoUpdate() throws Exception {
+        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(httpHelper, jsonHelper);
+        
+        when(response.getContentAsString()).thenReturn(SOME_JSON);
+        dao.putNetworkInterfaceInfo(info);
+        
+        // Check query first
+        verify(httpHelper).newRequest(QUERY_URL);
+        verify(request).method(HttpMethod.GET);
+        verify(jsonHelper).fromJson(SOME_JSON);
+        verify(request).send();
+        verify(response).getStatus();
 
-        @SuppressWarnings("unchecked")
-        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
-        when(c.hasNext()).thenReturn(true).thenReturn(false);
-        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
-        when(storage.prepareStatement(desc)).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(c);
-        NetworkInterfaceInfoDAOImpl dao = new NetworkInterfaceInfoDAOImpl(storage);
-
-        assertEquals(2, dao.getCount());
+        // Check no update sent
+        verify(request, never()).method(HttpMethod.PUT);
+        verify(jsonHelper, never()).toJson(any(NetworkInterfaceInfoUpdate.class));
+        verify(httpHelper, never()).createContentProvider(SOME_OTHER_JSON);
+        verify(request, never()).content(contentProvider, CONTENT_TYPE);
     }
 }
 
