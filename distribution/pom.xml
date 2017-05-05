@@ -287,6 +287,7 @@
               <goal>single</goal>
             </goals>
           </execution>
+<!-- TODO Uncomment once Byteman plugin is ported to use web-gateway
           <execution>
             <id>assemble-all-plugin-libs</id>
             <configuration>
@@ -300,7 +301,7 @@
             <goals>
               <goal>single</goal>
             </goals>
-          </execution>
+          </execution>-->
           <execution>
             <id>assemble-scripts</id>
             <configuration>

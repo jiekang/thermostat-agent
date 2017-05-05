@@ -51,7 +51,6 @@ import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -70,7 +69,6 @@ public class Agent {
     private final BackendRegistry backendRegistry;
     private final AgentStartupConfiguration config;
     private final Map<Backend, BackendInformation> backendInfos;
-    private final Storage storage;
     private final AgentInfoDAO agentDao;
     private final BackendInfoDAO backendDao;
     private final WriterID writerID;
@@ -127,17 +125,16 @@ public class Agent {
         }
     };
     
-    public Agent(BackendRegistry registry, AgentStartupConfiguration config, Storage storage,
+    public Agent(BackendRegistry registry, AgentStartupConfiguration config,
             AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao, WriterID writerId) {
-        this(registry, config, storage, agentInfoDao, backendInfoDao, writerId, new MXBeanConnectionPoolTracker());
+        this(registry, config, agentInfoDao, backendInfoDao, writerId, new MXBeanConnectionPoolTracker());
     }
     
-    Agent(BackendRegistry registry, AgentStartupConfiguration config, Storage storage,
+    Agent(BackendRegistry registry, AgentStartupConfiguration config,
             AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao, WriterID writerId,
             MXBeanConnectionPoolTracker poolTracker) {
         this.backendRegistry = registry;
         this.config = config;
-        this.storage = storage;
         this.agentDao = agentInfoDao;
         this.backendDao = backendInfoDao;
         this.writerID = writerId;
@@ -215,7 +212,7 @@ public class Agent {
         System.out.println("purging database");
         logger.info("purging database");
         agentDao.removeAgentInformation(agentInfo);
-        storage.purge(agentInfo.getAgentId());
+        //storage.purge(agentInfo.getAgentId()); TODO Need purge functionality
     }
 
     private void updateAgentStatusToStopped() {

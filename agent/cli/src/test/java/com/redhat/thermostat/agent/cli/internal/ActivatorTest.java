@@ -65,10 +65,9 @@ public class ActivatorTest {
         
         activator.start(bundleContext);
         
-        assertEquals(4, bundleContext.getServiceListeners().size());
+        assertEquals(3, bundleContext.getServiceListeners().size());
         
         assertCommandIsRegistered(bundleContext, "agent", AgentApplication.class);
-        assertCommandIsRegistered(bundleContext, "service", ServiceCommand.class);
 
         activator.stop(bundleContext);
 

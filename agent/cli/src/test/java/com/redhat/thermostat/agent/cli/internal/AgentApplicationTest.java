@@ -39,9 +39,7 @@ package com.redhat.thermostat.agent.cli.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -56,7 +54,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
@@ -74,17 +71,8 @@ import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
-import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.storage.core.ConnectionException;
-import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.storage.core.DbServiceFactory;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -99,10 +87,8 @@ public class AgentApplicationTest {
     private StubBundleContext context;
 
     private ConfigurationServer configServer;
-    private DbService dbService;
     private ConfigurationCreator configCreator;
     private ExitStatus exitStatus;
-    private DbServiceFactory dbServiceFactory;
     private WriterID writerId;
     
     @Before
@@ -118,18 +104,13 @@ public class AgentApplicationTest {
         configCreator = mock(ConfigurationCreator.class);
         when(configCreator.create()).thenReturn(config);
 
-        Storage storage = mock(Storage.class);
-        context.registerService(Storage.class, storage, null);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         context.registerService(AgentInfoDAO.class.getName(), agentInfoDAO, null);
         BackendInfoDAO backendInfoDAO = mock(BackendInfoDAO.class);
         context.registerService(BackendInfoDAO.class.getName(), backendInfoDAO, null);
         configServer = mock(ConfigurationServer.class);
         context.registerService(ConfigurationServer.class.getName(), configServer, null);
-        dbServiceFactory = mock(DbServiceFactory.class);
-        dbService = mock(DbService.class);
         writerId = mock(WriterID.class);
-        when(dbServiceFactory.createDbService(anyString(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
 
         exitStatus = mock(ExitStatus.class);
     }
@@ -138,16 +119,13 @@ public class AgentApplicationTest {
     public void tearDown() {
         context = null;
         configServer = null;
-        dbService = null;
         configCreator = null;
-        dbServiceFactory = null;
         exitStatus = null;
     }
 
     @Test
     public void testAgentStartup() throws CommandException, InterruptedException {
-        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, mock(SSLConfiguration.class), new DependencyServices(), configCreator, dbServiceFactory);
-        agent.setStorageCredentials(mock(StorageCredentials.class));
+        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, configCreator);
         final CountDownLatch latch = new CountDownLatch(1);
         final CommandException[] ce = new CommandException[1];
         final long timeoutMillis = 5000L;
@@ -161,24 +139,6 @@ public class AgentApplicationTest {
         if (!ret) {
             fail("Timeout expired!");
         }
-    }
-    
-    @Test
-    public void testAgentStartupConnectFailure() throws CommandException, InterruptedException {
-        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, mock(SSLConfiguration.class), new DependencyServices(), configCreator, dbServiceFactory);
-        agent.setStorageCredentials(mock(StorageCredentials.class));
-        
-        Arguments args = mock(Arguments.class);
-        final CommandContext commandContext = mock(CommandContext.class);
-        when(commandContext.getArguments()).thenReturn(args);
-        
-        // Throw a ConnectionException when we try to connect to storage
-        doThrow(new ConnectionException()).when(dbService).connect();
-        
-        agent.run(commandContext);
-        
-        // Ensure we shut down command channel server
-        verify(configServer).stopListening();
     }
     
     /*
@@ -201,10 +161,9 @@ public class AgentApplicationTest {
                 .withArguments(any(BundleContext.class))
                 .thenThrow(InvalidSyntaxException.class);
         final AgentApplication agent = new AgentApplication(context,
-                exitStatus, writerId,  mock(SSLConfiguration.class),
-                mock(DependencyServices.class), configCreator, dbServiceFactory);
+                exitStatus, writerId, configCreator);
         try {
-            agent.startAgent(null, null, null);
+            agent.startAgent(null, null);
         } catch (RuntimeException e) {
             assertEquals(InvalidSyntaxException.class, e.getCause().getClass());
         }
@@ -219,18 +178,17 @@ public class AgentApplicationTest {
                 .thenReturn(mock(BackendRegistry.class));
         Agent mockAgent = mock(Agent.class);
         whenNew(Agent.class).withParameterTypes(BackendRegistry.class,
-                AgentStartupConfiguration.class, Storage.class,
+                AgentStartupConfiguration.class,
                 AgentInfoDAO.class, BackendInfoDAO.class, WriterID.class).withArguments(
                 any(BackendRegistry.class),
-                any(AgentStartupConfiguration.class), any(Storage.class),
+                any(AgentStartupConfiguration.class),
                 any(AgentInfoDAO.class), any(BackendInfoDAO.class), 
                 any(WriterID.class)).thenReturn(mockAgent);
         doThrow(LaunchException.class).when(mockAgent).start();
         final AgentApplication agent = new AgentApplication(context,
-                exitStatus, writerId,  mock(SSLConfiguration.class),
-                mock(DependencyServices.class), configCreator, dbServiceFactory);
+                exitStatus, writerId,  configCreator);
         try {
-            agent.startAgent(null, null, null);
+            agent.startAgent(null, null);
         } catch (RuntimeException e) {
             fail("Should not have thrown RuntimeException");
         }
@@ -242,21 +200,6 @@ public class AgentApplicationTest {
         final CommandContext commandContext = mock(CommandContext.class);
         when(commandContext.getArguments()).thenReturn(args);
         
-        // Immediately switch to CONNECTED state on dbService.connect
-        final ArgumentCaptor<ConnectionListener> listenerCaptor = ArgumentCaptor.forClass(ConnectionListener.class);
-        doNothing().when(dbService).addConnectionListener(listenerCaptor.capture());
-        
-        doAnswer(new Answer<Void>() {
-
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                ConnectionListener listener = listenerCaptor.getValue();
-                listener.changed(ConnectionStatus.CONNECTED);
-                return null;
-            }
-            
-        }).when(dbService).connect();
-
         // Run agent in a new thread so we can timeout on failure
         Thread t = new Thread(new Runnable() {
             

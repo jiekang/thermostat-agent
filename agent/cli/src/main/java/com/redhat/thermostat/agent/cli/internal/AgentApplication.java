@@ -45,11 +45,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
-
 import com.redhat.thermostat.agent.Agent;
-import com.redhat.thermostat.agent.cli.internal.locale.LocaleResources;
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
@@ -65,23 +61,16 @@ import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
-import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.storage.core.ConnectionException;
-import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.storage.core.DbServiceFactory;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
+
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 @SuppressWarnings("restriction")
 public final class AgentApplication extends AbstractStateNotifyingCommand {
@@ -100,37 +89,30 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private static final String SIGTERM_NAME = "TERM";
 
     private static final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     private final BundleContext bundleContext;
     private final ConfigurationCreator configurationCreator;
 
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
-    private DbServiceFactory dbServiceFactory;
     @SuppressWarnings("rawtypes")
     private ServiceTracker configServerTracker;
     private MultipleServiceTracker depTracker;
     private final ExitStatus exitStatus;
     private final WriterID writerId;
-    private final SSLConfiguration sslConf;
-    private final DependencyServices depServices;
     private CountDownLatch shutdownLatch;
 
     private CustomSignalHandler handler;
 
-    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, SSLConfiguration sslConf) {
-        this(bundleContext, exitStatus, writerId, sslConf, new DependencyServices(), new ConfigurationCreator(), new DbServiceFactory());
+    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId) {
+        this(bundleContext, exitStatus, writerId, new ConfigurationCreator());
     }
 
-    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, SSLConfiguration sslConf, DependencyServices depServices, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
+    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, ConfigurationCreator configurationCreator) {
         this.bundleContext = bundleContext;
         this.configurationCreator = configurationCreator;
-        this.dbServiceFactory = dbServiceFactory;
         this.exitStatus = exitStatus;
         this.writerId = writerId;
-        this.sslConf = sslConf;
-        this.depServices = depServices;
     }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
@@ -143,10 +125,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
 
-        StorageCredentials creds = depServices.getRequiredService(StorageCredentials.class);
-        final DbService dbService = dbServiceFactory.createDbService(
-                configuration.getDBConnectionString(), creds, sslConf);
-        
         shutdownLatch = new CountDownLatch(1);
         
         configServerTracker = new ServiceTracker(bundleContext, ConfigurationServer.class.getName(), null) {
@@ -157,43 +135,11 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
 
                 try {
                     configServer.startListening(hostPort.getHost(), hostPort.getPort());
-
-                    ConnectionListener connectionListener = new ConnectionListener() {
-                        @Override
-                        public void changed(ConnectionStatus newStatus) {
-                            switch (newStatus) {
-                            case DISCONNECTED:
-                                logger.warning("Unexpected disconnect event.");
-                                break;
-                            case CONNECTING:
-                                logger.fine("Connecting to storage.");
-                                break;
-                            case CONNECTED:
-                                logger.fine("Connected to storage");
-                                handleConnected(configServer);
-                                break;
-                            case FAILED_TO_CONNECT:
-                                // ConnectionException will be thrown
-                                break;
-                            default:
-                                logger.warning("Unfamiliar ConnectionStatus value: " + newStatus.toString());
-                            }
-                        }
-                    };
-
-                    dbService.addConnectionListener(connectionListener);
-                    logger.fine("Connecting to storage...");
-                
-                    dbService.connect();
+                    prepareAgent(configServer);
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, e.getMessage());
                     // log stack trace as info only
                     logger.log(Level.INFO, e.getMessage(), e);
-                    shutdown(ExitStatus.EXIT_ERROR);
-                } catch (ConnectionException e) {
-                    logger.log(Level.SEVERE, "Could not connect to storage (" + e.getMessage() + ")");
-                    // log stack trace as info only
-                    logger.log(Level.INFO, "Could not connect to storage", e);
                     shutdown(ExitStatus.EXIT_ERROR);
                 }
                 
@@ -222,14 +168,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             // Ensure proper shutdown if interrupted
             handler.handle(new Signal(SIGINT_NAME));
             return;
-        }
-    }
-
-    void setStorageCredentials(StorageCredentials creds) {
-        if (creds == null) {
-            depServices.removeService(StorageCredentials.class);
-        } else {
-            depServices.addService(StorageCredentials.class, creds);
         }
     }
 
@@ -294,7 +232,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         
     }
 
-    Agent startAgent(final Storage storage, AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
+    Agent startAgent(AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
         BackendRegistry backendRegistry = null;
         try {
             backendRegistry = new BackendRegistry(bundleContext);
@@ -307,7 +245,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             throw new RuntimeException(e);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO, writerId);
+        final Agent agent = new Agent(backendRegistry, configuration, agentInfoDAO, backendInfoDAO, writerId);
         try {
             logger.fine("Starting agent.");
             agent.start();
@@ -332,9 +270,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         return agent;
     }
     
-    private void handleConnected(final ConfigurationServer configServer) {
+    private void prepareAgent(final ConfigurationServer configServer) {
         Class<?>[] deps = new Class<?>[] {
-                Storage.class,
                 AgentInfoDAO.class,
                 BackendInfoDAO.class
         };
@@ -342,11 +279,10 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
 
             @Override
             public void dependenciesAvailable(DependencyProvider services) {
-                Storage storage = services.get(Storage.class);
                 AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
                 BackendInfoDAO backendInfoDAO = services.get(BackendInfoDAO.class);
 
-                Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO);
+                Agent agent = startAgent(agentInfoDAO, backendInfoDAO);
                 handler = new CustomSignalHandler(agent, configServer);
                 Signal.handle(new Signal(SIGINT_NAME), handler);
                 Signal.handle(new Signal(SIGTERM_NAME), handler);

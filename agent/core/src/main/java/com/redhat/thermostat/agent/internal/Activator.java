@@ -50,15 +50,13 @@ import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.storage.config.FileStorageCredentials;
-import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
@@ -83,8 +81,6 @@ public class Activator implements BundleActivator {
             public CommonPaths addingService(ServiceReference<CommonPaths> ref) {
                 CommonPaths paths = context.getService(ref);
                 try {
-                    StorageCredentials creds = new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
-                    context.registerService(StorageCredentials.class, creds, null);
                     AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
                     VmBlacklistImpl blacklist = new VmBlacklistImpl();
                     blacklist.addVmFilter(new AgentProxyFilter());
