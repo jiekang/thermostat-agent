@@ -38,74 +38,69 @@ package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
+import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl.HttpHelper;
+import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl.JsonHelper;
 import com.redhat.thermostat.storage.model.BackendInformation;
 
 public class BackendInfoDAOTest {
+    
+    private static final String URL = "http://localhost:26000/api/v100/backend-info/systems/*/agents/foo-agent1";
+    private static final String REMOVE_URL = URL + "?q=name%3D%3DTest+Backend";
+    private static final String SOME_JSON = "{\"some\" : \"json\"}";
+    private static final String CONTENT_TYPE = "application/json";
 
     private BackendInformation backendInfo1;
-    private BackendInformation backend1;
+    private JsonHelper jsonHelper;
+    private HttpHelper httpHelper;
+    private StringContentProvider contentProvider;
+    private Request request;
+    private ContentResponse response;
 
     @Before
-    public void setUp() {
-
+    public void setUp() throws Exception {
         backendInfo1 = new BackendInformation("foo-agent1");
 
-        backendInfo1.setName("backend-name");
+        backendInfo1.setName("Test Backend");
         backendInfo1.setDescription("description");
         backendInfo1.setActive(true);
         backendInfo1.setObserveNewJvm(true);
         backendInfo1.setPids(new int[] { -1, 0, 1});
         backendInfo1.setOrderValue(100);
 
-        backend1 = new BackendInformation("foo-agent2");
-        backend1.setName("backend-name");
-        backend1.setDescription("description");
-        backend1.setActive(true);
-        backend1.setObserveNewJvm(true);
-        backend1.setPids(new int[] { -1, 0, 1});
-        backend1.setOrderValue(100);
+        httpHelper = mock(HttpHelper.class);
+        contentProvider = mock(StringContentProvider.class);
+        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        request = mock(Request.class);
+        when(httpHelper.newRequest(anyString())).thenReturn(request);
+        response = mock(ContentResponse.class);
+        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(request.send()).thenReturn(response);
+        
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(BackendInformation.class))).thenReturn(SOME_JSON);
     }
     
-    @Test
-    public void preparedQueryDescriptorsAreSane() {
-        String expectedBackendInfo = "QUERY backend-info WHERE 'agentId' = ?s";
-        assertEquals(expectedBackendInfo, BackendInfoDAOImpl.QUERY_BACKEND_INFO);
-        String addBackendInfo = "ADD backend-info SET " +
-                                        "'agentId' = ?s , " +
-                                        "'name' = ?s , " +
-                                        "'description' = ?s , " +
-                                        "'observeNewJvm' = ?b , " +
-                                        "'pids' = ?i[ , " +
-                                        "'active' = ?b , " +
-                                        "'orderValue' = ?i";
-        assertEquals(addBackendInfo, BackendInfoDAOImpl.DESC_ADD_BACKEND_INFO);
-    }
-
     @Test
     public void verifyCategoryName() {
         Category<BackendInformation> c = BackendInfoDAO.CATEGORY;
@@ -126,120 +121,31 @@ public class BackendInfoDAOTest {
         assertTrue(keys.contains(BackendInfoDAO.ORDER_VALUE));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    public void verifyAddBackendInformation()
-            throws DescriptorParsingException, StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        PreparedStatement<BackendInformation> add = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
-
-        BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
+    public void verifyAddBackendInformation() throws Exception {
+        BackendInfoDAO dao = new BackendInfoDAOImpl(httpHelper, jsonHelper);
 
         dao.addBackendInformation(backendInfo1);
         
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        verify(httpHelper).newRequest(URL);
+        verify(request).method(HttpMethod.POST);
+        verify(jsonHelper).toJson(eq(Arrays.asList(backendInfo1)));
+        verify(httpHelper).createContentProvider(SOME_JSON);
+        verify(request).content(contentProvider, CONTENT_TYPE);
+        verify(request).send();
+        verify(response).getStatus();
+    }
+
+    @Test
+    public void verifyRemoveBackendInformation() throws Exception {
+        BackendInfoDAO dao = new BackendInfoDAOImpl(httpHelper, jsonHelper);
         
-        verify(storage).prepareStatement(captor.capture());
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(BackendInfoDAOImpl.DESC_ADD_BACKEND_INFO, desc.getDescriptor());
-
-        verify(add).setString(0, backendInfo1.getAgentId());
-        verify(add).setString(1, backendInfo1.getName());
-        verify(add).setString(2, backendInfo1.getDescription());
-        verify(add).setBoolean(3, backendInfo1.isObserveNewJvm());
-        verify(add).setIntList(4, backendInfo1.getPids());
-        verify(add).setBoolean(5, backendInfo1.isActive());
-        verify(add).setInt(6, backendInfo1.getOrderValue());
-        verify(add).execute();
-        verifyNoMoreInteractions(add);
-    }
-
-    @Test
-    public void verifyGetBackendInformation() throws DescriptorParsingException, StatementExecutionException {
-        final String AGENT_ID = "agent-id";
-        HostRef agentref = mock(HostRef.class);
-        when(agentref.getAgentId()).thenReturn(AGENT_ID);
-
-        @SuppressWarnings("unchecked")
-        Cursor<BackendInformation> backendCursor = (Cursor<BackendInformation>) mock(Cursor.class);
-        when(backendCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(backendCursor.next()).thenReturn(backend1).thenReturn(null);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<BackendInformation> stmt = (PreparedStatement<BackendInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(backendCursor);
-
-        BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
-
-        List<BackendInformation> result = dao.getBackendInformation(agentref);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, AGENT_ID);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-
-        assertEquals(Arrays.asList(backendInfo1), result);
-    }
-
-    @Test
-    public void verifyGetBackendInformationWithAgentId() throws DescriptorParsingException, StatementExecutionException {
-        final String AGENT_ID = "agent-id";
-        AgentId agentId = new AgentId(AGENT_ID);
-
-        @SuppressWarnings("unchecked")
-        Cursor<BackendInformation> backendCursor = (Cursor<BackendInformation>) mock(Cursor.class);
-        when(backendCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(backendCursor.next()).thenReturn(backend1).thenReturn(null);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<BackendInformation> stmt = (PreparedStatement<BackendInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(backendCursor);
-
-        BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
-
-        List<BackendInformation> result = dao.getBackendInformation(agentId);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, AGENT_ID);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-
-        assertEquals(Arrays.asList(backendInfo1), result);
-    }
-
-    @SuppressWarnings("unchecked")
-    private StatementDescriptor<BackendInformation> anyDescriptor() {
-        return (StatementDescriptor<BackendInformation>) any(StatementDescriptor.class);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyRemoveBackendInformation()
-            throws DescriptorParsingException, StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        PreparedStatement<BackendInformation> remove = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(remove);
-        
-        BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
-
         dao.removeBackendInformation(backendInfo1);
         
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
-        
-        verify(storage).prepareStatement(captor.capture());
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(BackendInfoDAOImpl.DESC_REMOVE_BACKEND_INFO, desc.getDescriptor());
-
-        verify(remove).setString(0, backendInfo1.getName());
-        verify(remove).execute();
-        verifyNoMoreInteractions(remove);
+        verify(httpHelper).newRequest(REMOVE_URL);
+        verify(request).method(HttpMethod.DELETE);
+        verify(request).send();
+        verify(response).getStatus();
     }
 
 }
