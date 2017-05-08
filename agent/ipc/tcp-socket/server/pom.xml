@@ -48,7 +48,7 @@
   <artifactId>thermostat-agent-ipc-tcpsocket-server</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat IPC Server</name>
+  <name>Thermostat IPC Server - TCP</name>
 
   <dependencies>
     <dependency>

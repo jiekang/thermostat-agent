@@ -69,9 +69,5 @@ public class PortableProcessStat {
     public long getKernelTime() {
         return kernelTime;
     }
-
-    public static PortableProcessStat build(int pid) {
-        return PortableProcessImpl.getInstance().getProcessStat(pid);
-    }
 }
 

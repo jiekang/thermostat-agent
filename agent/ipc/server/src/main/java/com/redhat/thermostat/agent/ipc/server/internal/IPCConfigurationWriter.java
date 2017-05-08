@@ -44,7 +44,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
-import com.redhat.thermostat.common.portability.PortableProcessImpl;
+import com.redhat.thermostat.common.portability.PortableProcessFactory;
 import com.redhat.thermostat.shared.config.OS;
 
 class IPCConfigurationWriter {
@@ -167,7 +167,7 @@ class IPCConfigurationWriter {
             return new Properties();
         }
         int getCurrentUid() {
-            return PortableProcessImpl.getInstance().getUid(0); // if pid=0, gets uid of current process
+            return PortableProcessFactory.getInstance().getUid(0); // if pid=0, gets uid of current process
         }
     }
 

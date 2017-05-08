@@ -61,6 +61,7 @@ import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.portability.ProcessUserInfo;
 import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilderFactory;
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
@@ -95,7 +96,7 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
     private boolean started;
 
     public MXBeanConnectionPoolImpl(File binPath, UserNameUtil userNameUtil, AgentIPCService ipcService) {
-        this(new ConnectorCreator(), binPath, ProcessUserInfo.createBuilder(new ProcDataSource(), userNameUtil),
+        this(new ConnectorCreator(), binPath, ProcessUserInfoBuilderFactory.createBuilder(new ProcDataSource(), userNameUtil),
                 ipcService, new FileSystemUtils());
     }
 

@@ -37,7 +37,7 @@
 package com.redhat.thermostat.common.portability.internal.macos;
 
 import com.redhat.thermostat.common.portability.PortableProcess;
-import com.redhat.thermostat.common.portability.PortableProcessImpl;
+import com.redhat.thermostat.common.portability.PortableProcessFactory;
 import com.redhat.thermostat.common.portability.ProcessUserInfo;
 import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -56,7 +56,7 @@ public class MacOSUserInfoBuilderImpl implements ProcessUserInfoBuilder {
     private static final Logger logger = LoggingUtils.getLogger(MacOSUserInfoBuilderImpl.class);
 
     public MacOSUserInfoBuilderImpl() {
-        this(PortableProcessImpl.getInstance());
+        this(PortableProcessFactory.getInstance());
     }
 
     MacOSUserInfoBuilderImpl(PortableProcess helper) {

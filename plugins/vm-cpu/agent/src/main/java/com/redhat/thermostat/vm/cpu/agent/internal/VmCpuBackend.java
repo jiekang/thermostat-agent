@@ -50,7 +50,7 @@ import com.redhat.thermostat.backend.VmPollingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.portability.PortableHostImpl;
+import com.redhat.thermostat.common.portability.PortableHostFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -112,7 +112,7 @@ public class VmCpuBackend extends VmPollingBackend {
         }
 
         private int getCpuCount() {
-            return PortableHostImpl.getInstance().getCPUCount();
+            return PortableHostFactory.getInstance().getCPUCount();
         }
 
         private int getLinuxCpuCount(ProcDataSource dataSource) {

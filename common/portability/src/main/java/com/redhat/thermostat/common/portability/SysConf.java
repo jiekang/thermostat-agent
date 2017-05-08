@@ -58,7 +58,7 @@ public class SysConf {
     }
 
     private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
+        return PortableHostFactory.getInstance().getClockTicksPerSecond();
     }
 
     public static long getLinuxClockTicksPerSecond() {

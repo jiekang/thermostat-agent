@@ -48,7 +48,7 @@
   <artifactId>thermostat-agent-ipc-tcpsocket-client</artifactId>
   <packaging>jar</packaging>
 
-  <name>Thermostat IPC Client</name>
+  <name>Thermostat IPC Client - TCP</name>
 
   <dependencies>
     <dependency>

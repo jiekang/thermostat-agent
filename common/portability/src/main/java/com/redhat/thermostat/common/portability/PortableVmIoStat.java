@@ -55,10 +55,6 @@ public class PortableVmIoStat {
         this.charactersWritten = charactersWritten;
     }
 
-    public static PortableVmIoStat build(Clock clock, int pid) {
-        return PortableProcessImpl.getInstance().getVmIoStat(clock, pid);
-    }
-
     public long getTimeStamp() {
         return timeStamp;
     }

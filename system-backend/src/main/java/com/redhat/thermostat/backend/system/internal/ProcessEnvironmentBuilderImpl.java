@@ -38,7 +38,7 @@ package com.redhat.thermostat.backend.system.internal;
 
 import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
 import com.redhat.thermostat.common.portability.PortableProcess;
-import com.redhat.thermostat.common.portability.PortableProcessImpl;
+import com.redhat.thermostat.common.portability.PortableProcessFactory;
 
 import java.util.Map;
 
@@ -50,7 +50,7 @@ class ProcessEnvironmentBuilderImpl implements ProcessEnvironmentBuilder {
     private final PortableProcess helper;
 
     ProcessEnvironmentBuilderImpl() {
-        this(PortableProcessImpl.getInstance());
+        this(PortableProcessFactory.getInstance());
     }
 
     ProcessEnvironmentBuilderImpl(PortableProcess wh) {

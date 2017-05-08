@@ -82,8 +82,4 @@ public class PortableMemoryStat {
     public long getCommitLimit() {
         return commitLimit;
     }
-
-    public static PortableMemoryStat build() {
-        return PortableHostImpl.getInstance().getMemoryStat();
-    }
 }

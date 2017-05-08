@@ -37,7 +37,7 @@
 package com.redhat.thermostat.host.overview.agent.internal;
 
 import com.redhat.thermostat.common.portability.PortableHost;
-import com.redhat.thermostat.common.portability.PortableHostImpl;
+import com.redhat.thermostat.common.portability.PortableHostFactory;
 import com.redhat.thermostat.host.overview.agent.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.host.overview.common.model.HostInfo;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -51,7 +51,7 @@ class HostInfoBuilderImpl implements HostInfoBuilder {
     private final PortableHost helper;
 
     HostInfoBuilderImpl(final WriterID writerID) {
-        this(writerID, PortableHostImpl.getInstance());
+        this(writerID, PortableHostFactory.getInstance());
     }
 
     HostInfoBuilderImpl(final WriterID writerID, PortableHost helper) {

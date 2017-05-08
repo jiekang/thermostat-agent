@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.portability.PortableMemoryStatFactory;
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
@@ -127,7 +128,7 @@ public class MemoryStatBuilder {
     private MemoryStat buildPortably() {
         long timestamp = System.currentTimeMillis();
 
-        PortableMemoryStat memstat = PortableMemoryStat.build();
+        PortableMemoryStat memstat = PortableMemoryStatFactory.build();
 
         String wId = writerId.getWriterID();
         return new MemoryStat(wId, timestamp, memstat.getTotal(), memstat.getFree(), memstat.getBuffers(), memstat.getCached(), memstat.getSwapTotal(), memstat.getSwapFree(), memstat.getCommitLimit());

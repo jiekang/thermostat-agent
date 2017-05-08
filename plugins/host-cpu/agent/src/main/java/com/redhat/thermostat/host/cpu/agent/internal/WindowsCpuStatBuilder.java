@@ -38,7 +38,7 @@ package com.redhat.thermostat.host.cpu.agent.internal;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.portability.PortableHost;
-import com.redhat.thermostat.common.portability.PortableHostImpl;
+import com.redhat.thermostat.common.portability.PortableHostFactory;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.core.WriterID;
 
@@ -53,7 +53,7 @@ public class WindowsCpuStatBuilder implements CpuStatBuilder {
     WindowsCpuStatBuilder(Clock clock, WriterID writerId) {
         this.writerId = writerId;
         this.clock = clock;
-        this.portableHost = PortableHostImpl.getInstance();
+        this.portableHost = PortableHostFactory.getInstance();
     }
 
     @Override

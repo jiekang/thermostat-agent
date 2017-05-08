@@ -36,22 +36,11 @@
 
 package com.redhat.thermostat.common.portability;
 
-import com.redhat.thermostat.common.portability.internal.linux.LinuxPortableHostImpl;
-import com.redhat.thermostat.common.portability.internal.macos.MacOSHostImpl;
-import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableHostImpl;
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.Clock;
 
-public class PortableHostImpl {
+public class PortableVmIoStatFactory {
 
-    private static final PortableHost INSTANCE = createInstance();
-
-    private static PortableHost createInstance() {
-        return OS.IS_LINUX ? LinuxPortableHostImpl.createInstance()
-                : OS.IS_WINDOWS ? WindowsPortableHostImpl.createInstance() : MacOSHostImpl.createInstance();
-    }
-
-    public static PortableHost getInstance() {
-        return INSTANCE;
+    public static PortableVmIoStat build(Clock clock, int pid) {
+        return PortableProcessFactory.getInstance().getVmIoStat(clock, pid);
     }
 }
-

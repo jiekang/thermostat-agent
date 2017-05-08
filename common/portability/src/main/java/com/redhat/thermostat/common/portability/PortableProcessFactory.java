@@ -41,7 +41,7 @@ import com.redhat.thermostat.common.portability.internal.macos.MacOSProcessImpl;
 import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableProcessImpl;
 import com.redhat.thermostat.shared.config.OS;
 
-public final class PortableProcessImpl {
+public final class PortableProcessFactory {
 
     private static final PortableProcess INSTANCE = createInstance();
 

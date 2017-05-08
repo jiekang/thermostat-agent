@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.io.agent.internal;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.portability.PortableVmIoStat;
+import com.redhat.thermostat.common.portability.PortableVmIoStatFactory;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 
@@ -53,7 +54,7 @@ public class VmIoStatBuilderImpl implements VmIoStatBuilder {
 
     public synchronized VmIoStat build(String vmId, Integer pid) {
 
-        PortableVmIoStat data = PortableVmIoStat.build(clock, pid);
+        PortableVmIoStat data = PortableVmIoStatFactory.build(clock, pid);
         return (data != null) ? new VmIoStat(writerId, vmId, data.getTimeStamp(), data.getCharactersRead(), data.getCharactersWritten(), data.getReadSyscalls(), data.getWriteSyscalls()) : null;
     }
 

@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.portability.internal.windows.WindowsHelperIm
 import com.redhat.thermostat.shared.config.OS;
 
 import java.io.File;
+
 /**
  * Utility for checking whether a process exists or not.
  *

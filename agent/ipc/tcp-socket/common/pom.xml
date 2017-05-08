@@ -48,7 +48,7 @@
   <artifactId>thermostat-agent-ipc-tcpsocket-common</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat IPC Common</name>
+  <name>Thermostat IPC Common - TCP</name>
 
   <dependencies>
     <dependency>

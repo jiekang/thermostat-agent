@@ -34,25 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.cpu.agent.internal;
+package com.redhat.thermostat.common.portability;
 
-import com.redhat.thermostat.common.portability.PortableProcessFactory;
-import com.redhat.thermostat.common.portability.PortableProcessStat;
+import com.redhat.thermostat.common.portability.internal.UnimplementedError;
+import com.redhat.thermostat.common.portability.internal.linux.LinuxProcessUserInfoBuilderImpl;
+import com.redhat.thermostat.common.portability.internal.macos.MacOSUserInfoBuilderImpl;
+import com.redhat.thermostat.common.portability.internal.windows.WindowsUserInfoBuilderImpl;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.shared.config.OS;
 
-/**
- * Extract status information about the process
- */
-public class ProcessStatusInfoBuilderImpl implements ProcessStatusInfoBuilder {
+public class ProcessUserInfoBuilderFactory {
 
-    ProcessStatusInfoBuilderImpl() {
+    public static ProcessUserInfoBuilder createBuilder(ProcDataSource source, UserNameUtil userNameUtil) {
+        final ProcessUserInfoBuilder builder;
+        if (OS.IS_LINUX) {
+            builder = new LinuxProcessUserInfoBuilderImpl(source, userNameUtil);
+        } else if (OS.IS_WINDOWS) {
+            builder = new WindowsUserInfoBuilderImpl();
+        } else if (OS.IS_MACOS) {
+            builder = new MacOSUserInfoBuilderImpl();
+        } else {
+            throw new UnimplementedError("ProcessUserInfo");
+        }
+        return builder;
     }
 
-    public ProcessStatusInfo build(int pid) {
-
-        final PortableProcessStat info =  PortableProcessFactory.getInstance().getProcessStat(pid);
-
-        return info != null ? new ProcessStatusInfo(pid, info.getUserTime(), info.getKernelTime()) : null;
+    public static ProcessUserInfoBuilder createBuilder() {
+        final ProcessUserInfoBuilder builder;
+        if (OS.IS_LINUX) {
+            builder = new LinuxProcessUserInfoBuilderImpl();
+        } else if (OS.IS_WINDOWS) {
+            builder = new WindowsUserInfoBuilderImpl();
+        } else {
+            builder = new MacOSUserInfoBuilderImpl();
+        }
+        return builder;
     }
-
 }
-

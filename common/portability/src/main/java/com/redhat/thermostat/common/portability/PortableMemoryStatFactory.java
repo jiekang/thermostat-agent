@@ -34,25 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.cpu.agent.internal;
+package com.redhat.thermostat.common.portability;
 
-import com.redhat.thermostat.common.portability.PortableProcessFactory;
-import com.redhat.thermostat.common.portability.PortableProcessStat;
+public class PortableMemoryStatFactory {
 
-/**
- * Extract status information about the process
- */
-public class ProcessStatusInfoBuilderImpl implements ProcessStatusInfoBuilder {
-
-    ProcessStatusInfoBuilderImpl() {
+    public static PortableMemoryStat build() {
+        return PortableHostFactory.getInstance().getMemoryStat();
     }
-
-    public ProcessStatusInfo build(int pid) {
-
-        final PortableProcessStat info =  PortableProcessFactory.getInstance().getProcessStat(pid);
-
-        return info != null ? new ProcessStatusInfo(pid, info.getUserTime(), info.getKernelTime()) : null;
-    }
-
 }
-
