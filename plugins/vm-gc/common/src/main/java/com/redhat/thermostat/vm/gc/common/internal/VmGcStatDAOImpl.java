@@ -36,118 +36,108 @@
 
 package com.redhat.thermostat.vm.gc.common.internal;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
-import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
-import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 
 public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
     
     private static Logger logger = LoggingUtils.getLogger(VmGcStatDAOImpl.class);
-    // ADD vm-gc-stats SET 'agentId' = ?s , \
-    //                     'vmId' = ?s , \
-    //                     'timeStamp' = ?l , \
-    //                     'collectorName' = ?s , \
-    //                     'runCount' = ?l , \
-    //                     'wallTime' = ?l
-    static final String DESC_ADD_VM_GC_STAT = "ADD " + vmGcStatCategory.getName() +
-            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
-                 "'" + Key.VM_ID.getName() + "' = ?s , " +
-                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
-                 "'" + collectorKey.getName() + "' = ?s , " +
-                 "'" + runCountKey.getName() + "' = ?l , " +
-                 "'" + wallTimeKey.getName() + "' = ?l";
-    // The assumption is that VM id's are unique. Which it is. It's a UUID.
-    static final String DESC_QUERY_DISTINCT_COLLECTORS = "QUERY-DISTINCT(" +
-            collectorKey.getName() + ") " + vmGcStatCategory.getName() +
-            " WHERE '" + Key.VM_ID.getName() + "' = ?s";
-    
+    private final JsonHelper jsonHelper;
+    private final HttpHelper httpHelper;
+    private final HttpClient httpClient;
 
-    private final Storage storage;
-    private final VmLatestPojoListGetter<VmGcStat> getter;
-    private final Category<DistinctResult> aggregateCategory;
+    static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
+    static final String GATEWAY_PATH = "/jvm-gc/0.0.2/";
+    static final String CONTENT_TYPE = "application/json";
 
-    VmGcStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(vmGcStatCategory);
-        // getDistinctCollectorNames uses an adapted category. Be sure to
-        // register it after the source category has been registered. This is
-        // necessary in order for web storage to work with the adapted
-        // category.
-        CategoryAdapter<VmGcStat, DistinctResult> adapter = new CategoryAdapter<>(vmGcStatCategory);
-        this.aggregateCategory = adapter.getAdapted(DistinctResult.class);
-        storage.registerCategory(aggregateCategory);
-        getter = new VmLatestPojoListGetter<>(storage, vmGcStatCategory);
+    VmGcStatDAOImpl() throws Exception {
+        this(new HttpClient(), new JsonHelper(new VmGcStatTypeAdapter()), new HttpHelper());
     }
 
-    @Override
-    public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since) {
-        return getter.getLatest(ref, since);
-    }
+    VmGcStatDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh) throws Exception {
+        this.httpClient = client;
+        this.jsonHelper = jh;
+        this.httpHelper = hh;
 
-    @Override
-    public List<VmGcStat> getLatestVmGcStats(AgentId agentId, VmId vmId, long since) {
-        return getter.getLatest(agentId, vmId, since);
+        this.httpHelper.startClient(this.httpClient);
     }
 
     @Override
     public void putVmGcStat(final VmGcStat stat) {
-        executeStatement(new AbstractDaoStatement<VmGcStat>(storage, vmGcStatCategory, DESC_ADD_VM_GC_STAT) {
-            @Override
-            public PreparedStatement<VmGcStat> customize(PreparedStatement<VmGcStat> preparedStatement) {
-                preparedStatement.setString(0, stat.getAgentId());
-                preparedStatement.setString(1, stat.getVmId());
-                preparedStatement.setLong(2, stat.getTimeStamp());
-                preparedStatement.setString(3, stat.getCollectorName());
-                preparedStatement.setLong(4, stat.getRunCount());
-                preparedStatement.setLong(5, stat.getWallTime());
-                return preparedStatement;
-            }
-        });
-    }
+        try {
+            String json = jsonHelper.toJson(stat);
+            StringContentProvider provider = httpHelper.createContentProvider(json);
 
-    @Override
-    public Set<String> getDistinctCollectorNames(VmRef ref) {
-        return getDistinctCollectorNames(new VmId(ref.getVmId()));
-    }
-
-    @Override
-    public Set<String> getDistinctCollectorNames(final VmId vmId) {
-        DistinctResult distinctResult = executeQuery(new AbstractDaoQuery<DistinctResult>(storage, aggregateCategory, DESC_QUERY_DISTINCT_COLLECTORS) {
-            @Override
-            public PreparedStatement<DistinctResult> customize(PreparedStatement<DistinctResult> preparedStatement) {
-                preparedStatement.setString(0, vmId.get());
-                return preparedStatement;
-            }
-        }).head();
-        Set<String> collNames = new HashSet<>();
-        if (distinctResult != null) {
-            Collections.addAll(collNames, distinctResult.getValues());
+            String url = buildUrl();
+            Request httpRequest = httpClient.newRequest(url);
+            httpRequest.method(HttpMethod.POST);
+            httpRequest.content(provider, CONTENT_TYPE);
+            sendRequest(httpRequest);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to send VmGcStat information to web gateway", e);
         }
-        return collNames;
     }
 
     @Override
     public Logger getLogger() {
         return logger;
+    }
+
+    private String buildUrl() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(GATEWAY_URL);
+        builder.append(GATEWAY_PATH);
+        return builder.toString();
+    }
+
+    private void sendRequest(Request httpRequest)
+            throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        ContentResponse resp = httpRequest.send();
+        int status = resp.getStatus();
+        if (status != HttpStatus.OK_200) {
+            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
+        }
+    }
+
+    // For Testing purposes
+    static class JsonHelper {
+
+        private final VmGcStatTypeAdapter adapter;
+
+        public JsonHelper(VmGcStatTypeAdapter adapter) {
+            this.adapter = adapter;
+        }
+
+        public String toJson(VmGcStat stat) throws IOException {
+            return adapter.toJson(stat);
+        }
+
+    }
+
+    // For Testing purposes
+    static class HttpHelper {
+
+        void startClient(HttpClient httpClient) throws Exception {
+            httpClient.start();
+        }
+
+        StringContentProvider createContentProvider(String content) {
+            return new StringContentProvider(content);
+        }
     }
 }
 

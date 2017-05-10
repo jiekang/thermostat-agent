@@ -60,36 +60,6 @@ public interface VmGcStatDAO {
             Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey, runCountKey, wallTimeKey),
             Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
-    @Deprecated
-    public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since);
-
-    public List<VmGcStat> getLatestVmGcStats(AgentId agentId, VmId vmId, long since);
-    
-    /**
-     * Find the set of distinct collector names for this JVM. For each JVM there
-     * are potentially multiple collectors recorded in storage.
-     * 
-     * @param ref
-     *            The idendifier of the JVM for which to get the collector names
-     *            for.
-     * @return A set of distinct collector names.
-     *
-     * @deprecated use {@link #getDistinctCollectorNames(VmId)}
-     */
-    @Deprecated
-    public Set<String> getDistinctCollectorNames(VmRef ref);
-
-    /**
-     * Find the set of distinct collector names for this JVM. For each JVM there
-     * are potentially multiple collectors recorded in storage.
-     *
-     * @param vmId
-     *            The idendifier of the JVM for which to get the collector names
-     *            for.
-     * @return A set of distinct collector names.
-     */
-    public Set<String> getDistinctCollectorNames(VmId vmId);
-    
     public void putVmGcStat(VmGcStat stat);
 }
 

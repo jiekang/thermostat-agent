@@ -37,70 +37,80 @@
 package com.redhat.thermostat.vm.gc.common.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.HttpHelper;
+import static com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.JsonHelper;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
 
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
+import com.redhat.thermostat.storage.core.Key;
 
 public class VmGcStatDAOTest {
 
-    static class Triple<S, T, U> {
-        final S first;
-        final T second;
-        final U third;
+    private VmGcStat stat;
+    private HttpClient httpClient;
+    private HttpHelper httpHelper;
+    private JsonHelper jsonHelper;
+    private StringContentProvider contentProvider;
+    private Request request;
+    private ContentResponse response;
+    private static final String AGENT_ID = "some-agent";
+    private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
 
-        public Triple(S first, T second, U third) {
-            this.first = first;
-            this.second = second;
-            this.third = third;
-        }
+    @Before
+    public void setup() throws Exception {
+        stat = new VmGcStat();
+        stat.setAgentId(AGENT_ID);
+        stat.setTimeStamp(1234l);
+        stat.setWallTime(4000l);
+        stat.setRunCount(1000l);
+        stat.setVmId("Vm-1");
+        stat.setCollectorName("Collector");
+
+        httpClient = mock(HttpClient.class);
+        request = mock(Request.class);
+        when(httpClient.newRequest(anyString())).thenReturn(request);
+        response = mock(ContentResponse.class);
+        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(request.send()).thenReturn(response);
+
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(any(VmGcStat.class))).thenReturn(JSON);
+        httpHelper = mock(HttpHelper.class);
+        contentProvider = mock(StringContentProvider.class);
+        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
     }
 
-    private static final String AGENT_ID = "some-agent";
-    private static final String VM_ID = "VM321";
-    private static final Long TIMESTAMP = 456L;
-    private static final String COLLECTOR = "collector1";
-    private static final Long RUN_COUNT = 10L;
-    private static final Long WALL_TIME = 9L;
-    
     @Test
-    public void verifyDescriptorsAreSane() {
-        String addVmGcStat = "ADD vm-gc-stats SET 'agentId' = ?s , " +
-                                    "'vmId' = ?s , " +
-                                    "'timeStamp' = ?l , " +
-                                    "'collectorName' = ?s , " +
-                                    "'runCount' = ?l , " +
-                                    "'wallTime' = ?l";
-        assertEquals(addVmGcStat, VmGcStatDAOImpl.DESC_ADD_VM_GC_STAT);
+    public void verifyAddVmGcStat() throws Exception {
+        VmGcStatDAO dao = new VmGcStatDAOImpl(httpClient, jsonHelper, httpHelper);
+
+        dao.putVmGcStat(stat);
+
+        final String url = VmGcStatDAOImpl.GATEWAY_URL + VmGcStatDAOImpl.GATEWAY_PATH;
+        verify(httpClient).newRequest(url);
+        verify(request).method(HttpMethod.POST);
+        verify(jsonHelper).toJson(stat);
+        verify(httpHelper).createContentProvider(JSON);
+        verify(request).content(contentProvider, VmGcStatDAOImpl.CONTENT_TYPE);
+        verify(request).send();
+        verify(response).getStatus();
     }
 
     @Test
@@ -116,241 +126,6 @@ public class VmGcStatDAOTest {
         assertEquals(6, keys.size());
     }
 
-    @Test
-    public void testGetLatestVmGcStatsBasic() throws DescriptorParsingException, StatementExecutionException {
-
-        VmGcStat vmGcStat = new VmGcStat("foo-agent", VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
-
-        @SuppressWarnings("unchecked")
-        Cursor<VmGcStat> cursor = (Cursor<VmGcStat>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(vmGcStat);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VmGcStat> stmt = (PreparedStatement<VmGcStat>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn("system");
-
-        VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getHostRef()).thenReturn(hostRef);
-        when(vmRef.getVmId()).thenReturn("VM321");
-
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
-        List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef, Long.MIN_VALUE);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, "system");
-        verify(stmt).setString(1, "VM321");
-        verify(stmt).setLong(2, Long.MIN_VALUE);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-
-        assertEquals(1, vmGcStats.size());
-        VmGcStat stat = vmGcStats.get(0);
-        assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
-        assertEquals(VM_ID, stat.getVmId());
-        assertEquals(COLLECTOR, stat.getCollectorName());
-        assertEquals(RUN_COUNT, (Long) stat.getRunCount());
-        assertEquals(WALL_TIME, (Long) stat.getWallTime());
-    }
-
-    @Test
-    public void testGetLatestVmGcStatsFromAgentIdAndVmId() throws DescriptorParsingException, StatementExecutionException {
-        AgentId agentId = new AgentId(AGENT_ID);
-        VmId vmId = new VmId(VM_ID);
-        VmGcStat vmGcStat = new VmGcStat(AGENT_ID, VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
-
-        @SuppressWarnings("unchecked")
-        Cursor<VmGcStat> cursor = (Cursor<VmGcStat>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(vmGcStat);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VmGcStat> stmt = (PreparedStatement<VmGcStat>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
-        List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(agentId, vmId, Long.MIN_VALUE);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, AGENT_ID);
-        verify(stmt).setString(1, VM_ID);
-        verify(stmt).setLong(2, Long.MIN_VALUE);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-
-        assertEquals(1, vmGcStats.size());
-        VmGcStat stat = vmGcStats.get(0);
-        assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
-        assertEquals(AGENT_ID, stat.getAgentId());
-        assertEquals(VM_ID, stat.getVmId());
-        assertEquals(COLLECTOR, stat.getCollectorName());
-        assertEquals(RUN_COUNT, (Long) stat.getRunCount());
-        assertEquals(WALL_TIME, (Long) stat.getWallTime());
-    }
-
-    @SuppressWarnings("unchecked")
-    private StatementDescriptor<VmGcStat> anyDescriptor() {
-        return (StatementDescriptor<VmGcStat>) any(StatementDescriptor.class);
-    }
-
-    @Test
-    public void testPutVmGcStat() throws DescriptorParsingException,
-            StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VmGcStat> add = mock(PreparedStatement.class);
-        StatementDescriptor<VmGcStat> desc = new StatementDescriptor<>(VmGcStatDAO.vmGcStatCategory, VmGcStatDAOImpl.DESC_ADD_VM_GC_STAT);
-        
-        when(storage.prepareStatement(eq(desc))).thenReturn(add);
-        
-        VmGcStat stat = new VmGcStat("foo-agent", VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
-        dao.putVmGcStat(stat);
-        
-        verify(storage).prepareStatement(eq(desc));
-
-        verify(add).setString(0, stat.getAgentId());
-        verify(add).setString(1, stat.getVmId());
-        verify(add).setLong(2, stat.getTimeStamp());
-        verify(add).setString(3, stat.getCollectorName());
-        verify(add).setLong(4, stat.getRunCount());
-        verify(add).setLong(5, stat.getWallTime());
-        verify(add).execute();
-        verifyNoMoreInteractions(add);
-    }
-
-    @Test
-    public void testVmRefDistinctCollectorsSuccess() throws DescriptorParsingException,
-            StatementExecutionException {
-
-        Triple<Cursor<DistinctResult>, DistinctResult, Set<String>> setup =
-                setupTestDistinctCollectorsSuccess();
-        Cursor<DistinctResult> c = setup.first;
-        DistinctResult result = setup.second;
-        Set<String> mockResults = setup.third;
-
-        Set<String> actual = doVmRefDistinctCollectorsTest(c);
-        assertNotNull(result);
-        assertEquals(2, actual.size());
-        assertEquals(mockResults, actual);
-    }
-
-    @Test
-    public void testDistinctCollectorsSuccess() throws DescriptorParsingException,
-            StatementExecutionException {
-
-        Triple<Cursor<DistinctResult>, DistinctResult, Set<String>> setup =
-                setupTestDistinctCollectorsSuccess();
-        Cursor<DistinctResult> c = setup.first;
-        DistinctResult result = setup.second;
-        Set<String> mockResults = setup.third;
-        
-        Set<String> actual = doDistinctCollectorsTest(c);
-        assertNotNull(result);
-        assertEquals(2, actual.size());
-        assertEquals(mockResults, actual);
-    }
-
-    private Triple<Cursor<DistinctResult>, DistinctResult, Set<String>> setupTestDistinctCollectorsSuccess()
-            throws DescriptorParsingException {
-
-        Set<String> mockResults = new HashSet<>();
-        mockResults.add("MSC");
-        mockResults.add("PCopy");
-        String[] vals = mockResults.toArray(new String[mockResults.size()]);
-        DistinctResult result = new DistinctResult();
-        result.setValues(vals);
-        @SuppressWarnings("unchecked")
-        Cursor<DistinctResult> c = mock(Cursor.class);
-        when(c.hasNext()).thenReturn(true).thenReturn(false);
-        when(c.next()).thenReturn(result).thenThrow(new NoSuchElementException());
-
-        return new Triple<>(c, result, mockResults);
-    }
-    
-    @Test
-    public void testVmRefDistinctCollectorsQueryFailure() throws DescriptorParsingException,
-            StatementExecutionException {
-        @SuppressWarnings("unchecked")
-        Cursor<DistinctResult> c = mock(Cursor.class);
-        when(c.hasNext()).thenReturn(false);
-        
-        Set<String> result = doVmRefDistinctCollectorsTest(c);
-        assertEquals("expected empty set", 0, result.size());
-    }
-
-    @Test
-    public void testDistinctCollectorsQueryFailure() throws DescriptorParsingException,
-            StatementExecutionException {
-        @SuppressWarnings("unchecked")
-        Cursor<DistinctResult> c = mock(Cursor.class);
-        when(c.hasNext()).thenReturn(false);
-
-        Set<String> result = doDistinctCollectorsTest(c);
-        assertEquals("expected empty set", 0, result.size());
-    }
-
-    private Set<String> doVmRefDistinctCollectorsTest(Cursor<DistinctResult> c)
-            throws DescriptorParsingException, StatementExecutionException {
-
-        Triple<Storage, PreparedStatement<DistinctResult>, StatementDescriptor<DistinctResult>>
-                setup = setupDoDistinctCollectorsTest(c);
-        Storage storage = setup.first;
-        PreparedStatement<DistinctResult> query = setup.second;
-        StatementDescriptor<DistinctResult> desc = setup.third;
-
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
-        Set<String> result = dao.getDistinctCollectorNames(new VmRef(null, VM_ID, -1, "foo-vmref"));
-        
-        verify(storage).prepareStatement(eq(desc));
-        verify(query).setString(0, VM_ID);
-        verify(query).executeQuery();
-        verifyNoMoreInteractions(query);
-        return result;
-    }
-
-    private Set<String> doDistinctCollectorsTest(Cursor<DistinctResult> c)
-            throws DescriptorParsingException, StatementExecutionException {
-
-        Triple<Storage, PreparedStatement<DistinctResult>, StatementDescriptor<DistinctResult>>
-                setup = setupDoDistinctCollectorsTest(c);
-        Storage storage = setup.first;
-        PreparedStatement<DistinctResult> query = setup.second;
-        StatementDescriptor<DistinctResult> desc = setup.third;
-
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
-        Set<String> result = dao.getDistinctCollectorNames(new VmId(VM_ID));
-
-        verify(storage).prepareStatement(eq(desc));
-        verify(query).setString(0, VM_ID);
-        verify(query).executeQuery();
-        verifyNoMoreInteractions(query);
-        return result;
-    }
-
-    private Triple<Storage, PreparedStatement<DistinctResult>, StatementDescriptor<DistinctResult>> setupDoDistinctCollectorsTest
-            (Cursor<DistinctResult> c)
-            throws DescriptorParsingException, StatementExecutionException {
-
-        Storage storage = mock(Storage.class);
-        CategoryAdapter<VmGcStat, DistinctResult> catAdapter = new CategoryAdapter<>(VmGcStatDAO.vmGcStatCategory);
-        Category<DistinctResult> adaptedCategory = catAdapter.getAdapted(DistinctResult.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<DistinctResult> query = mock(PreparedStatement.class);
-        StatementDescriptor<DistinctResult> desc = new StatementDescriptor<>(adaptedCategory, VmGcStatDAOImpl.DESC_QUERY_DISTINCT_COLLECTORS);
-
-        when(storage.prepareStatement(eq(desc))).thenReturn(query);
-        when(query.executeQuery()).thenReturn(c);
-
-        return new Triple<>(storage, query, desc);
-    }
 
 }
 

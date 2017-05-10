@@ -38,42 +38,21 @@ package com.redhat.thermostat.vm.gc.common.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class Activator implements BundleActivator {
-    
-    private ServiceTracker tracker;
-    private ServiceRegistration reg;
 
     @Override
     public void start(BundleContext context) throws Exception {
-        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                Storage storage = (Storage) context.getService(reference);
-                VmGcStatDAO vmGcStatDao = new VmGcStatDAOImpl(storage);
-                reg = context.registerService(VmGcStatDAO.class.getName(), vmGcStatDao, null);
-                return super.addingService(reference);
-            }
-            
-            @Override
-            public void removedService(ServiceReference reference,
-                    Object service) {
-                reg.unregister();
-                super.removedService(reference, service);
-            }
-        };
-        tracker.open();
+        VmGcStatDAO vmGcStatDao = new VmGcStatDAOImpl();
+        context.registerService(VmGcStatDAO.class.getName(), vmGcStatDao, null);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
+        // Nothing to do here. The OSGi framework will automatically
+        // unregister the service when the bundle is stopped.
     }
 
 }
