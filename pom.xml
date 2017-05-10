@@ -251,9 +251,6 @@
          used. -->
     <jcommon.version>1.0.17</jcommon.version>
     <jgraphx.version>2.3.0.5</jgraphx.version>
-    <mongo-driver.version>3.2.1</mongo-driver.version>
-    <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
-    <mongo-driver.osgi-version>3.2.1</mongo-driver.osgi-version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-cli.version>1.2</commons-cli.version>
     <commons-io.version>2.4</commons-io.version>
@@ -648,11 +645,6 @@
         <groupId>org.tinyjee.jgraphx</groupId>
         <artifactId>jgraphx</artifactId>
         <version>${jgraphx.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mongodb</groupId>
-        <artifactId>mongo-java-driver</artifactId>
-        <version>${mongo-driver.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-beanutils</groupId>
