@@ -51,7 +51,7 @@
   <name>Thermostat Plugins</name>
 
   <modules>
-    <module>thread</module>
+    <!--<module>thread</module>-->
     <module>killvm</module>
     <module>com.redhat.thermostat.host.overview</module>
     <module>host-cpu</module>
