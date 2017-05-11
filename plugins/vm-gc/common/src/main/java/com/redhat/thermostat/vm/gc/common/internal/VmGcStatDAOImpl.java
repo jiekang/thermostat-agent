@@ -37,6 +37,8 @@
 package com.redhat.thermostat.vm.gc.common.internal;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -79,7 +81,7 @@ public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
     @Override
     public void putVmGcStat(final VmGcStat stat) {
         try {
-            String json = jsonHelper.toJson(stat);
+            String json = jsonHelper.toJson(Arrays.asList(stat));
             StringContentProvider provider = httpHelper.createContentProvider(json);
 
             String url = buildUrl();
@@ -122,8 +124,8 @@ public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
             this.adapter = adapter;
         }
 
-        public String toJson(VmGcStat stat) throws IOException {
-            return adapter.toJson(stat);
+        public String toJson(List<VmGcStat> list) throws IOException {
+            return adapter.toJson(list);
         }
 
     }

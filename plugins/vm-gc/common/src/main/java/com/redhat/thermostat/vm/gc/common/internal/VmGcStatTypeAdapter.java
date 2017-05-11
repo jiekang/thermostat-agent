@@ -42,8 +42,9 @@ import com.google.gson.stream.JsonWriter;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 import java.io.IOException;
+import java.util.List;
 
-public class VmGcStatTypeAdapter extends TypeAdapter<VmGcStat> {
+public class VmGcStatTypeAdapter extends TypeAdapter<List<VmGcStat>> {
 
     private static final String TYPE_LONG = "$numberLong";
     private static final String AGENT_ID = "agentId";
@@ -54,12 +55,20 @@ public class VmGcStatTypeAdapter extends TypeAdapter<VmGcStat> {
     private static final String WALL_TIME_IN_MICROS = "wallTimeInMicros";
 
     @Override
-    public VmGcStat read(JsonReader in) throws IOException {
+    public List<VmGcStat> read(JsonReader in) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void write(JsonWriter out, VmGcStat stat) throws IOException {
+    public void write(JsonWriter out, List<VmGcStat> stats) throws IOException {
+        out.beginArray();
+        for (VmGcStat stat : stats) {
+            writeGcStat(out, stat);
+        }
+        out.endArray();
+    }
+    
+    private void writeGcStat(JsonWriter out, VmGcStat stat) throws IOException {
         out.beginObject();
         out.name(AGENT_ID);
         out.value(stat.getAgentId());

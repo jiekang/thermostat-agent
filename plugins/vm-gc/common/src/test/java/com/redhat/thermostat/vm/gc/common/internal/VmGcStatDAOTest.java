@@ -38,14 +38,14 @@ package com.redhat.thermostat.vm.gc.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.HttpHelper;
-import static com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.JsonHelper;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.eclipse.jetty.client.HttpClient;
@@ -57,9 +57,11 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
-import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.HttpHelper;
+import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.JsonHelper;
+import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcStatDAOTest {
 
@@ -91,7 +93,7 @@ public class VmGcStatDAOTest {
         when(request.send()).thenReturn(response);
 
         jsonHelper = mock(JsonHelper.class);
-        when(jsonHelper.toJson(any(VmGcStat.class))).thenReturn(JSON);
+        when(jsonHelper.toJson(anyListOf(VmGcStat.class))).thenReturn(JSON);
         httpHelper = mock(HttpHelper.class);
         contentProvider = mock(StringContentProvider.class);
         when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
@@ -106,7 +108,7 @@ public class VmGcStatDAOTest {
         final String url = VmGcStatDAOImpl.GATEWAY_URL + VmGcStatDAOImpl.GATEWAY_PATH;
         verify(httpClient).newRequest(url);
         verify(request).method(HttpMethod.POST);
-        verify(jsonHelper).toJson(stat);
+        verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
         verify(httpHelper).createContentProvider(JSON);
         verify(request).content(contentProvider, VmGcStatDAOImpl.CONTENT_TYPE);
         verify(request).send();

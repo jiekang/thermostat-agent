@@ -36,20 +36,19 @@
 
 package com.redhat.thermostat.vm.gc.common.internal;
 
-import com.google.gson.GsonBuilder;
-import com.google.gson.Gson;
-import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcStatTypeAdapterTest {
 
     @Test
-    public void testWrite() {
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(VmGcStat.class, new VmGcStatTypeAdapter());
-        Gson gson = builder.create();
+    public void testWrite() throws Exception {
+        VmGcStatTypeAdapter typeAdapter = new VmGcStatTypeAdapter();
         VmGcStat stat = new VmGcStat();
         stat.setAgentId("1");
         stat.setVmId("2");
@@ -57,6 +56,7 @@ public class VmGcStatTypeAdapterTest {
         stat.setCollectorName("Collector");
         stat.setRunCount(10l);
         stat.setWallTime(200l);
-        assertEquals("{\"agentId\":\"1\",\"vmId\":\"2\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collectorName\":\"Collector\",\"runCount\":10,\"wallTimeInMicros\":200}", gson.toJson(stat));
+        assertEquals("[{\"agentId\":\"1\",\"vmId\":\"2\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collectorName\":\"Collector\",\"runCount\":10,\"wallTimeInMicros\":200}]", 
+                typeAdapter.toJson(Arrays.asList(stat)));
     }
 }
