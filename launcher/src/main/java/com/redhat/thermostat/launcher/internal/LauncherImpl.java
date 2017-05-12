@@ -36,11 +36,10 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -76,7 +75,6 @@ import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.InteractiveStorageCredentials;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -170,14 +168,7 @@ public class LauncherImpl implements Launcher {
             } else if (isInfoQuery(args, inShell)) {
                 showInfo();
             } else {
-                // With web-always-on we need to make sure that the setup ran.
-                if (isSomeHelpInvocation(args) || isThermostatConfigured()) {
-                    logger.log(Level.FINE, "Running command without setup interception.");
-                    runCommandFromArguments(args, listeners, inShell);
-                } else {
-                    logger.log(Level.FINE, "Running command through setup.");
-                    runSetupThenInterceptedCommand(args);
-                }
+                runCommandFromArguments(args, listeners, inShell);
             }
         } catch (NoClassDefFoundError e) {
             // This could mean pom is missing <Private-Package> or <Export-Package> lines.
@@ -201,47 +192,6 @@ public class LauncherImpl implements Launcher {
         }
     }
     
-    private boolean isSomeHelpInvocation(String[] args) {
-        for (String arg: args) {
-            if (HELP_SET.contains(arg)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void runSetupThenInterceptedCommand(String[] originalCmdArgs) {
-        String origCmdArgs = convertOriginalArgsToString(originalCmdArgs);
-        String[] setupArgs = { "setup",
-                               "--origArgs",
-                               origCmdArgs
-                             };
-        runCommandFromArguments(setupArgs, null, false);
-    }
-
-    private String convertOriginalArgsToString(String[] origArgs) {
-        if (origArgs.length == 0) {
-            throw new AssertionError("Running setup with no argument?");
-        }
-        final String separator = "|||";
-        // single argument
-        if (origArgs.length == 1) {
-            return origArgs[0];
-        }
-        StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < origArgs.length - 1; i++) {
-            buffer.append(origArgs[i]);
-            buffer.append(separator);
-        }
-        buffer.append(origArgs[origArgs.length - 1]);
-        return buffer.toString();
-    }
-
-    private boolean isThermostatConfigured() throws InvalidConfigurationException {
-        File setupCompleteFile = paths.getUserSetupCompleteStampFile();
-        return setupCompleteFile.exists();
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void shutdown() throws InternalError {
         try {

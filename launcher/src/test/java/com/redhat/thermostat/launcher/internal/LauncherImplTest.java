@@ -874,28 +874,6 @@ public class LauncherImplTest {
         runAndVerifyCommand(new String[] { cmdName }, expected, isInShell);
     }
     
-    @Test
-    public void verifyOriginalCmdArgsArePassedOnToSetup() {
-        String[] argsList = new String[] { "list-vms", "--dbUrl=foo" };
-        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
-        assertEquals("Expected to run only setup", 1, resultList.size());
-        Pair<String[], Boolean> actual = resultList.get(0);
-        assertFalse("Expected to run outside shell", actual.getSecond());
-        String[] expectedList = new String[] { "setup", "--origArgs", "list-vms|||--dbUrl=foo" };
-        assertArrayEquals(expectedList, actual.getFirst());
-    }
-    
-    @Test
-    public void verifyOriginalCmdArgsArePassedOnToSetup2() {
-        String[] argsList = new String[] { "web-storage-service" };
-        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
-        assertEquals("Expected to run only setup", 1, resultList.size());
-        Pair<String[], Boolean> actual = resultList.get(0);
-        assertFalse("Expected to run outside shell", actual.getSecond());
-        String[] expectedList = new String[] { "setup", "--origArgs", "web-storage-service" };
-        assertArrayEquals(expectedList, actual.getFirst());
-    }
-    
     /*
      * Bash completion uses help which expects help to always run
      * (no setup required).
