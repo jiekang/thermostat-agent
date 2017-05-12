@@ -62,7 +62,7 @@
 <!--        <include>com.redhat.thermostat:thermostat-vm-heap-analysis-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-io-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-jmx-distribution</include>-->
-<!--        <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>-->
+        <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>
 <!--        <include>com.redhat.thermostat:thermostat-vm-profiler-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-killvm-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-numa-distribution</include>-->

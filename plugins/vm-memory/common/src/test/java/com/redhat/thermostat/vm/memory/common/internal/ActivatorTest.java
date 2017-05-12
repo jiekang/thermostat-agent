@@ -47,27 +47,10 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class ActivatorTest {
-    
-    @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertEquals(0, context.getAllServices().size());
-        assertEquals(1, context.getServiceListeners().size());
-
-        activator.stop(context);
-    }
 
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        Storage storage = mock(Storage.class);
-
-        context.registerService(Storage.class, storage, null);
 
         Activator activator = new Activator();
 

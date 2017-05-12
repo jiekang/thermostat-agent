@@ -63,17 +63,6 @@ public interface VmMemoryStatDAO {
                     generationsKey),
             Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
-    public VmMemoryStat getNewestMemoryStat(VmRef ref);
-
-    public VmMemoryStat getOldestMemoryStat(VmRef ref);
-
-    @Deprecated
-    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef vm, long since);
-
-    public List<VmMemoryStat> getLatestVmMemoryStats(AgentId agentId, VmId vmId, long since);
-
-    public List<VmMemoryStat> getVmMemoryStats(VmRef vm, long since, long to);
-
     public void putVmMemoryStat(VmMemoryStat stat);
 
 }

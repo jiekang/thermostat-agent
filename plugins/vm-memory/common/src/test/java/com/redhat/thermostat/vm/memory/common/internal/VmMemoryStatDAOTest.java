@@ -38,89 +38,64 @@ package com.redhat.thermostat.vm.memory.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 
+import static com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.HttpHelper;
+import static com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.JsonHelper;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyListOf;
+
 public class VmMemoryStatDAOTest {
 
+    private HttpClient httpClient;
+    private HttpHelper httpHelper;
+    private JsonHelper jsonHelper;
+    private StringContentProvider contentProvider;
+    private Request request;
+    private ContentResponse response;
+    private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
     private static final String VM_ID = "0xcafe";
     private static final String AGENT_ID = "agent";
+    private static final String CONTENT_TYPE = "application/json";
+    private static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
+    private static final String GATEWAY_PATH = "/jvm-memory/0.0.2/";
 
-    private Storage storage;
-    private VmRef vmRef;
-    private AgentId agentId;
-    private VmId vmId;
-
-    private PreparedStatement<VmMemoryStat> stmt;
-    private Cursor<VmMemoryStat> cursor;
-
-    @SuppressWarnings("unchecked")
     @Before
-    public void setUp() throws DescriptorParsingException, StatementExecutionException {
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn(AGENT_ID);
+    public void setUp() throws Exception {
+        httpClient = mock(HttpClient.class);
+        request = mock(Request.class);
+        when(httpClient.newRequest(anyString())).thenReturn(request);
+        response = mock(ContentResponse.class);
+        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(request.send()).thenReturn(response);
 
-        vmRef = mock(VmRef.class);
-        when(vmRef.getHostRef()).thenReturn(hostRef);
-        when(vmRef.getVmId()).thenReturn(VM_ID);
-
-        agentId = new AgentId(AGENT_ID);
-        vmId = new VmId(VM_ID);
-
-        storage = mock(Storage.class);
-        stmt = (PreparedStatement<VmMemoryStat>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-
-        cursor = (Cursor<VmMemoryStat>) mock(Cursor.class);
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        when(cursor.hasNext()).thenReturn(false);
-    }
-
-    @SuppressWarnings("unchecked")
-    private StatementDescriptor<VmMemoryStat> anyDescriptor() {
-        return (StatementDescriptor<VmMemoryStat>) any(StatementDescriptor.class);
-    }
-    
-    @Test
-    public void preparedQueryDescriptorsAreSane() {
-        String addVmMemoryStat = "ADD vm-memory-stats SET 'agentId' = ?s , " +
-                                        "'vmId' = ?s , " +
-                                        "'timeStamp' = ?l , " +
-                                        "'metaspaceMaxCapacity' = ?l , " +
-                                        "'metaspaceMinCapacity' = ?l , " +
-                                        "'metaspaceCapacity' = ?l , " +
-                                        "'metaspaceUsed' = ?l , " +
-                                        "'generations' = ?p[";
-        assertEquals(addVmMemoryStat, VmMemoryStatDAOImpl.DESC_ADD_VM_MEMORY_STAT);
+        httpHelper = mock(HttpHelper.class);
+        contentProvider = mock(StringContentProvider.class);
+        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(VmMemoryStat.class))).thenReturn(JSON);
     }
 
     @Test
@@ -140,63 +115,9 @@ public class VmMemoryStatDAOTest {
         assertEquals(8, keys.size());
     }
 
-    @Test
-    public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
-        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
-        impl.getNewestMemoryStat(vmRef);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, vmRef.getHostRef().getAgentId());
-        verify(stmt).setString(1, vmRef.getVmId());
-        verify(stmt).executeQuery();
-    }
-
-    @Test
-    public void testVmRefGetLatestSince() throws DescriptorParsingException, StatementExecutionException {
-        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
-        impl.getLatestVmMemoryStats(vmRef, 123L);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, vmRef.getHostRef().getAgentId());
-        verify(stmt).setString(1, vmRef.getVmId());
-        verify(stmt).setLong(2, 123L);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-    }
-
-    @Test
-    public void testGetLatestSince() throws DescriptorParsingException, StatementExecutionException {
-        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
-        impl.getLatestVmMemoryStats(agentId, vmId, 123L);
-
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, agentId.get());
-        verify(stmt).setString(1, vmId.get());
-        verify(stmt).setLong(2, 123L);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-    }
-
-    @Test
-    public void testGetLatestReturnsNullWhenStorageEmpty() throws DescriptorParsingException, StatementExecutionException {
-        when(cursor.hasNext()).thenReturn(false);
-        when(cursor.next()).thenReturn(null);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VmMemoryStat> stmt = (PreparedStatement<VmMemoryStat>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
-        VmMemoryStat latest = impl.getNewestMemoryStat(vmRef);
-        assertTrue(latest == null);
-    }
-
     @SuppressWarnings("unchecked")
     @Test
-    public void testPutVmMemoryStat() throws DescriptorParsingException,
-            StatementExecutionException {
+    public void testPutVmMemoryStat() throws Exception {
 
         List<Generation> generations = new ArrayList<Generation>();
 
@@ -228,31 +149,18 @@ public class VmMemoryStatDAOTest {
         }
         VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]),
                 2, 3, 4, 5);
-
-        Storage storage = mock(Storage.class);
-        PreparedStatement<VmMemoryStat> add = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
         
-        VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(storage);
+        VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(httpClient, httpHelper, jsonHelper);
         dao.putVmMemoryStat(stat);
-        
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
-        
-        verify(storage).prepareStatement(captor.capture());
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(VmMemoryStatDAOImpl.DESC_ADD_VM_MEMORY_STAT, desc.getDescriptor());
 
-        verify(add).setString(0, stat.getAgentId());
-        verify(add).setString(1, stat.getVmId());
-        verify(add).setLong(2, stat.getTimeStamp());
-        verify(add).setLong(3, stat.getMetaspaceMaxCapacity());
-        verify(add).setLong(4, stat.getMetaspaceMinCapacity());
-        verify(add).setLong(5, stat.getMetaspaceCapacity());
-        verify(add).setLong(6, stat.getMetaspaceUsed());
-        verify(add).setPojoList(7, stat.getGenerations());
-        verify(add).execute();
-        Mockito.verifyNoMoreInteractions(add);
+        String url = GATEWAY_URL + GATEWAY_PATH;
+        verify(httpClient).newRequest(url);
+        verify(request).method(HttpMethod.POST);
+        verify(jsonHelper).toJson(Arrays.asList(stat));
+        verify(httpHelper).createContentProvider(JSON);
+        verify(request).content(contentProvider, CONTENT_TYPE);
+        verify(request).send();
+        verify(response).getStatus();
     }
     
 }

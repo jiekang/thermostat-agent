@@ -36,105 +36,104 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 
 class VmMemoryStatDAOImpl extends AbstractDao implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
 
-    // ADD vm-memory-stats SET 'agentId' = ?s , \
-    //                         'vmId' = ?s , \
-    //                         'timeStamp' = ?s , \
-    //                         'metaspaceMaxCapacity' = ?l , \
-    //                         'metaspaceMinCapacity' = ?l , \
-    //                         'metaspaceCapacity' = ?l , \
-    //                         'metaspaceUsed' = ?l , \
-    //                         'generations' = ?p[
-    static final String DESC_ADD_VM_MEMORY_STAT = "ADD " + vmMemoryStatsCategory.getName() +
-            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
-                 "'" + Key.VM_ID.getName() + "' = ?s , " +
-                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
-                 "'" + KEY_METASPACE_MAX_CAPACITY.getName() + "' = ?l , " +
-                 "'" + KEY_METASPACE_MIN_CAPACITY.getName() + "' = ?l , " +
-                 "'" + KEY_METASPACE_CAPACITY.getName() + "' = ?l , " +
-                 "'" + KEY_METASPACE_USED.getName() + "' = ?l , " +
-                 "'" + generationsKey.getName() + "' = ?p[";
-    
-    private final Storage storage;
-    private final VmLatestPojoListGetter<VmMemoryStat> latestGetter;
-    private final VmTimeIntervalPojoListGetter<VmMemoryStat> intervalGetter;
-    private final VmBoundaryPojoGetter<VmMemoryStat> boundaryGetter;
+    private final HttpClient client;
+    private final HttpHelper httpHelper;
+    private final JsonHelper jsonHelper;
 
-    VmMemoryStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(vmMemoryStatsCategory);
-        latestGetter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory);
-        intervalGetter = new VmTimeIntervalPojoListGetter<>(storage, vmMemoryStatsCategory);
-        boundaryGetter = new VmBoundaryPojoGetter<>(storage, vmMemoryStatsCategory);
+    private static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
+    private static final String GATEWAY_PATH = "/jvm-memory/0.0.2/";
+    private static final String CONTENT_TYPE = "application/json";
+
+    VmMemoryStatDAOImpl() throws Exception {
+        this(new HttpClient(), new HttpHelper(), new JsonHelper(new VmMemoryStatTypeAdapter()));
     }
 
-    @Override
-    public VmMemoryStat getNewestMemoryStat(VmRef ref) {
-        return boundaryGetter.getNewestStat(ref);
-    }
+    VmMemoryStatDAOImpl(HttpClient client, HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+        this.client = client;
+        this.httpHelper = httpHelper;
+        this.jsonHelper = jsonHelper;
 
-    @Override
-    public VmMemoryStat getOldestMemoryStat(VmRef ref) {
-        return boundaryGetter.getOldestStat(ref);
+        this.httpHelper.startClient(this.client);
     }
 
     @Override
     public void putVmMemoryStat(final VmMemoryStat stat) {
-        executeStatement(new AbstractDaoStatement<VmMemoryStat>(storage, vmMemoryStatsCategory, DESC_ADD_VM_MEMORY_STAT) {
-            @Override
-            public PreparedStatement<VmMemoryStat> customize(PreparedStatement<VmMemoryStat> preparedStatement) {
-                preparedStatement.setString(0, stat.getAgentId());
-                preparedStatement.setString(1, stat.getVmId());
-                preparedStatement.setLong(2, stat.getTimeStamp());
-                preparedStatement.setLong(3, stat.getMetaspaceMaxCapacity());
-                preparedStatement.setLong(4, stat.getMetaspaceMinCapacity());
-                preparedStatement.setLong(5, stat.getMetaspaceCapacity());
-                preparedStatement.setLong(6, stat.getMetaspaceUsed());
-                preparedStatement.setPojoList(7, stat.getGenerations());
-                return preparedStatement;
-            }
-        });
+        try {
+            String json = jsonHelper.toJson(Arrays.asList(stat));
+            StringContentProvider provider = httpHelper.createContentProvider(json);
+
+            String url = GATEWAY_URL + GATEWAY_PATH;
+            Request httpRequest = client.newRequest(url);
+            httpRequest.method(HttpMethod.POST);
+            httpRequest.content(provider, CONTENT_TYPE);
+            sendRequest(httpRequest);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to send VmMemoryStat to Web Gateway", e);
+        }
     }
 
-    @Override
-    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
-        return latestGetter.getLatest(ref, since);
-    }
-
-    @Override
-    public List<VmMemoryStat> getLatestVmMemoryStats(AgentId agentId, VmId vmId, long since) {
-        return latestGetter.getLatest(agentId, vmId, since);
-    }
-
-    @Override
-    public List<VmMemoryStat> getVmMemoryStats(VmRef ref, long since, long to) {
-        return intervalGetter.getLatest(ref, since, to);
+    private void sendRequest(Request httpRequest)
+            throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        ContentResponse resp = httpRequest.send();
+        int status = resp.getStatus();
+        if (status != HttpStatus.OK_200) {
+            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
+        }
     }
 
     @Override
     protected Logger getLogger() {
         return logger;
+    }
+
+    // For testing purposes
+    static class JsonHelper {
+
+        private final VmMemoryStatTypeAdapter adapter;
+
+        public JsonHelper(VmMemoryStatTypeAdapter adapter) {
+            this.adapter = adapter;
+        }
+
+        String toJson(List<VmMemoryStat> stats) throws IOException {
+            return adapter.toJson(stats);
+        }
+    }
+
+    // For testing purposes
+    static class HttpHelper {
+
+        void startClient(HttpClient httpClient) throws Exception {
+            httpClient.start();
+        }
+
+        StringContentProvider createContentProvider(String content) {
+            return new StringContentProvider(content);
+        }
+
     }
 }
 
