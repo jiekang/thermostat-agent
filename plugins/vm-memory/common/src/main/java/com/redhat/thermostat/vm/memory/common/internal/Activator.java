@@ -53,6 +53,8 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
+        VmTlabStatDAO vmTlabStatDao = new VmTlabStatDAOImpl();
+        context.registerService(VmTlabStatDAO.class.getName(), vmTlabStatDao, null);
         VmMemoryStatDAO vmMemoryStatDao = new VmMemoryStatDAOImpl();
         context.registerService(VmMemoryStatDAO.class.getName(), vmMemoryStatDao, null);
     }

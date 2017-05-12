@@ -73,20 +73,6 @@ public interface VmTlabStatDAO {
                     KEY_TOTAL_FAST_WASTE, KEY_MAX_FAST_WASTE),
             Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
-    @Deprecated
-    public VmTlabStat getNewestStat(VmRef ref);
-
-    @Deprecated
-    public VmTlabStat getOldestStat(VmRef ref);
-
-    @Deprecated
-    public List<VmTlabStat> getLatestStats(VmRef vm, long since);
-
-    public List<VmTlabStat> getLatestStats(AgentId agentId, VmId vmId, long since);
-
-    @Deprecated
-    public List<VmTlabStat> getStats(VmRef vm, long since, long to);
-
     public void putStat(VmTlabStat stat);
 
 }

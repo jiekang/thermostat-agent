@@ -36,111 +36,105 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
+
 class VmTlabStatDAOImpl extends AbstractDao implements VmTlabStatDAO {
+
+    private static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
+    private static final String GATEWAY_PATH = "/jvm-memory/0.0.2/";
+    private static final String CONTENT_TYPE = "application/json";
 
     private static final Logger logger = LoggingUtils.getLogger(VmTlabStatDAOImpl.class);
 
-    static final String DESC_ADD_VM_TLAB_STAT = "ADD " + vmTlabStatsCategory.getName() +
-            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
-                 "'" + Key.VM_ID.getName() + "' = ?s , " +
-                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
-                 "'" + KEY_TOTAL_ALLOCATING_THREADS.getName() + "' = ?l , " +
-                 "'" + KEY_TOTAL_ALLOCATIONS.getName() + "' = ?l , " +
-                 "'" + KEY_TOTAL_REFILLS.getName() + "' = ?l , " +
-                 "'" + KEY_MAX_REFILLS.getName() + "' = ?l , " +
-                 "'" + KEY_TOTAL_SLOW_ALLOCATIONS.getName() + "' = ?l , " +
-                 "'" + KEY_MAX_SLOW_ALLOCATIONS.getName() + "' = ?l , " +
-                 "'" + KEY_TOTAL_GC_WASTE.getName() + "' = ?l , " +
-                 "'" + KEY_MAX_GC_WASTE.getName() + "' = ?l , " +
-                 "'" + KEY_TOTAL_SLOW_WASTE.getName() + "' = ?l , " +
-                 "'" + KEY_MAX_SLOW_WASTE.getName() + "' = ?l , " +
-                 "'" + KEY_TOTAL_FAST_WASTE.getName() + "' = ?l , " +
-                 "'" + KEY_MAX_FAST_WASTE.getName() + "' = ?l";
+    private final HttpClient client;
+    private final HttpHelper httpHelper;
+    private final JsonHelper jsonHelper;
 
-    private final Storage storage;
-    private final VmLatestPojoListGetter<VmTlabStat> latestGetter;
-    private final VmTimeIntervalPojoListGetter<VmTlabStat> intervalGetter;
-    private final VmBoundaryPojoGetter<VmTlabStat> boundaryGetter;
-
-    VmTlabStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(vmTlabStatsCategory);
-        latestGetter = new VmLatestPojoListGetter<>(storage, vmTlabStatsCategory);
-        intervalGetter = new VmTimeIntervalPojoListGetter<>(storage, vmTlabStatsCategory);
-        boundaryGetter = new VmBoundaryPojoGetter<>(storage, vmTlabStatsCategory);
+    VmTlabStatDAOImpl() throws Exception {
+        this(new HttpClient(), new HttpHelper(), new JsonHelper(new VmTlabStatTypeAdapter()));
     }
 
-    @Override
-    public VmTlabStat getNewestStat(VmRef ref) {
-        return boundaryGetter.getNewestStat(ref);
+    VmTlabStatDAOImpl(HttpClient client, HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+        this.client = client;
+        this.httpHelper = httpHelper;
+        this.jsonHelper = jsonHelper;
+
+        this.httpHelper.startClient(this.client);
     }
 
-    @Override
-    public VmTlabStat getOldestStat(VmRef ref) {
-        return boundaryGetter.getOldestStat(ref);
-    }
 
     @Override
     public void putStat(final VmTlabStat stat) {
-        executeStatement(new AbstractDaoStatement<VmTlabStat>(storage, vmTlabStatsCategory, DESC_ADD_VM_TLAB_STAT) {
-            @Override
-            public PreparedStatement<VmTlabStat> customize(PreparedStatement<VmTlabStat> preparedStatement) {
-                preparedStatement.setString(0, stat.getAgentId());
-                preparedStatement.setString(1, stat.getVmId());
-                preparedStatement.setLong(2, stat.getTimeStamp());
-                preparedStatement.setLong(3, stat.getTotalAllocatingThreads());
-                preparedStatement.setLong(4, stat.getTotalAllocations());
-                preparedStatement.setLong(5, stat.getTotalRefills());
-                preparedStatement.setLong(6, stat.getMaxRefills());
-                preparedStatement.setLong(7, stat.getTotalSlowAllocations());
-                preparedStatement.setLong(8, stat.getMaxSlowAllocations());
-                preparedStatement.setLong(9, stat.getTotalGcWaste());
-                preparedStatement.setLong(10, stat.getMaxGcWaste());
-                preparedStatement.setLong(11, stat.getTotalSlowWaste());
-                preparedStatement.setLong(12, stat.getMaxSlowWaste());
-                preparedStatement.setLong(13, stat.getTotalFastWaste());
-                preparedStatement.setLong(14, stat.getMaxFastWaste());
-                return preparedStatement;
-            }
-        });
+        try {
+            String json = jsonHelper.toJson(Arrays.asList(stat));
+            StringContentProvider provider = httpHelper.createContentProvider(json);
+
+            String url = GATEWAY_URL + GATEWAY_PATH;
+            Request httpRequest = client.newRequest(url);
+            httpRequest.method(HttpMethod.POST);
+            httpRequest.content(provider, CONTENT_TYPE);
+            sendRequest(httpRequest);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to send VmTlabStat to Web Gateway", e);
+        }
     }
 
-    @Override
-    public List<VmTlabStat> getLatestStats(VmRef ref, long since) {
-        return latestGetter.getLatest(ref, since);
-    }
-
-    @Override
-    public List<VmTlabStat> getLatestStats(AgentId agentId, VmId vmId, long since) {
-        return latestGetter.getLatest(agentId, vmId, since);
-    }
-
-    @Override
-    public List<VmTlabStat> getStats(VmRef ref, long since, long to) {
-        return intervalGetter.getLatest(ref, since, to);
+    private void sendRequest(Request httpRequest)
+            throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        ContentResponse resp = httpRequest.send();
+        int status = resp.getStatus();
+        if (status != HttpStatus.OK_200) {
+            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
+        }
     }
 
     @Override
     protected Logger getLogger() {
         return logger;
+    }
+
+    static class JsonHelper {
+
+        private final VmTlabStatTypeAdapter adapter;
+
+        public JsonHelper(VmTlabStatTypeAdapter adapter) {
+            this.adapter = adapter;
+        }
+
+        String toJson(List<VmTlabStat> stats) throws IOException {
+            return adapter.toJson(stats);
+        }
+    }
+
+    // For testing purposes
+    static class HttpHelper {
+
+        void startClient(HttpClient httpClient) throws Exception {
+            httpClient.start();
+        }
+
+        StringContentProvider createContentProvider(String content) {
+            return new StringContentProvider(content);
+        }
+
     }
 }
 

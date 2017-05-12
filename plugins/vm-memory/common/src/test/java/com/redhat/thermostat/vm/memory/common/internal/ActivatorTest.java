@@ -61,7 +61,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
     }
 
 }
