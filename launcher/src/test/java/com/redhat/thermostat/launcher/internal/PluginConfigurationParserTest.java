@@ -142,10 +142,6 @@ public class PluginConfigurationParserTest {
                 "      <command-groups>\n" +
                 "        <command-group>group</command-group>\n" +
                 "      </command-groups>\n" +
-                "      <environments>\n" +
-                "        <environment>shell</environment>\n" +
-                "        <environment>cli</environment>\n" +
-                "      </environments>\n" +
                 "      <bundles>\n" +
                 "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
                 "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
@@ -175,8 +171,6 @@ public class PluginConfigurationParserTest {
         Options opts = newCommand.getOptions();
         assertTrue(opts.getOptions().isEmpty());
         assertTrue(opts.getRequiredOptions().isEmpty());
-        assertTrue(newCommand.getEnvironments().contains(Environment.SHELL));
-        assertTrue(newCommand.getEnvironments().contains(Environment.CLI));
         BundleInformation[] expectedBundles = new BundleInformation[] {
                 new BundleInformation("foo", "1.0"), new BundleInformation("bar", "1.0"), new BundleInformation("baz", "1.0"),
         };
@@ -210,10 +204,6 @@ public class PluginConfigurationParserTest {
                 "          </options>" +
                 "        </subcommand>" +
                 "      </subcommands>" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "      <bundles>\n" +
                 "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
                 "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
@@ -264,10 +254,6 @@ public class PluginConfigurationParserTest {
                 "      <command-groups>\n" +
                 "        <command-group>group</command-group>\n" +
                 "      </command-groups>\n" +
-                "      <environments>\n" +
-                "        <environment>shell</environment>\n" +
-                "        <environment>cli</environment>\n" +
-                "      </environments>\n" +
                 "      <bundles>\n" +
                 "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
                 "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
@@ -437,10 +423,6 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>some summary</summary>\n" +
                 "      <description>some description</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -468,10 +450,6 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>summary</summary>\n" +
                 "      <description>  Line 1.  " + newLine + "Line 2. Line 3." + newLine + "Line 4.</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -501,10 +479,6 @@ public class PluginConfigurationParserTest {
                 "      <arguments>\n" +
                 "        <argument>file</argument>\n" +
                 "      </arguments>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -527,9 +501,6 @@ public class PluginConfigurationParserTest {
         List<String> args = command.getPositionalArguments();
         assertEquals(1, args.size());
         assertEquals("file", args.get(0));
-
-        assertTrue(command.getEnvironments().contains(Environment.SHELL));
-        assertTrue(command.getEnvironments().contains(Environment.CLI));
     }
 
     @Test
@@ -567,10 +538,6 @@ public class PluginConfigurationParserTest {
                 "          <description>some required and long option</description>\n" +
                 "        </option>\n" +
                 "      </options>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -621,10 +588,6 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>summary</summary>\n" +
                 "      <description>just a test</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "      <options>\n" +
                 "        <option common=\"true\">\n" +
                 "          <long>dbUrl</long>\n" +
@@ -672,10 +635,6 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>summary</summary>\n" +
                 "      <description>just a test</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "      <options>\n" +
                 "        <option common=\"true\">\n" +
                 "          <long>foobarbaz</long>\n" +
@@ -711,10 +670,6 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>some summary</summary>\n" +
                 "      <description>some description</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -740,10 +695,6 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>some summary</summary>\n" +
                 "      <description>some description</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -769,10 +720,6 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>some summary</summary>\n" +
                 "      <description>some description</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";

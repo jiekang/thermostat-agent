@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import org.apache.commons.cli.Options;
 
@@ -138,12 +137,11 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         String usage = selectBest(info1.getUsage(), info2.getUsage());
         List<PluginConfiguration.Subcommand> subcommands = selectBest(info1.getSubcommands(), info2.getSubcommands());
         Options options = selectBest(info1.getOptions(), info2.getOptions());
-        Set<Environment> environment = selectBest(info1.getEnvironments(), info2.getEnvironments());
         List<BundleInformation> bundles = new ArrayList<>();
         bundles.addAll(info1.getBundles());
         bundles.addAll(info2.getBundles());
 
-        return new BasicCommandInfo(name, summary, description, commandGroups, usage, options, subcommands, environment, bundles);
+        return new BasicCommandInfo(name, summary, description, commandGroups, usage, options, subcommands, bundles);
     }
 
     private <T> T selectBest(T first, T second) {

@@ -38,7 +38,6 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -54,7 +53,6 @@ public class TestCommandInfo implements CommandInfo {
     private String usage;
 
     private Options options = new Options();
-    private Set<Environment> environments;
 
     public TestCommandInfo(String name) {
         this.name = name;
@@ -115,15 +113,6 @@ public class TestCommandInfo implements CommandInfo {
         for (Option option : options) {
             this.options.addOption(option);
         }
-    }
-
-    @Override
-    public Set<Environment> getEnvironments() {
-        return environments;
-    }
-
-    public void setAvailable(Set<Environment> environments) {
-        this.environments = environments;
     }
 
     @Override

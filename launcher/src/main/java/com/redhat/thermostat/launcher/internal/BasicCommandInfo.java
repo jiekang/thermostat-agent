@@ -37,9 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.util.List;
-import java.util.Set;
 
-import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.launcher.BundleInformation;
@@ -53,11 +51,10 @@ public class BasicCommandInfo implements CommandInfo {
     private final String usage;
     private final List<PluginConfiguration.Subcommand> subcommands;
     private final Options options;
-    private final Set<Environment> environments;
     private final List<BundleInformation> bundles;
 
     public BasicCommandInfo(String name, String summary, String description, List<String> commandGroups, String usage,
-                            Options options, List<PluginConfiguration.Subcommand> subcommands, Set<Environment> environments, List<BundleInformation> bundles) {
+                            Options options, List<PluginConfiguration.Subcommand> subcommands, List<BundleInformation> bundles) {
         this.name = name;
         this.summary = summary;
         this.description = description;
@@ -65,7 +62,6 @@ public class BasicCommandInfo implements CommandInfo {
         this.usage = usage;
         this.options = options;
         this.subcommands = subcommands;
-        this.environments = environments;
         this.bundles = bundles;
     }
 
@@ -102,11 +98,6 @@ public class BasicCommandInfo implements CommandInfo {
     @Override
     public List<PluginConfiguration.Subcommand> getSubcommands() {
         return subcommands;
-    }
-
-    @Override
-    public Set<Environment> getEnvironments() {
-        return environments;
     }
 
     @Override

@@ -36,6 +36,13 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ExitStatus;
@@ -48,23 +55,10 @@ import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.core.DbService;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import java.io.File;
-import java.io.IOException;
 
 public class Activator implements BundleActivator {
 
@@ -80,18 +74,14 @@ public class Activator implements BundleActivator {
         private ServiceRegistration pluginConfReg;
         private ServiceRegistration commandGroupMetaReg;
         private BundleContext context;
-        private CurrentEnvironment env;
 
-        RegisterLauncherAction(BundleContext context, CurrentEnvironment env) {
+        RegisterLauncherAction(BundleContext context) {
             this.context = context;
-            this.env = env;
         }
 
         @Override
         public void dependenciesAvailable(DependencyProvider services) {
             CommonPaths paths = services.get(CommonPaths.class);
-            ClientPreferences prefs = new ClientPreferences(paths);
-            SSLConfiguration sslConf = services.get(SSLConfiguration.class);
 
             String commandsDir = new File(paths.getSystemConfigurationDirectory(), "commands").toString();
             CommandInfoSource builtInCommandSource =
@@ -120,7 +110,7 @@ public class Activator implements BundleActivator {
 
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             LauncherImpl launcher = new LauncherImpl(context, new CommandContextFactory(context),
-                    bundleService, commands, env, prefs, paths, sslConf);
+                    bundleService, commands, paths);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);
@@ -141,27 +131,20 @@ public class Activator implements BundleActivator {
     }
 
     private MultipleServiceTracker launcherDepsTracker;
-    private MultipleServiceTracker shellTracker;
 
     private CommandRegistry registry;
 
-    private ShellCommand shellCommand;
     private TabCompletion tabCompletion;
-    @SuppressWarnings("rawtypes")
     private MultipleServiceTracker commandInfoSourceTracker;
-    private ServiceTracker dbServiceTracker;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes" })
     @Override
     public void start(final BundleContext context) throws Exception {
-        CurrentEnvironment environment = new CurrentEnvironment(Environment.CLI);
-
         Class[] launcherDeps = new Class[]{
             CommonPaths.class,
-            SSLConfiguration.class,
         };
         registry = new CommandRegistryImpl(context);
-        RegisterLauncherAction registerLauncherAction = new RegisterLauncherAction(context, environment);
+        RegisterLauncherAction registerLauncherAction = new RegisterLauncherAction(context);
         launcherDepsTracker = new MultipleServiceTracker(context, launcherDeps,
                 registerLauncherAction);
         launcherDepsTracker.open();
@@ -187,36 +170,6 @@ public class Activator implements BundleActivator {
         });
 
         final HelpCommand helpCommand = new HelpCommand();
-        environment.addListener(new CurrentEnvironmentChangeListener() {
-            @Override
-            public void enviornmentChanged(Environment oldEnv, Environment newEnv) {
-                helpCommand.setEnvironment(newEnv);
-            }
-        });
-        helpCommand.setEnvironment(environment.getCurrent());
-
-        final Class<?>[] shellClasses = new Class[] {
-                CommonPaths.class,
-                ConfigurationInfoSource.class,
-        };
-        shellTracker = new MultipleServiceTracker(context, shellClasses, new Action() {
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-                CommonPaths paths = services.get(CommonPaths.class);
-                ConfigurationInfoSource config = services.get(ConfigurationInfoSource.class);
-                shellCommand = new ShellCommand(context, paths, config);
-                shellCommand.setTabCompletion(tabCompletion);
-                shellCommand.setCompleterServiceRegistry(completerServiceRegistry);
-                registry.registerCommand("shell", shellCommand);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                registry.unregisterCommand("shell");
-            }
-        });
-        shellTracker.open();
-
         final HelpCommandCompleterService helpCommandCompleterService = new HelpCommandCompleterService();
         final Class<?>[] helpCommandClasses = new Class<?>[] {
                 CommandInfoSource.class,
@@ -228,9 +181,6 @@ public class Activator implements BundleActivator {
                 CommandInfoSource infoSource = services.get(CommandInfoSource.class);
                 helpCommand.setCommandInfoSource(infoSource);
                 helpCommandCompleterService.bindCommandInfoSource(infoSource);
-                if (shellCommand != null) {
-                    shellCommand.setCommandInfoSource(infoSource);
-                }
 
                 CommandGroupMetadataSource commandGroupMetadataSource = services.get(CommandGroupMetadataSource.class);
                 helpCommand.setCommandGroupMetadataSource(commandGroupMetadataSource);
@@ -241,36 +191,10 @@ public class Activator implements BundleActivator {
                 helpCommand.setCommandInfoSource(null);
                 helpCommand.setCommandGroupMetadataSource(null);
                 helpCommandCompleterService.unbindCommandInfoSource();
-                if (shellCommand != null) {
-                    shellCommand.setCommandInfoSource(null);
-                }
             }
         });
         commandInfoSourceTracker.open();
 
-        dbServiceTracker = new ServiceTracker(context, DbService.class.getName(), new ServiceTrackerCustomizer() {
-            @Override
-            public Object addingService(ServiceReference serviceReference) {
-                if (shellCommand != null) {
-                    DbService dbService = (DbService) context.getService(serviceReference);
-                    shellCommand.dbServiceAvailable(dbService);
-                }
-                return context.getService(serviceReference);
-            }
-
-            @Override
-            public void modifiedService(ServiceReference serviceReference, Object o) {
-                //Do nothing
-            }
-
-            @Override
-            public void removedService(ServiceReference serviceReference, Object o) {
-                if (shellCommand != null) {
-                    shellCommand.dbServiceUnavailable();
-                }
-            }
-        });
-        dbServiceTracker.open();
         registry.registerCommand("help", helpCommand);
 
         context.registerService(CompleterService.class.getName(), helpCommandCompleterService, null);
@@ -286,9 +210,6 @@ public class Activator implements BundleActivator {
         }
         if (completerServiceRegistry != null) {
             completerServiceRegistry.stop();
-        }
-        if (shellTracker != null) {
-            shellTracker.close();
         }
         registry.unregisterCommands();
     }

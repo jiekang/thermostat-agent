@@ -242,7 +242,7 @@ public class FrameworkProvider {
 
     private void runLauncher(Framework framework, String[] args) throws InterruptedException {
         Object launcher = getService(framework, Launcher.class.getName());
-        callVoidReflectedMethod(launcher, "run", args, false);
+        callVoidReflectedMethod(launcher, "run", (Object) args);
     }
 
     private Object getService(Framework framework, String name) throws InterruptedException {

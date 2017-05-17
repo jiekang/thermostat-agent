@@ -90,11 +90,6 @@ public interface CommandInfo {
      */
     public List<PluginConfiguration.Subcommand> getSubcommands();
 
-    /**
-     * Environments where this command is available
-     */
-    public Set<Environment> getEnvironments();
-
     List<BundleInformation> getBundles();
 
 }

@@ -39,9 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.cli.Options;
 import org.junit.Test;
@@ -56,14 +54,12 @@ public class BasicCommandInfoTest {
         final String SUMMARY = "some-summary";
         final String DESCRIPTION = "some-description";
         final List<String> COMMAND_GROUPS = Collections.singletonList("some-command-group");
-        final List<String> COMMAND_GROUP_METADATAS = Collections.emptyList();
         final String USAGE = "some-usage";
         final Options OPTIONS = new Options();
         final List<PluginConfiguration.Subcommand> SUBCOMMANDS = Collections.emptyList();
-        final Set<Environment> ENVIRONMENT = EnumSet.noneOf(Environment.class);
         final List<BundleInformation> BUNDLES = Collections.emptyList();
 
-        BasicCommandInfo info = new BasicCommandInfo(NAME, SUMMARY, DESCRIPTION, COMMAND_GROUPS, USAGE, OPTIONS, SUBCOMMANDS, ENVIRONMENT, BUNDLES);
+        BasicCommandInfo info = new BasicCommandInfo(NAME, SUMMARY, DESCRIPTION, COMMAND_GROUPS, USAGE, OPTIONS, SUBCOMMANDS, BUNDLES);
 
         assertEquals(NAME, info.getName());
         assertEquals(SUMMARY, info.getSummary());

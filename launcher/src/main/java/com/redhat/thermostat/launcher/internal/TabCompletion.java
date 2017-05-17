@@ -256,20 +256,18 @@ public class TabCompletion {
 
     public void setupTabCompletion(CommandInfoSource commandInfoSource) {
         for (CommandInfo info : commandInfoSource.getCommandInfos()) {
-            if (info.getEnvironments().contains(Environment.SHELL)) {
-                String commandName = info.getName();
-                TreeCompleter.Node command = getCommandByName(commandName);
+            String commandName = info.getName();
+            TreeCompleter.Node command = getCommandByName(commandName);
 
-                setupSubcommandCompletion(command, info);
+            setupSubcommandCompletion(command, info);
 
-                for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
-                    setupDefaultCompletion(command, option);
-                }
-
-                addHelpOptionIfRequired(command);
-
-                treeCompleter.addBranch(command);
+            for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
+                setupDefaultCompletion(command, option);
             }
+
+            addHelpOptionIfRequired(command);
+
+            treeCompleter.addBranch(command);
         }
     }
 

@@ -80,8 +80,6 @@ public class HelpCommand extends AbstractCommand  {
     private CommandInfoSource commandInfoSource;
     private CommandGroupMetadataSource commandGroupMetadataSource;
 
-    private Environment currentEnvironment;
-
     private SortedMap<CommandGroupMetadata, SortedSet<CommandInfo>> commandGroupMap;
     private Map<String, CommandGroupMetadata> commandGroupMetadataMap;
     private Set<CommandInfo> contextualCommands = new HashSet<>();
@@ -92,10 +90,6 @@ public class HelpCommand extends AbstractCommand  {
 
     public void setCommandGroupMetadataSource(CommandGroupMetadataSource commandGroupMetadataSource) {
         this.commandGroupMetadataSource = commandGroupMetadataSource;
-    }
-
-    public void setEnvironment(Environment env) {
-        currentEnvironment = env;
     }
 
     @Override
@@ -113,22 +107,12 @@ public class HelpCommand extends AbstractCommand  {
             return;
         }
 
-        for (CommandInfo info: commandInfoSource.getCommandInfos()) {
-            if (info.getEnvironments().contains(currentEnvironment)) {
-                contextualCommands.add(info);
-            }
-        }
-
+        contextualCommands.addAll(commandInfoSource.getCommandInfos());
         commandGroupMetadataMap = new HashMap<>(commandGroupMetadataSource.getCommandGroupMetadata());
         commandGroupMap = createCommandGroupMap();
 
         if (nonParsed.isEmpty()) {
-            if (currentEnvironment == Environment.CLI) {
-                //CLI only since the framework will already be
-                //started for a command invoked via shell
-                printOptionSummaries(ctx);
-            }
-
+            printOptionSummaries(ctx);
             printCommandSummaries(ctx);
         } else {
             printCommandUsage(ctx, nonParsed.get(0));
@@ -230,9 +214,6 @@ public class HelpCommand extends AbstractCommand  {
         Options options = info.getOptions();
         String usage = APP_NAME + " " + info.getUsage() + "\n" + info.getDescription();
         String header = "";
-        if (isAvailabilityNoteNeeded(info)) {
-            header = getAvailabilityNote(info);
-        }
         header = header + "\n" + APP_NAME + " " + info.getName();
         Option help = CommonOptions.getHelpOption();
         options.addOption(help);
@@ -267,23 +248,6 @@ public class HelpCommand extends AbstractCommand  {
         }
 
         pw.flush();
-    }
-
-    private boolean isAvailabilityNoteNeeded(CommandInfo info) {
-        return !info.getEnvironments().contains(currentEnvironment);
-    }
-
-    /** Describe where command is available */
-    private String getAvailabilityNote(CommandInfo info) {
-        // there are two mutually exclusive environments: if an availability
-        // note is needed, it will just be about one
-        if (info.getEnvironments().contains(Environment.SHELL)) {
-            return translator.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL).getContents();
-        } else if (info.getEnvironments().contains(Environment.CLI)) {
-            return translator.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL).getContents();
-        } else {
-            throw new AssertionError("Need to handle a third environment");
-        }
     }
 
     @Override

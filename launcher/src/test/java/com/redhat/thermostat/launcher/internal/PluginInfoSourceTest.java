@@ -46,6 +46,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,13 +57,10 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
@@ -71,6 +69,7 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.Configurations;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.PluginID;
@@ -201,7 +200,6 @@ public class PluginInfoSourceTest {
         final List<String> COMMAND_GROUPS = Collections.singletonList("group");
         final String USAGE = "usage";
         final Options OPTIONS = new Options();
-        final Set<Environment> ENVIRONMENTS = EnumSet.of(Environment.SHELL);
         BundleInformation bundleInfo = new BundleInformation("plugin-bundle", "0.1");
 
         Path pluginDir = sysPluginRootDir.resolve("plugin1");
@@ -213,7 +211,6 @@ public class PluginInfoSourceTest {
         when(cmd.getCommandGroups()).thenReturn(COMMAND_GROUPS);
         when(usageBuilder.getUsage(NAME, false, OPTIONS)).thenReturn(USAGE);
         when(cmd.getOptions()).thenReturn(OPTIONS);
-        when(cmd.getEnvironments()).thenReturn(ENVIRONMENTS);
         when(cmd.getBundles()).thenReturn(Arrays.asList(bundleInfo));
 
         when(parserResult.getNewCommands()).thenReturn(Arrays.asList(cmd));

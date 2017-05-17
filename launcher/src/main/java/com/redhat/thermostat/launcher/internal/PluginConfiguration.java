@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import org.apache.commons.cli.Options;
 
@@ -128,12 +127,11 @@ public class PluginConfiguration {
         private final List<String> positionalArguments;
         private final Options options;
         private final List<Subcommand> subcommands;
-        private final Set<Environment> environment;
         private final List<BundleInformation> bundles;
 
         public NewCommand(String name, String summary, String description, List<String> commandGroups, String usage,
                           List<String> positionalArguments, Options options, List<Subcommand> subcommands,
-                          Set<Environment> environment, List<BundleInformation> bundles) {
+                          List<BundleInformation> bundles) {
             this.commandName = name;
             this.summary = summary;
             this.description = description;
@@ -142,7 +140,6 @@ public class PluginConfiguration {
             this.positionalArguments = positionalArguments;
             this.options = options;
             this.subcommands = subcommands;
-            this.environment = environment;
             this.bundles = bundles;
         }
 
@@ -183,11 +180,6 @@ public class PluginConfiguration {
 
         public List<Subcommand> getSubcommands() {
             return subcommands;
-        }
-
-        /** Returns the environments where this command is available to be used */
-        public Set<Environment> getEnvironments() {
-            return Collections.unmodifiableSet(environment);
         }
 
         public List<BundleInformation> getBundles() {

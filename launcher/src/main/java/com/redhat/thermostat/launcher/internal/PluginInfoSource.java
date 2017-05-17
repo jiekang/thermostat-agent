@@ -186,7 +186,6 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                     command.getCommandGroups(),
                     usage,
                     command.getOptions(), command.getSubcommands(),
-                    command.getEnvironments(),
                     command.getBundles()
             );
 
@@ -237,7 +236,6 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                         old.getCommandGroups(),
                         old.getUsage(),
                         old.getOptions(), old.getSubcommands(),
-                        old.getEnvironments(),
                         updatedBundles
                 );
                 allNewCommands.put(entry.getKey(), updated);
@@ -274,7 +272,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
     }
 
     private BasicCommandInfo createCommandInfo(String name, List<BundleInformation> bundles) {
-        return new BasicCommandInfo(name, null, null, Collections.<String>emptyList(), null, null, null, null, bundles);
+        return new BasicCommandInfo(name, null, null, Collections.<String>emptyList(), null, null, null, bundles);
     }
 
     public Map<String, String> getConfiguration(String pluginID, String fileName) throws IOException {

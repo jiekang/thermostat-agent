@@ -154,12 +154,12 @@ public class ActivatorTest {
 
         assertCommandIsRegistered(context, "help", HelpCommand.class);
 
-        verify(mockTracker, times(3)).open();
+        verify(mockTracker, times(2)).open();
 
         Action action = actionCaptor.getValue();
         assertNotNull(action);
         activator.stop(context);
-        verify(mockTracker, times(3)).close();
+        verify(mockTracker, times(2)).close();
     }
     
     @Test
@@ -169,18 +169,11 @@ public class ActivatorTest {
         MultipleServiceTracker launcherDepsTracker = mock(MultipleServiceTracker.class);
         Class<?>[] launcherDeps = new Class[] {
                 CommonPaths.class,
-                SSLConfiguration.class,
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(launcherDeps), actionCaptor.capture()).thenReturn(launcherDepsTracker);
 
         MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
-        Class<?>[] shellDeps = new Class[] {
-                CommonPaths.class,
-                ConfigurationInfoSource.class,
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(shellDeps), actionCaptor.capture()).thenReturn(unusedTracker);
         Class<?>[] vmIdCompleterDeps = new Class[] {
                 VmInfoDAO.class,
                 AgentInfoDAO.class
@@ -201,7 +194,6 @@ public class ActivatorTest {
 
         Activator activator = new Activator();
         ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
-        when(configurationInfoSource.getConfiguration("shell-command", "shell-prompt.conf")).thenReturn(new HashMap<String, String>());
         context.registerService(ConfigurationInfoSource.class, configurationInfoSource, null);
 
         activator.start(context);
@@ -210,7 +202,6 @@ public class ActivatorTest {
         
         Action action = actionCaptor.getAllValues().get(0);
         assertNotNull(action);
-        SSLConfiguration sslConfiguration = mock(SSLConfiguration.class);
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
@@ -227,8 +218,7 @@ public class ActivatorTest {
         Map<String, Object> services = new HashMap<>();
         services.put(CommonPaths.class.getName(), paths);
         services.put(ConfigurationInfoSource.class.getName(), configurationInfoSource);
-        services.put(SSLConfiguration.class.getName(), sslConfiguration);
-        action.dependenciesAvailable(new DependencyProvider(services));
+                action.dependenciesAvailable(new DependencyProvider(services));
         
         assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CompoundCommandInfoSource.class).getClass()));
         assertTrue(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
@@ -238,77 +228,6 @@ public class ActivatorTest {
         action.dependenciesUnavailable();
         pathsReg.unregister();
         
-        assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CompoundCommandInfoSource.class));
-        assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
-        assertFalse(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
-    }
-
-    @Test
-    public void testServiceTrackerCustomizerForShellTracker() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
-        MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
-        Class<?>[] launcherDeps = new Class[] {
-                CommonPaths.class,
-                SSLConfiguration.class,
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(launcherDeps), actionCaptor.capture()).thenReturn(unusedTracker);
-
-        MultipleServiceTracker shellTracker = mock(MultipleServiceTracker.class);
-        Class<?>[] shellDeps = new Class[] {
-                CommonPaths.class,
-                ConfigurationInfoSource.class,
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(shellDeps), actionCaptor.capture()).thenReturn(shellTracker);
-        Class<?>[] vmIdCompleterDeps = new Class[] {
-                VmInfoDAO.class,
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(vmIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] agentIdCompleterDeps = new Class[] {
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(agentIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] helpCommandDeps = new Class[] {
-                CommandInfoSource.class,
-                CommandGroupMetadataSource.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(helpCommandDeps), actionCaptor.capture()).thenReturn(unusedTracker);
-
-        Activator activator = new Activator();
-        ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
-        when(configurationInfoSource.getConfiguration("shell-command", "shell-prompt.conf")).thenReturn(new HashMap<String, String>());
-        context.registerService(ConfigurationInfoSource.class, configurationInfoSource, null);
-
-        activator.start(context);
-
-        Action action = actionCaptor.getAllValues().get(1);
-
-        assertNotNull(action);
-        CommonPaths paths = mock(CommonPaths.class);
-        when(paths.getSystemLibRoot()).thenReturn(new File(""));
-        when(paths.getSystemPluginRoot()).thenReturn(new File(""));
-        when(paths.getUserPluginRoot()).thenReturn(new File(""));
-        when(paths.getUserClientConfigurationFile()).thenReturn(new File(""));
-        when(paths.getSystemPluginConfigurationDirectory()).thenReturn(new File(""));
-        when(paths.getUserPluginConfigurationDirectory()).thenReturn(new File(""));
-        @SuppressWarnings("rawtypes")
-        ServiceRegistration pathsReg = context.registerService(CommonPaths.class, paths, null);
-        Map<String, Object> services = new HashMap<>();
-        services.put(CommonPaths.class.getName(), paths);
-        services.put(ConfigurationInfoSource.class.getName(), configurationInfoSource);
-        action.dependenciesAvailable(new DependencyProvider(services));
-
-        assertTrue(context.isServiceRegistered(Command.class.getName(), ShellCommand.class));
-
-        action.dependenciesUnavailable();
-        pathsReg.unregister();
-
         assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CompoundCommandInfoSource.class));
         assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
         assertFalse(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));

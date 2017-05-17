@@ -67,23 +67,14 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
-import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.launcher.InteractiveStorageCredentials;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.ConnectionException;
-import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageCredentials;
-import com.redhat.thermostat.storage.core.StorageException;
 
 /**
  * This class is thread-safe.
@@ -107,39 +98,28 @@ public class LauncherImpl implements Launcher {
     private final BundleContext context;
     private final BundleManager registry;
     private final CommandContextFactory cmdCtxFactory;
-    private final DbServiceFactory dbServiceFactory;
     private final Version coreVersion;
     private final CommandSource commandSource;
     private final CommandInfoSource commandInfoSource;
-    private final CurrentEnvironment currentEnvironment;
     private final CommonPaths paths;
     private final DependencyManager manager;
 
-    private final ClientPreferences prefs;
-    private final SSLConfiguration sslConf;
-
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
-            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs,
-            CommonPaths paths, SSLConfiguration sslConf) {
-        this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), env,
-                new DbServiceFactory(), new Version(), prefs, paths, sslConf);
+            CommandInfoSource infoSource, CommonPaths paths) {
+        this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context),
+                new Version(), paths);
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource commandInfoSource, CommandSource commandSource,
-            CurrentEnvironment currentEnvironment, DbServiceFactory dbServiceFactory, Version version,
-            ClientPreferences prefs, CommonPaths paths, SSLConfiguration sslConf) {
+            Version version, CommonPaths paths) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
-        this.dbServiceFactory = dbServiceFactory;
         this.coreVersion = version;
         this.commandSource = commandSource;
         this.commandInfoSource = commandInfoSource;
-        this.currentEnvironment = currentEnvironment;
-        this.prefs = prefs;
         this.paths = Objects.requireNonNull(paths);
-        this.sslConf = sslConf;
         this.manager = new DependencyManager(paths);
 
         // We log this in the constructor so as to not log it multiple times when a command invokes
@@ -149,26 +129,23 @@ public class LauncherImpl implements Launcher {
     }
 
     @Override
-    public void run(String[] args, boolean inShell) {
-        run(args, null, inShell);
+    public void run(String[] args) {
+        run(args, null);
     }
 
     @Override
-    public void run(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+    public void run(String[] args, Collection<ActionListener<ApplicationState>> listeners) {
         usageCount.incrementAndGet();
-
-        Environment oldEnvironment = currentEnvironment.getCurrent();
-        currentEnvironment.setCurrent(inShell ? Environment.SHELL : Environment.CLI);
 
         try {
             if (hasNoArguments(args)) {
                 runHelpCommand();
-            } else if (isVersionQuery(args, inShell)) {
+            } else if (isVersionQuery(args)) {
                 showVersion();
-            } else if (isInfoQuery(args, inShell)) {
+            } else if (isInfoQuery(args)) {
                 showInfo();
             } else {
-                runCommandFromArguments(args, listeners, inShell);
+                runCommandFromArguments(args, listeners);
             }
         } catch (NoClassDefFoundError e) {
             // This could mean pom is missing <Private-Package> or <Export-Package> lines.
@@ -184,7 +161,6 @@ public class LauncherImpl implements Launcher {
             throw e;
         } finally {
             args = null;
-            currentEnvironment.setCurrent(oldEnvironment);
             boolean isLastLaunch = (usageCount.decrementAndGet() == 0);
             if (isLastLaunch) {
                 shutdown();
@@ -232,34 +208,34 @@ public class LauncherImpl implements Launcher {
     }
 
     private void runHelpCommand() {
-        runCommand(HELP_COMMAND_NAME, new String[0], null, false);
+        runCommand(HELP_COMMAND_NAME, new String[0], null);
     }
 
     private void runHelpCommandFor(String cmdName) {
-        runCommand(HELP_COMMAND_NAME, new String[] { "--", cmdName }, null, false);
+        runCommand(HELP_COMMAND_NAME, new String[] { "--", cmdName }, null);
     }
 
     // package-private for testing
-    void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
-        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners, inShell);
+    void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners) {
+        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners);
     }
 
-    private void runCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+    private void runCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners) {
         // treat 'foo --help' as 'help foo'
         if (!cmdName.equals(HELP_COMMAND_NAME) && Arrays.asList(cmdArgs).contains(HELP_OPTION)) {
-            runCommand(HELP_COMMAND_NAME, new String[] { cmdName } , listeners, inShell);
+            runCommand(HELP_COMMAND_NAME, new String[] { cmdName } , listeners);
             return;
         }
 
         try {
-            parseArgsAndRunCommand(cmdName, cmdArgs, listeners, inShell);
+            parseArgsAndRunCommand(cmdName, cmdArgs, listeners);
         } catch (CommandException e) {
             cmdCtxFactory.getConsole().getError().println(e.getMessage());
         }
     }
 
     private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs,
-    		Collection<ActionListener<ApplicationState>> listeners, boolean inShell) throws CommandException {
+    		Collection<ActionListener<ApplicationState>> listeners) throws CommandException {
 
         PrintStream out = cmdCtxFactory.getConsole().getOutput();
         PrintStream err = cmdCtxFactory.getConsole().getError();
@@ -299,10 +275,6 @@ public class LauncherImpl implements Launcher {
             return;
         }
 
-        if ((inShell && !cmdInfo.getEnvironments().contains(Environment.SHELL)) || (!inShell && !cmdInfo.getEnvironments().contains(Environment.CLI))) {
-        	outputBadShellContext(inShell, out, cmdName);
-        	return;
-        }
         if (listeners != null && cmd instanceof AbstractStateNotifyingCommand) {
             AbstractStateNotifyingCommand basicCmd = (AbstractStateNotifyingCommand) cmd;
             ActionNotifier<ApplicationState> notifier = basicCmd.getNotifier();
@@ -319,16 +291,6 @@ public class LauncherImpl implements Launcher {
             out.println(e.getMessage());
             runHelpCommandFor(cmdName);
         }
-    }
-
-    private void outputBadShellContext(boolean inShell, PrintStream out, String cmd) {
-    	LocalizedString message = null;
-    	if (inShell) {
-            message = t.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY, cmd);
-    	} else {
-            message = t.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL_ONLY, cmd);
-    	}
-    	out.println(message.getContents());
     }
 
     private Arguments parseCommandArguments(String[] cmdArgs, CommandInfo commandInfo)
@@ -410,45 +372,14 @@ public class LauncherImpl implements Launcher {
         }
     }
 
-    @SuppressWarnings("rawtypes")
     private CommandContext setupCommandContext(Command cmd, Arguments args) throws CommandException {
-
         CommandContext ctx = cmdCtxFactory.createContext(args);
-
-        if (cmd.isStorageRequired()) {
-
-            ServiceReference dbServiceReference = context.getServiceReference(DbService.class);
-            if (dbServiceReference == null) {
-                String dbUrl = ctx.getArguments().getArgument(CommonOptions.DB_URL_ARG);
-                if (dbUrl == null) {
-                    dbUrl = prefs.getConnectionUrl();
-                }
-                StorageCredentials creds = new InteractiveStorageCredentials(prefs, dbUrl, ctx.getConsole());
-                try {
-                    // this may throw storage exception
-                    DbService service = dbServiceFactory.createDbService(dbUrl, creds, sslConf);
-                    // This registers the DbService if all goes well
-                    service.connect();
-                } catch (StorageException ex) {
-                    throw new CommandException(t.localize(LocaleResources.LAUNCHER_MALFORMED_URL, dbUrl));
-                } catch (ConnectionException ex) {
-                    String error = ex.getMessage();
-                    String message = ( error == null ? "" : " Error: " + error );
-                    logger.log(Level.SEVERE, "Could not connect to: " + dbUrl + message, ex);
-                    throw new CommandException(t.localize(LocaleResources.LAUNCHER_CONNECTION_ERROR, dbUrl), ex);
-                }
-            }
-        }
         return ctx;
     }
 
-    private boolean isVersionQuery(String[] args, boolean inShell) {
+    private boolean isVersionQuery(String[] args) {
         // don't allow --version in the shell
-        if (inShell) {
-            return false;
-        } else {
-            return args[0].equals(Version.VERSION_OPTION);
-        }
+        return args[0].equals(Version.VERSION_OPTION);
     }
 
     private void showVersion() {
@@ -457,13 +388,9 @@ public class LauncherImpl implements Launcher {
         cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
     }
 
-    private boolean isInfoQuery(String[] args, boolean inShell) {
+    private boolean isInfoQuery(String[] args) {
         // don't allow --info in the shell
-        if (inShell) {
-            return false;
-        } else {
-            return args[0].equals(INFO_OPTION);
-        }
+        return args[0].equals(INFO_OPTION);
     }
 
     private void showInfo() {

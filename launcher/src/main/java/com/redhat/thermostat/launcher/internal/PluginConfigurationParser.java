@@ -44,18 +44,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -69,6 +66,7 @@ import org.xml.sax.SAXParseException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.Configurations;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.PluginID;
@@ -392,7 +390,6 @@ public class PluginConfigurationParser {
         List<PluginConfiguration.Subcommand> subcommands = new ArrayList<>();
         List<String> arguments = new ArrayList<>();
         Options options = new Options();
-        Set<Environment> availableInEnvironments = EnumSet.noneOf(Environment.class);
         List<BundleInformation> bundles = new ArrayList<>();
 
         NodeList nodes = commandNode.getChildNodes();
@@ -414,8 +411,6 @@ public class PluginConfigurationParser {
                 arguments = parseArguments(pluginName, name, node);
             } else if (node.getNodeName().equals("options")) {
                 options = parseOptions(node);
-            } else if (node.getNodeName().equals("environments")) {
-                availableInEnvironments = parseEnvironment(pluginName, name, node);
             } else if (node.getNodeName().equals("bundles")) {
                 bundles.addAll(parseBundles(pluginName, name, node));
             }
@@ -425,13 +420,12 @@ public class PluginConfigurationParser {
             logger.warning("plugin " + pluginName  + " provides a new command " + name + " but supplies no bundles");
         }
 
-        if (name == null || summary == null || description == null || availableInEnvironments.isEmpty()) {
+        if (name == null || summary == null || description == null) {
             logger.warning("plugin " + pluginName + " provides an incomplete new command: " +
                     "name='" + name + "', summary='" + summary + ", description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, summary, description, commandGroups, usage, arguments, options, subcommands,
-                    availableInEnvironments, bundles);
+            return new NewCommand(name, summary, description, commandGroups, usage, arguments, options, subcommands, bundles);
         }
     }
 
@@ -498,10 +492,6 @@ public class PluginConfigurationParser {
             }
         }
         return groups;
-    }
-
-    private String parseCommandGroup(Node commandGroupNode) {
-        return commandGroupNode.getTextContent().trim().toLowerCase();
     }
 
     private List<String> parseArguments(String pluginName, String commandName, Node argumentsNode) {
@@ -656,19 +646,6 @@ public class PluginConfigurationParser {
         }
         opt.setRequired(required);
         return opt;
-    }
-
-    private Set<Environment> parseEnvironment(String pluginName, String commandName, Node environmentNode) {
-        EnumSet<Environment> result = EnumSet.noneOf(Environment.class);
-        List<String> environments = parseNodeAsList(pluginName, commandName, environmentNode, "environment");
-        for (String environment : environments) {
-            if (environment.equals("shell")) {
-                result.add(Environment.SHELL);
-            } else if (environment.equals("cli")) {
-                result.add(Environment.CLI);
-            }
-        }
-        return result;
     }
 
     private List<String> parseNodeAsList(String pluginName, String commandName, Node parentNode, String childElementName) {

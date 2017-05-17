@@ -36,13 +36,10 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,8 +55,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -73,7 +68,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -81,15 +75,12 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 import com.redhat.thermostat.common.internal.test.TestTimerFactory;
 import com.redhat.thermostat.common.tools.ApplicationState;
@@ -97,11 +88,7 @@ import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.storage.core.DbServiceFactory;
-import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class LauncherImplTest {
@@ -154,16 +141,13 @@ public class LauncherImplTest {
     private TestTimerFactory timerFactory;
     private BundleManager registry;
     private Version version;
-    private DbServiceFactory dbServiceFactory;
     private CommandInfoSource infos;
     private CommandGroupMetadataSource commandGroupMetadataSource;
     private ActionNotifier<ApplicationState> notifier;
 
     private LauncherImpl launcher;
 
-    private CurrentEnvironment environment;
     private CommonPaths paths;
-    private SSLConfiguration sslConf;
 
     @SuppressWarnings("unchecked")
     @Before
@@ -187,7 +171,6 @@ public class LauncherImplTest {
         when(info1.getSummary()).thenReturn("description 1");
         when(info1.getDescription()).thenReturn("description 1");
         when(info1.getOptions()).thenReturn(options1);
-        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
         TestCommand cmd2 = new TestCommand(new TestCmd2());
         CommandInfo info2 = mock(CommandInfo.class);
@@ -199,7 +182,6 @@ public class LauncherImplTest {
         options2.addOption(opt4);
         when(info2.getSummary()).thenReturn("description 2");
         when(info2.getOptions()).thenReturn(options2);
-        when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
         TestCommand cmd3 = new TestCommand();
         CommandInfo info3 = mock(CommandInfo.class);
@@ -207,7 +189,6 @@ public class LauncherImplTest {
         cmd3.setStorageRequired(true);
         when(info3.getSummary()).thenReturn("description 3");
         when(info3.getOptions()).thenReturn(new Options());
-        when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
         // This TestCommand object doesn't need to connect to storage,
         // and it is used to test commands without any required option
@@ -217,13 +198,11 @@ public class LauncherImplTest {
         cmd4.setStorageRequired(false);
         when(info4.getSummary()).thenReturn("description 4");
         when(info4.getOptions()).thenReturn(new Options());
-        when(info4.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         
         AbstractStateNotifyingCommand basicCmd = mock(AbstractStateNotifyingCommand.class);
         CommandInfo basicInfo = mock(CommandInfo.class);
         when(basicInfo.getName()).thenReturn("basic");
         when(basicInfo.getSummary()).thenReturn("nothing that means anything");
-        when(basicInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         when(basicCmd.isStorageRequired()).thenReturn(false);
         Options options = new Options();
         when(basicInfo.getOptions()).thenReturn(options);
@@ -236,10 +215,8 @@ public class LauncherImplTest {
         when(helpCommandInfo.getBundles()).thenReturn(new ArrayList<BundleInformation>());
         when(helpCommandInfo.getOptions()).thenReturn(new Options());
         when(helpCommandInfo.getUsage()).thenReturn("thermostat help");
-        when(helpCommandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
         HelpCommand helpCommand = new HelpCommand();
-        helpCommand.setEnvironment(Environment.CLI);
 
         CommandRegistry reg = ctxFactory.getCommandRegistry();
         reg.registerCommand("help", helpCommand);
@@ -284,8 +261,6 @@ public class LauncherImplTest {
         when(appSvc.getApplicationExecutor()).thenReturn(exec);
         bundleContext.registerService(ApplicationService.class, appSvc, null);
 
-        environment = mock(CurrentEnvironment.class);
-        dbServiceFactory = mock(DbServiceFactory.class);
         version = mock(Version.class);
 
         paths = mock(CommonPaths.class);
@@ -295,7 +270,6 @@ public class LauncherImplTest {
         File setupFile = mock(File.class);
         when(setupFile.exists()).thenReturn(true);
         when(paths.getUserSetupCompleteStampFile()).thenReturn(setupFile);
-        ClientPreferences prefs = new ClientPreferences(paths);
 
         userPluginRoot = Files.createTempDirectory("userPluginRoot").toFile();
         systemPluginRoot = Files.createTempDirectory("systemPluginRoot").toFile();
@@ -306,9 +280,8 @@ public class LauncherImplTest {
 
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
-        sslConf = mock(SSLConfiguration.class);
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, sslConf);
+                version, paths);
     }
 
     @After
@@ -331,11 +304,11 @@ public class LauncherImplTest {
 
     @Test
     public void testMain() {
-        runAndVerifyCommand(new String[] {name1, "--arg1", "Hello", "--arg2", "World"}, "Hello, World", false);
+        runAndVerifyCommand(new String[] {name1, "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
 
         ctxFactory.reset();
 
-        runAndVerifyCommand(new String[] {"test2", "--arg3", "Hello", "--arg4", "World"}, "World: Hello", false);
+        runAndVerifyCommand(new String[] {"test2", "--arg3", "Hello", "--arg4", "World"}, "World: Hello");
     }
 
     @Test
@@ -350,12 +323,12 @@ public class LauncherImplTest {
                 + " test2         description 2\n"
                 + " test3         description 3\n"
                 + " test4         description 4\n";
-        runAndVerifyCommand(new String[0], expected, false);
+        runAndVerifyCommand(new String[0], expected);
     }
 
     @Test
     public void verifySetLogLevel() {
-        runAndVerifyCommand(new String[] {name1, "--logLevel", "WARNING", "--arg1", "Hello", "--arg2", "World"}, "Hello, World", false);
+        runAndVerifyCommand(new String[] {name1, "--logLevel", "WARNING", "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
         Logger globalLogger = Logger.getLogger("com.redhat.thermostat");
         assertEquals(Level.WARNING, globalLogger.getLevel());
     }
@@ -372,7 +345,7 @@ public class LauncherImplTest {
             + " test2         description 2\n"
             + " test3         description 3\n"
             + " test4         description 4\n";
-        runAndVerifyCommand(new String[] {"--help"}, expected, false);
+        runAndVerifyCommand(new String[] {"--help"}, expected);
     }
 
     @Test
@@ -387,7 +360,7 @@ public class LauncherImplTest {
             + " test2         description 2\n"
             + " test3         description 3\n"
             + " test4         description 4\n";
-        runAndVerifyCommand(new String[] {"-help"}, expected, false);
+        runAndVerifyCommand(new String[] {"-help"}, expected);
     }
 
     @Test
@@ -402,7 +375,7 @@ public class LauncherImplTest {
             + " test2         description 2\n"
             + " test3         description 3\n"
             + " test4         description 4\n";
-        runAndVerifyCommand(new String[] {"foobarbaz"}, expected, false);
+        runAndVerifyCommand(new String[] {"foobarbaz"}, expected);
     }
 
     @Test
@@ -417,7 +390,7 @@ public class LauncherImplTest {
             + " test2         description 2\n"
             + " test3         description 3\n"
             + " test4         description 4\n";
-        runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected, false);
+        runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected);
     }
 
     @Test
@@ -434,7 +407,7 @@ public class LauncherImplTest {
 
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "foo, bar";
-        runAndVerifyCommand(new String[] {"test1", "sub", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "sub", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected);
     }
 
     @Test
@@ -465,7 +438,7 @@ public class LauncherImplTest {
                 "\n" +
                 "sub:\n" +
                 "subcommand description\n\n\n";
-        runAndVerifyCommand(new String[] {"test1", "sub", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "sub", "--arg1", "foo", "--arg2", "bar"}, expected);
     }
 
     @Test
@@ -482,7 +455,7 @@ public class LauncherImplTest {
 
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "foo, bar";
-        runAndVerifyCommand(new String[] {"test1", "sub", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "sub", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected);
     }
 
     @Test
@@ -499,7 +472,7 @@ public class LauncherImplTest {
 
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "foo, bar";
-        runAndVerifyCommand(new String[] {"test1", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "--arg1", "foo", "--arg2", "bar"}, expected);
     }
 
     // This tests the case where we have a parent command "test1" with subcommand "sub",
@@ -523,7 +496,7 @@ public class LauncherImplTest {
 
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "foo, bar";
-        runAndVerifyCommand(new String[] {"test1", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected);
     }
 
     // This tests the case where we have a parent command "test1" with subcommand "sub",
@@ -548,7 +521,7 @@ public class LauncherImplTest {
 
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "null, bar";
-        runAndVerifyCommand(new String[] {"test1", "sub", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "sub", "--arg1", "foo", "--arg2", "bar"}, expected);
     }
 
     @Test
@@ -589,7 +562,7 @@ public class LauncherImplTest {
                 + "     --arg2 <arg>\n"
                 + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
-        runAndVerifyCommand(new String[] {"test1", "--arg1", "arg1value", "--argNotAccepted"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "--arg1", "arg1value", "--argNotAccepted"}, expected);
     }
 
     @Test
@@ -603,13 +576,13 @@ public class LauncherImplTest {
                 + "     --arg2 <arg>\n"
                 + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
-        runAndVerifyCommand(new String[] {"test1"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1"}, expected);
     }
     
     @Test
     public void testMissingNotRequiredOption() {
         String expected = "";
-        runAndVerifyCommand(new String[] {"test4"}, expected, false);
+        runAndVerifyCommand(new String[] {"test4"}, expected);
     }
 
     @Test
@@ -623,7 +596,7 @@ public class LauncherImplTest {
                 + "     --arg2 <arg>\n"
                 + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
-        runAndVerifyCommand(new String[] {"test1", "--arg1"}, expected, false);
+        runAndVerifyCommand(new String[] {"test1", "--arg1"}, expected);
     }
 
     @Test
@@ -638,7 +611,7 @@ public class LauncherImplTest {
                 + " test2         description 2\n"
                 + " test3         description 3\n"
                 + " test4         description 4\n";
-            runAndVerifyCommand(new String[] {"foo"}, expected, false);
+            runAndVerifyCommand(new String[] {"foo"}, expected);
     }
 
     @Test
@@ -655,96 +628,29 @@ public class LauncherImplTest {
         CommandInfo cmdInfo = mock(CommandInfo.class);
         when(cmdInfo.getName()).thenReturn("error");
         when(cmdInfo.getOptions()).thenReturn(new Options());
-        when(cmdInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         when(infos.getCommandInfo("error")).thenReturn(cmdInfo);
 
-        wrappedRun(launcher, new String[] { "error" }, false);
+        wrappedRun(launcher, new String[] { "error" });
         assertEquals("test error\n", ctxFactory.getError());
 
     }
 
-    private void runAndVerifyCommand(String[] args, String expected, boolean inShell) {
-        wrappedRun(launcher, args, inShell);
+    private void runAndVerifyCommand(String[] args, String expected) {
+        wrappedRun(launcher, args);
         assertEquals(expected, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
     }
     
-    private void wrappedRun(LauncherImpl launcher, String[] args, boolean inShell) {
-        wrappedRun(launcher, args, inShell, null);
+    private void wrappedRun(LauncherImpl launcher, String[] args) {
+        wrappedRun(launcher, args, null);
     }
     
-    private void wrappedRun(LauncherImpl launcher, String[] args, boolean inShell, Collection<ActionListener<ApplicationState>> listeners) {
+    private void wrappedRun(LauncherImpl launcher, String[] args, Collection<ActionListener<ApplicationState>> listeners) {
         try {
-            launcher.run(args, listeners, inShell);
+            launcher.run(args, listeners);
         } catch (ExitException e) {
             System.out.println(e.getMessage());
         }
-    }
-
-    @Test
-    public void verifyPrefsAreUsed() {
-        ClientPreferences prefs = mock(ClientPreferences.class);
-        String dbUrl = "mongo://fluff:12345";
-        when(prefs.getConnectionUrl()).thenReturn(dbUrl);
-        when(prefs.getUserName()).thenReturn("user");
-
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, sslConf);
-
-        DbService dbService = mock(DbService.class);
-        ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(dbUrlCaptor.capture(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
-        wrappedRun(launcher, new String[] { "test3" }, false);
-        verify(dbService).connect();
-        verify(prefs).getConnectionUrl();
-        assertEquals(dbUrl, dbUrlCaptor.getValue());
-    }
-
-    @Test
-    public void verifyUserInputUsedIfNoSavedAuthInfo() {
-        ClientPreferences prefs = mock(ClientPreferences.class);
-        String dbUrl = "mongo://fluff:12345";
-        when(prefs.getConnectionUrl()).thenReturn(dbUrl);
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, sslConf);
-
-        DbService dbService = mock(DbService.class);
-        ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(dbUrlCaptor.capture(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
-        ctxFactory.setInput("user\rpass\r");
-        wrappedRun(launcher, new String[] { "test3" }, false);
-        verify(dbService).connect();
-        verify(prefs).getConnectionUrl();
-        assertEquals(dbUrl, dbUrlCaptor.getValue());
-    }
-
-    @Test
-    public void verifyDbServiceConnectIsCalledForStorageCommand() throws Exception {
-        ClientPreferences prefs = mock(ClientPreferences.class);
-        String dbUrl = "mongo://fluff:12345";
-        String user = "user";
-        char[] password = new char[] {'1', '2', '3', '4', '5'};
-        when(prefs.getConnectionUrl()).thenReturn(dbUrl);
-        when(prefs.getUserName()).thenReturn(user);
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, sslConf);
-
-        Command mockCmd = mock(Command.class);
-        when(mockCmd.isStorageRequired()).thenReturn(true);
-        
-        ctxFactory.getCommandRegistry().registerCommand("dummy", mockCmd);
-        
-        CommandInfo cmdInfo = mock(CommandInfo.class);
-        when(cmdInfo.getName()).thenReturn("dummy");
-        when(cmdInfo.getOptions()).thenReturn(new Options());
-        when(cmdInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
-        when(infos.getCommandInfo("dummy")).thenReturn(cmdInfo);
-
-        DbService dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(anyString(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
-
-        wrappedRun(launcher, new String[] { "dummy" }, false);
-        verify(dbService).connect();
     }
 
     @Test
@@ -755,7 +661,7 @@ public class LauncherImplTest {
 
         when(version.getVersionInfo()).thenReturn(versionString);
 
-        wrappedRun(launcher, new String[] {Version.VERSION_OPTION}, false);
+        wrappedRun(launcher, new String[] {Version.VERSION_OPTION});
 
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
@@ -772,7 +678,6 @@ public class LauncherImplTest {
         assertTrue(logger.getLevel() == Level.ALL);
         TestLogHandler handler = new TestLogHandler();
         logger.addHandler(handler);
-        ClientPreferences prefs = mock(ClientPreferences.class);
         CommonPaths logPaths = mock(CommonPaths.class);
         when(logPaths.getUserThermostatHome()).thenReturn(mock(File.class));
         when(logPaths.getSystemThermostatHome()).thenReturn(mock(File.class));
@@ -786,8 +691,7 @@ public class LauncherImplTest {
             // this should trigger logging
             new LauncherImpl(bundleContext, ctxFactory, registry,
                     infos, new CommandSource(bundleContext),
-                    environment, dbServiceFactory,
-                    version, prefs, logPaths, sslConf);
+                    version, logPaths);
             assertTrue(handler.loggedThermostatHome);
             assertTrue(handler.loggedUserHome);
             verify(logPaths).getUserThermostatHome();
@@ -808,13 +712,13 @@ public class LauncherImplTest {
         listeners.add(listener);
         String[] args = new String[] {"basic"};
 
-        wrappedRun(launcher, args, false, listeners);
+        wrappedRun(launcher, args, listeners);
         verify(notifier).addActionListener(listener);
     }
 
     @Test
     public void verifyShutdown() throws BundleException {
-        wrappedRun(launcher, new String[] { "test1" }, false);
+        wrappedRun(launcher, new String[] { "test1" });
 
         verify(sysBundle).stop();
     }
@@ -822,7 +726,7 @@ public class LauncherImplTest {
     @Test
     public void verifySetExitStatus() {
         try {
-            launcher.run(new String[] { "test1" }, false);
+            launcher.run(new String[] { "test1" });
             fail("Should have called System.exit()");
         } catch (ExitException e) {
             // pass, by default launcher exits with an exit status
@@ -831,104 +735,6 @@ public class LauncherImplTest {
         }
     }
 
-    @Test
-    public void verifyCommandSupportedInShellBehavesNormally() {
-    	runWithShellStatus(true, "fluff", true, true, "");
-    }
-
-    @Test
-    public void verifyCommandSupportedOutsideShellBehavesNormally() {
-    	runWithShellStatus(false, "fluff", true, true, "");
-    }
-
-    @Test
-    public void verifyCommandNotSupportedInShellDisplaysMessage() {
-    	runWithShellStatus(true, "fluff", false, true, "The fluff command is not supported from within the thermostat shell.\n");
-    }
-
-    @Test
-    public void verifyCommandNotSupportedOutsideShellDisplaysMessage() {
-    	runWithShellStatus(false, "fluff", true, false, "The fluff command is not supported from outside the thermostat shell.\n");
-    }
-
-    private void runWithShellStatus(boolean isInShell, String cmdName, boolean isAvailableInShell,
-    		boolean isAvailableOutsideShell, String expected) {
-    	Command mockCmd = mock(Command.class);
-        when(mockCmd.isStorageRequired()).thenReturn(false);
-
-        EnumSet<Environment> available = EnumSet.noneOf(Environment.class);
-        if (isAvailableInShell) {
-            available.add(Environment.SHELL);
-        }
-        if (isAvailableOutsideShell) {
-            available.add(Environment.CLI);
-        }
-
-        CommandInfo cmdInfo = mock(CommandInfo.class);
-        when(cmdInfo.getName()).thenReturn(cmdName);
-        when(cmdInfo.getOptions()).thenReturn(new Options());
-        when(cmdInfo.getEnvironments()).thenReturn(available);
-        when(infos.getCommandInfo(cmdName)).thenReturn(cmdInfo);
-
-        ctxFactory.getCommandRegistry().registerCommand(cmdName, mockCmd);
-        runAndVerifyCommand(new String[] { cmdName }, expected, isInShell);
-    }
-    
-    /*
-     * Bash completion uses help which expects help to always run
-     * (no setup required).
-     */
-    @Test
-    public void verifyHelpIsNotRunThroughSetupHook() {
-        String[] argsList = new String[] { "help" };
-        
-        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
-        assertEquals("Expected to run only help", 1, resultList.size());
-        Pair<String[], Boolean> actual = resultList.get(0);
-        assertFalse("Expected to run outside shell", actual.getSecond());
-        String[] expectedList = new String[] { "help" };
-        assertArrayEquals(expectedList, actual.getFirst());
-    }
-    
-    @Test
-    public void verifyCommandHelpOptionIsNotRunThroughSetupHook() {
-        String[] argsList = new String[] { "web-storage-service", "--help" };
-        
-        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
-        assertEquals("Expected to run only web-storage-service --help", 1, resultList.size());
-        Pair<String[], Boolean> actual = resultList.get(0);
-        assertFalse("Expected to run outside shell", actual.getSecond());
-        String[] expectedList = new String[] { "web-storage-service", "--help" };
-        assertArrayEquals(expectedList, actual.getFirst());
-    }
-    
-    private List<Pair<String[], Boolean>> runAsUnconfiguredThermostat(String[] args) {
-        CommonPaths setupPaths = mock(CommonPaths.class);
-        File mockFile = mock(File.class);
-        when(mockFile.exists()).thenReturn(false);
-        when(setupPaths.getUserSetupCompleteStampFile()).thenReturn(mockFile);
-        File fileWithAbsPath = mock(File.class);
-        when(setupPaths.getSystemThermostatHome()).thenReturn(fileWithAbsPath);
-        when(setupPaths.getUserThermostatHome()).thenReturn(fileWithAbsPath);
-        when(setupPaths.getSystemPluginRoot()).thenReturn(systemPluginRoot);
-        when(setupPaths.getSystemLibRoot()).thenReturn(systemLibRoot);
-        when(setupPaths.getUserPluginRoot()).thenReturn(userPluginRoot);
-        final List<Pair<String[], Boolean>> runList = new ArrayList<>();
-        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos,
-                                    new CommandSource(bundleContext), environment,
-                                    dbServiceFactory, version,
-                                    mock(ClientPreferences.class), setupPaths, sslConf) {
-            @Override
-            void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
-                Pair<String[], Boolean> pair = new Pair<>(args, inShell);
-                runList.add(pair);
-            }
-        };
-        
-        wrappedRun(launcher, args, false, null);
-        return runList;
-    }
-    
     private static class TestLogHandler extends Handler {
         
         private boolean loggedThermostatHome;

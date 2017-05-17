@@ -222,7 +222,7 @@ public class FrameworkProviderTest {
 
         provider.start(new String[] {});
 
-        verify(launcher).run(new String[] {}, false);
+        verify(launcher).run(new String[] {});
     }
 
     @Test

@@ -49,7 +49,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -202,14 +201,12 @@ public class TabCompletionTest {
         when(mockCommand.getName()).thenReturn("mock-command");
         when(mockCommand.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
         when(mockCommand.getDescription()).thenReturn("description");
-        when(mockCommand.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
         when(mockCommand.getOptions()).thenReturn(mockOptions);
 
         CommandInfo fakeCommand = mock(CommandInfo.class);
         when(fakeCommand.getName()).thenReturn("fake-command");
         when(fakeCommand.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
         when(fakeCommand.getDescription()).thenReturn("description");
-        when(fakeCommand.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
         when(fakeCommand.getOptions()).thenReturn(fakeOptions);
 
         CommandInfoSource infoSource = mock(CommandInfoSource.class);
@@ -280,14 +277,12 @@ public class TabCompletionTest {
         when(mockCommand.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
         when(mockCommand.getDescription()).thenReturn("description");
         when(mockCommand.getSubcommands()).thenReturn(Collections.singletonList(subcommand));
-        when(mockCommand.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
         when(mockCommand.getOptions()).thenReturn(options);
 
         CommandInfo fakeCommand = mock(CommandInfo.class);
         when(fakeCommand.getName()).thenReturn("fake-command");
         when(fakeCommand.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
         when(fakeCommand.getDescription()).thenReturn("description");
-        when(fakeCommand.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
         when(fakeCommand.getOptions()).thenReturn(options);
 
         CommandInfoSource infoSource = mock(CommandInfoSource.class);
@@ -321,8 +316,7 @@ public class TabCompletionTest {
         when(parent.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
         when(parent.getDescription()).thenReturn("parent desc");
         when(parent.getSubcommands()).thenReturn(Collections.singletonList(subcommand));
-        when(parent.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
-        when(parent.getOptions()).thenReturn(parentOptions);
+                when(parent.getOptions()).thenReturn(parentOptions);
 
         CommandInfoSource infoSource = mock(CommandInfoSource.class);
         when(infoSource.getCommandInfos()).thenReturn(Collections.singletonList(parent));
