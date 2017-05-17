@@ -279,7 +279,7 @@
               <descriptors>
                 <descriptor>assembly/plugin-assembly.xml</descriptor>
               </descriptors>
-              <finalName>image/plugins</finalName>
+              <finalName>image</finalName>
               <attach>false</attach>
             </configuration>
             <phase>package</phase>

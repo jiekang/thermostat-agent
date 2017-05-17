@@ -65,6 +65,10 @@ import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcStatDAOTest {
 
+    private static final String AGENT_ID = "some-agent";
+    private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
+    private static final String GATEWAY_URL = "http://example.com/jvm-gc";
+    
     private VmGcStat stat;
     private HttpClient httpClient;
     private HttpHelper httpHelper;
@@ -72,8 +76,7 @@ public class VmGcStatDAOTest {
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private static final String AGENT_ID = "some-agent";
-    private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
+    private VmGcStatDAO dao;
 
     @Before
     public void setup() throws Exception {
@@ -97,16 +100,17 @@ public class VmGcStatDAOTest {
         httpHelper = mock(HttpHelper.class);
         contentProvider = mock(StringContentProvider.class);
         when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        
+        VmGcStatConfiguration config = mock(VmGcStatConfiguration.class);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+        dao = new VmGcStatDAOImpl(config, httpClient, jsonHelper, httpHelper);
     }
 
     @Test
     public void verifyAddVmGcStat() throws Exception {
-        VmGcStatDAO dao = new VmGcStatDAOImpl(httpClient, jsonHelper, httpHelper);
-
         dao.putVmGcStat(stat);
 
-        final String url = VmGcStatDAOImpl.GATEWAY_URL + VmGcStatDAOImpl.GATEWAY_PATH;
-        verify(httpClient).newRequest(url);
+        verify(httpClient).newRequest(GATEWAY_URL);
         verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
         verify(httpHelper).createContentProvider(JSON);

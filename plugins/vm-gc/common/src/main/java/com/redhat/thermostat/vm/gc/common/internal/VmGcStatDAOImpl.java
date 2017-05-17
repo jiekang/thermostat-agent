@@ -57,20 +57,21 @@ import org.eclipse.jetty.http.HttpStatus;
 
 public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
     
-    private static Logger logger = LoggingUtils.getLogger(VmGcStatDAOImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(VmGcStatDAOImpl.class);
+    
+    private final String gatewayURL;
     private final JsonHelper jsonHelper;
     private final HttpHelper httpHelper;
     private final HttpClient httpClient;
 
-    static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
-    static final String GATEWAY_PATH = "/jvm-gc/0.0.2/";
     static final String CONTENT_TYPE = "application/json";
 
-    VmGcStatDAOImpl() throws Exception {
-        this(new HttpClient(), new JsonHelper(new VmGcStatTypeAdapter()), new HttpHelper());
+    VmGcStatDAOImpl(VmGcStatConfiguration config) throws Exception {
+        this(config, new HttpClient(), new JsonHelper(new VmGcStatTypeAdapter()), new HttpHelper());
     }
 
-    VmGcStatDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh) throws Exception {
+    VmGcStatDAOImpl(VmGcStatConfiguration config, HttpClient client, JsonHelper jh, HttpHelper hh) throws Exception {
+        this.gatewayURL = config.getGatewayURL();
         this.httpClient = client;
         this.jsonHelper = jh;
         this.httpHelper = hh;
@@ -84,8 +85,7 @@ public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
             String json = jsonHelper.toJson(Arrays.asList(stat));
             StringContentProvider provider = httpHelper.createContentProvider(json);
 
-            String url = buildUrl();
-            Request httpRequest = httpClient.newRequest(url);
+            Request httpRequest = httpClient.newRequest(gatewayURL);
             httpRequest.method(HttpMethod.POST);
             httpRequest.content(provider, CONTENT_TYPE);
             sendRequest(httpRequest);
@@ -97,13 +97,6 @@ public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
     @Override
     public Logger getLogger() {
         return logger;
-    }
-
-    private String buildUrl() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(GATEWAY_URL);
-        builder.append(GATEWAY_PATH);
-        return builder.toString();
     }
 
     private void sendRequest(Request httpRequest)

@@ -36,23 +36,70 @@
 
 package com.redhat.thermostat.vm.gc.common.internal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class Activator implements BundleActivator {
+    
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+    
+    private final VmGcStatDAOCreator creator;
+    private ServiceTracker tracker;
+    private ServiceRegistration reg;
+    
+    public Activator() {
+        this(new VmGcStatDAOCreator());
+    }
+    
+    Activator(VmGcStatDAOCreator creator) {
+        this.creator = creator;
+    }
 
     @Override
     public void start(BundleContext context) throws Exception {
-        VmGcStatDAO vmGcStatDao = new VmGcStatDAOImpl();
-        context.registerService(VmGcStatDAO.class.getName(), vmGcStatDao, null);
+        tracker = new ServiceTracker(context, ConfigurationInfoSource.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                ConfigurationInfoSource source = (ConfigurationInfoSource) super.addingService(reference);
+                try {
+                    VmGcStatDAO vmGcStatDao = creator.createDAO(new VmGcStatConfiguration(source));
+                    reg = context.registerService(VmGcStatDAO.class.getName(), vmGcStatDao, null);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Failed to create " + VmGcStatDAO.class.getSimpleName(), e);
+                }
+                return source;
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                if (reg != null) {
+                    reg.unregister();
+                }
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // Nothing to do here. The OSGi framework will automatically
-        // unregister the service when the bundle is stopped.
+        tracker.close();
+    }
+    
+    static class VmGcStatDAOCreator {
+        VmGcStatDAOImpl createDAO(VmGcStatConfiguration config) throws Exception {
+            return new VmGcStatDAOImpl(config);
+        }
     }
 
 }

@@ -37,38 +37,41 @@
 package com.redhat.thermostat.vm.gc.common.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.vm.gc.common.internal.Activator.VmGcStatDAOCreator;
 
-public class ActivatorTest {
+public class VmGcStatConfigurationTest {
+    
+    private static final String PLUGIN_ID = "vm-gc";
+    private static final String CONFIG_FILE = "gateway.properties";
+    private static final String URL_PROP = "gatewayURL";
 
     @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        VmGcStatDAOCreator creator = mock(VmGcStatDAOCreator.class);
-        VmGcStatDAOImpl dao = mock(VmGcStatDAOImpl.class);
-        when(creator.createDAO(any(VmGcStatConfiguration.class))).thenReturn(dao);
-        
+    public void testGetGatewayURL() throws Exception {
         ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(ConfigurationInfoSource.class.getName(), source, null);
-
-        Activator activator = new Activator(creator);
-
-        activator.start(context);
-
-        assertEquals(2, context.getAllServices().size());
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        Map<String, String> props = new HashMap<>();
+        props.put(URL_PROP, "urlToGateway");
+        when(source.getConfiguration(PLUGIN_ID, CONFIG_FILE)).thenReturn(props);
+        VmGcStatConfiguration config = new VmGcStatConfiguration(source);
+        
+        assertEquals("urlToGateway", config.getGatewayURL());
+    }
+    
+    @Test(expected=IOException.class)
+    public void testGetGatewayURLMissing() throws Exception {
+        ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
+        Map<String, String> props = new HashMap<>();
+        when(source.getConfiguration(PLUGIN_ID, CONFIG_FILE)).thenReturn(props);
+        VmGcStatConfiguration config = new VmGcStatConfiguration(source);
+        config.getGatewayURL();
     }
 
 }

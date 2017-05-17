@@ -67,6 +67,12 @@
 <!--        <include>com.redhat.thermostat:thermostat-killvm-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-numa-distribution</include>-->
       </includes>
+      <unpackOptions>
+        <includes>
+          <include>plugins/**</include>
+          <include>etc/plugins.d/**</include>
+        </includes>
+      </unpackOptions>
     </dependencySet>  
   </dependencySets>
   
