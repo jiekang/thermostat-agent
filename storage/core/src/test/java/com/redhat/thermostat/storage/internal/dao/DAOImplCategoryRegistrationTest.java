@@ -44,7 +44,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -62,13 +61,12 @@ public class DAOImplCategoryRegistrationTest extends ServiceLoaderTest<CategoryR
     public void registersAllCategories() {
         DAOImplCategoryRegistration reg = new DAOImplCategoryRegistration();
         Set<String> categories = reg.getCategoryNames();
-        assertEquals(5, categories.size());
+        assertEquals(4, categories.size());
         assertFalse("null descriptor not allowed", categories.contains(null));
         assertTrue(categories.contains(VmInfoDAO.vmInfoCategory.getName()));
         assertTrue(categories.contains(AgentInfoDAO.CATEGORY.getName()));
         assertTrue(categories.contains(NetworkInterfaceInfoDAO.networkInfoCategory.getName()));
         assertTrue(categories.contains(BackendInfoDAO.CATEGORY.getName()));
-        assertTrue(categories.contains(SchemaInfo.CATEGORY.getName()));
     }
 
 }

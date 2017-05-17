@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.internal.dao;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -61,7 +60,6 @@ public class DAOImplCategoryRegistration implements CategoryRegistration {
         categories.add(VmInfoDAO.vmInfoCategory.getName());
         categories.add(BackendInfoDAO.CATEGORY.getName());
         categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
         return categories;
     }
 

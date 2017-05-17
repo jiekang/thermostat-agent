@@ -42,21 +42,16 @@ import java.util.UUID;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.SchemaInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
-import com.redhat.thermostat.storage.internal.dao.SchemaInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
 
 public class Activator implements BundleActivator {
@@ -78,10 +73,6 @@ public class Activator implements BundleActivator {
         ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
         regs.add(reg);
         
-        SchemaInfoDAO schemaInfoDAO = new SchemaInfoDAOImpl();
-        reg = context.registerService(SchemaInfoDAO.class.getName(), schemaInfoDAO, null);
-        regs.add(reg);
-
         AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl();
         reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
         regs.add(reg);

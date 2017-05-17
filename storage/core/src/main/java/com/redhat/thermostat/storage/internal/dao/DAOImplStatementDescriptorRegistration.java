@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
@@ -51,10 +51,7 @@ public class DAOImplStatementDescriptorRegistration implements
     
     @Override
     public Set<String> getStatementDescriptors() {
-        Set<String> daoDescs = new HashSet<>();
-        daoDescs.add(SchemaInfoDAOImpl.QUERY_ALL_COLLECTIONS);
-
-        return daoDescs;
+        return Collections.emptySet(); // TODO Remove once plugins no longer depend on this
     }
 
 }

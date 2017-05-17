@@ -54,7 +54,6 @@
     <module>archetype-ext</module>
     <module>multi-module-plugin-archetype</module>
     <module>ide-launcher</module>
-    <module>schema-info-command</module>
     <module>ipc-test</module>
   </modules>
 
