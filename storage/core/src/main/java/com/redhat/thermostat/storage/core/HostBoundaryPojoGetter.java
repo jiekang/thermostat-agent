@@ -39,11 +39,9 @@ package com.redhat.thermostat.storage.core;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-public class HostBoundaryPojoGetter<T extends TimeStampedPojo> extends AbstractDao {
+public class HostBoundaryPojoGetter<T extends TimeStampedPojo>  {
 
     // QUERY %s WHERE 'agentId' = ?s AND \
     //                        SORT 'timeStamp' DSC  \
@@ -63,13 +61,11 @@ public class HostBoundaryPojoGetter<T extends TimeStampedPojo> extends AbstractD
 
     private static final Logger logger = LoggingUtils.getLogger(HostBoundaryPojoGetter.class);
 
-    private final Storage storage;
     private final Category<T> cat;
     private final String queryNewest;
     private final String queryOldest;
 
-    public HostBoundaryPojoGetter(Storage storage, Category<T> cat) {
-        this.storage = storage;
+    public HostBoundaryPojoGetter(Category<T> cat) {
         this.cat = cat;
         this.queryNewest = String.format(DESC_NEWEST_HOST_STAT, cat.getName());
         this.queryOldest = String.format(DESC_OLDEST_HOST_STAT, cat.getName());
@@ -100,13 +96,7 @@ public class HostBoundaryPojoGetter<T extends TimeStampedPojo> extends AbstractD
     }
 
     private T runAgentIdQuery(final String agentId, final String descriptor) {
-        return executeQuery(new AbstractDaoQuery<T>(storage, cat, descriptor) {
-            @Override
-            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, agentId);
-                return preparedStatement;
-            }
-        }).head();
+        return null;
     }
 
     //Package private for testing
@@ -118,7 +108,6 @@ public class HostBoundaryPojoGetter<T extends TimeStampedPojo> extends AbstractD
         return queryOldest;
     }
 
-    @Override
     protected Logger getLogger() {
         return logger;
     }

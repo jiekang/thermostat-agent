@@ -45,7 +45,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import org.eclipse.jetty.client.HttpClient;
@@ -55,7 +54,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
-class VmMemoryStatDAOImpl extends AbstractDao implements VmMemoryStatDAO {
+class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
 
@@ -104,7 +103,6 @@ class VmMemoryStatDAOImpl extends AbstractDao implements VmMemoryStatDAO {
         }
     }
 
-    @Override
     protected Logger getLogger() {
         return logger;
     }

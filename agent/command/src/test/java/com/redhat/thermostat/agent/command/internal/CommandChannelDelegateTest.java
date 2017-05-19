@@ -58,7 +58,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -69,7 +68,6 @@ import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.FileSystemUtils;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.ProcessCreator;
-import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.StorageGetter;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.common.command.Request;
@@ -78,8 +76,6 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.core.AuthToken;
-import com.redhat.thermostat.storage.core.SecureStorage;
 
 public class CommandChannelDelegateTest {
     
@@ -90,7 +86,6 @@ public class CommandChannelDelegateTest {
     private static final byte[] ENCODED_RESPONSE_AUTH_FAILED = { 'A', 'U', 'T', 'H' };
     private static final byte[] ENCODED_RESPONSE_ERROR = { 'E', 'R', 'R' };
     
-    private StorageGetter storageGetter;
     private ProcessCreator processCreator;
     private ReceiverRegistry receivers;
     private File binPath;
@@ -112,7 +107,6 @@ public class CommandChannelDelegateTest {
         receivers = mock(ReceiverRegistry.class);
         sslConf = mock(SSLConfiguration.class);
         binPath = new File("/path/to/thermostat/home/");
-        storageGetter = mock(StorageGetter.class);
         processCreator = mock(ProcessCreator.class);
         process = mock(Process.class);
         ipcService = mock(AgentIPCService.class);
@@ -148,7 +142,7 @@ public class CommandChannelDelegateTest {
         fsUtils = mock(FileSystemUtils.class);
         userInfoBuilder = mock(ProcessUserInfoBuilder.class);
         delegate = new CommandChannelDelegate(receivers, sslConf, binPath, ipcService, 
-                latch, sslConfEncoder, requestDecoder, responseEncoder, storageGetter, userInfoBuilder, 
+                latch, sslConfEncoder, requestDecoder, responseEncoder, userInfoBuilder,
                 fsUtils, processCreator);
         
         startedMessage = mock(IPCMessage.class);
@@ -395,84 +389,6 @@ public class CommandChannelDelegateTest {
         assertArrayEquals(ENCODED_RESPONSE_ERROR, result);
     }
     
-    @Test
-    public void testAuthenticateSuccess() throws IOException {
-        SecureStorage secStorage = mock(SecureStorage.class);
-        when(storageGetter.get()).thenReturn(secStorage);
-        
-        RequestReceiver receiver = mock(RequestReceiver.class);
-        Request request = createRequest(receiver);
-        
-        // Create tokens
-        final String authToken = "TXlBdXRoVG9rZW4=";
-        final String clientToken = "TXlDbGllbnRUb2tlbg==";
-        when(request.getParameter(Request.AUTH_TOKEN)).thenReturn(authToken);
-        when(request.getParameter(Request.CLIENT_TOKEN)).thenReturn(clientToken);
-        when(request.getParameter(Request.ACTION)).thenReturn("DoSomething");
-        
-        mockVerifyToken(secStorage, authToken, clientToken);
-        
-        byte[] result = receiveRequestAndReturnResponse(request);
-        verify(receiver).receive(request);
-        assertArrayEquals(ENCODED_RESPONSE_OK, result);
-    }
-    
-    @Test
-    public void testAuthenticateFailed() throws IOException {
-        SecureStorage secStorage = mock(SecureStorage.class);
-        when(storageGetter.get()).thenReturn(secStorage);
-        
-        RequestReceiver receiver = mock(RequestReceiver.class);
-        Request request = createRequest(receiver);
-        
-        // Create tokens
-        final String authToken = "TXlBdXRoVG9rZW4=";
-        final String clientToken = "TXlDbGllbnRUb2tlbg==";
-        when(request.getParameter(Request.AUTH_TOKEN)).thenReturn(authToken);
-        when(request.getParameter(Request.CLIENT_TOKEN)).thenReturn(clientToken);
-        when(request.getParameter(Request.ACTION)).thenReturn("DoSomething");
-        
-        mockVerifyToken(secStorage, "TXlFdmlsVG9rZW4=", clientToken);
-        
-        byte[] result = receiveRequestAndReturnResponse(request);
-        verify(receiver, never()).receive(request);
-        assertArrayEquals(ENCODED_RESPONSE_AUTH_FAILED, result);
-    }
-
-    @Test
-    public void testAuthenticateNPE() throws IOException {
-        SecureStorage secStorage = mock(SecureStorage.class);
-        when(storageGetter.get()).thenReturn(secStorage);
-        
-        RequestReceiver receiver = mock(RequestReceiver.class);
-        Request request = createRequest(receiver);
-        
-        // Create tokens
-        final String authToken = "TXlBdXRoVG9rZW4=";
-        final String clientToken = "TXlDbGllbnRUb2tlbg==";
-        when(request.getParameter(Request.AUTH_TOKEN)).thenReturn(authToken);
-        when(request.getParameter(Request.CLIENT_TOKEN)).thenReturn(clientToken);
-        
-        when(secStorage.verifyToken(any(AuthToken.class), any(String.class))).thenThrow(new NullPointerException());
-        
-        byte[] result = receiveRequestAndReturnResponse(request);
-        verify(receiver, never()).receive(request);
-        assertArrayEquals(ENCODED_RESPONSE_AUTH_FAILED, result);
-    }
-    
-    private void mockVerifyToken(SecureStorage secStorage,
-            final String authToken, final String clientToken) {
-        when(secStorage.verifyToken(any(AuthToken.class), eq("DoSomething"))).thenAnswer(new Answer<Boolean>() {
-            @Override
-            public Boolean answer(InvocationOnMock invocation) throws Throwable {
-                AuthToken token = (AuthToken) invocation.getArguments()[0];
-                boolean authMatches = Arrays.equals(token.getToken(), Base64.decodeBase64(authToken));
-                boolean clientMatches = Arrays.equals(token.getClientToken(), Base64.decodeBase64(clientToken));
-                return authMatches && clientMatches;
-            }
-        });
-    }
-
     private Request createRequest(RequestReceiver receiver) {
         Request request = mock(Request.class);
         when(request.getType()).thenReturn(RequestType.RESPONSE_EXPECTED);

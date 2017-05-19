@@ -74,7 +74,6 @@ import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.Storage;
 
 /**
  * This class is thread-safe.
@@ -183,13 +182,6 @@ public class LauncherImpl implements Launcher {
             // default to success for exit status
             int exitStatus = ExitStatus.EXIT_SUCCESS;
             if (context != null) {
-                ServiceReference storageRef = context.getServiceReference(Storage.class);
-                if (storageRef != null) {
-                    Storage storage = (Storage) context.getService(storageRef);
-                    if (storage != null) {
-                        storage.shutdown();
-                    }
-                }
                 ServiceReference exitStatusRef = context.getServiceReference(ExitStatus.class);
                 if (exitStatusRef != null) {
                     ExitStatus exitStatusService = (ExitStatus) context.getService(exitStatusRef);

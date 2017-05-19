@@ -36,16 +36,8 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 

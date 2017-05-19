@@ -47,7 +47,6 @@ import org.junit.Test;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -103,15 +102,11 @@ public class ActivatorTest {
     @Test
     public void verifyActivatorRegistersServicesMultipleTimes() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        Storage storage = mock(Storage.class);
-                
         ApplicationService appService = mock(ApplicationService.class);
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(appService.getTimerFactory()).thenReturn(timerFactory);        
         Timer timer = mock(Timer.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-
-        context.registerService(Storage.class, storage, null);
         context.registerService(ApplicationService.class, appService, null);
 
         Activator activator = new Activator();
@@ -127,7 +122,7 @@ public class ActivatorTest {
         activator.stop(context);
         
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(1, context.getAllServices().size());
         
         activator.start(context);
 
@@ -140,7 +135,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(1, context.getAllServices().size());
         
     }
 }

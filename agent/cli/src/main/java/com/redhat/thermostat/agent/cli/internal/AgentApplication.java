@@ -292,7 +292,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             public void dependenciesUnavailable() {
                 if (shutdownLatch.getCount() > 0) {
                     // In the rare case we lose one of our deps, gracefully shutdown
-                    logger.severe("Storage unexpectedly became unavailable");
+                    logger.severe("Dependencies unexpectedly became unavailable");
                     shutdown(ExitStatus.EXIT_ERROR);
                 }
             }

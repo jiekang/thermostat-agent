@@ -60,7 +60,6 @@
 
   <modules>
     <module>core</module>
-    <module>testutils</module>
   </modules>
 
 </project>

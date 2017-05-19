@@ -57,7 +57,7 @@
     <!--<module>host-cpu</module>-->
     <!--<module>host-memory</module>-->
     <!--<module>vm-byteman</module>-->
-    <module>vm-cpu</module>
+    <!--<module>vm-cpu</module>-->
     <module>vm-gc</module>
     <!--<module>vm-classstat</module>-->
     <!--<module>vm-compiler</module>-->

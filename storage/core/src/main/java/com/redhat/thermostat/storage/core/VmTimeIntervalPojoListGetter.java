@@ -40,8 +40,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
@@ -50,7 +48,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
  *
  * @see VmLatestPojoListGetter
  */
-public class VmTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
+public class VmTimeIntervalPojoListGetter<T extends TimeStampedPojo>  {
 
     // The query for VmTimeIntervalPojoListGetter should query for since <= timestamp < to
     // in order not to miss data for multiple consecutive queries of the form [a, b), [b, c), ...
@@ -65,12 +63,10 @@ public class VmTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends Abs
 
     private static final Logger logger = LoggingUtils.getLogger(VmTimeIntervalPojoListGetter.class);
 
-    private final Storage storage;
     private final Category<T> cat;
     private final String query;
 
-    public VmTimeIntervalPojoListGetter(Storage storage, Category<T> cat) {
-        this.storage = storage;
+    public VmTimeIntervalPojoListGetter(Category<T> cat) {
         this.cat = cat;
         this.query = String.format(VM_INTERVAL_QUERY_FORMAT, cat.getName());
     }
@@ -84,16 +80,7 @@ public class VmTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends Abs
     }
 
     public List<T> getLatest(final AgentId agentId, final VmId vmId, final long since, final long to) {
-        return executeQuery(new AbstractDaoQuery<T>(storage, cat, query) {
-            @Override
-            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, agentId.get());
-                preparedStatement.setString(1, vmId.get());
-                preparedStatement.setLong(2, since);
-                preparedStatement.setLong(3, to);
-                return preparedStatement;
-            }
-        }).asList();
+        return null;
     }
 
     // package private for tests
@@ -101,7 +88,6 @@ public class VmTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends Abs
         return query;
     }
 
-    @Override
     protected Logger getLogger() {
         return logger;
     }

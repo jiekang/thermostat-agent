@@ -50,12 +50,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-
-
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
@@ -69,9 +63,6 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.config.OS;
-import com.redhat.thermostat.storage.core.AuthToken;
-import com.redhat.thermostat.storage.core.SecureStorage;
-import com.redhat.thermostat.storage.core.Storage;
 
 class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallbacks {
     
@@ -87,7 +78,6 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     
     private final ReceiverRegistry receivers;
     private final SSLConfiguration sslConf;
-    private final StorageGetter storageGetter;
     private final File binPath;
     private final AgentIPCService ipcService;
     private final CountDownLatch readyLatch;
@@ -103,16 +93,15 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath,
             AgentIPCService ipcService) {
         this(receivers, sslConf, binPath, ipcService, new CountDownLatch(1), new SSLConfigurationEncoder(), 
-                new AgentRequestDecoder(), new AgentResponseEncoder(), new StorageGetter(), new ProcessUserInfoBuilder(), 
+                new AgentRequestDecoder(), new AgentResponseEncoder(), new ProcessUserInfoBuilder(),
                 new FileSystemUtils(), new ProcessCreator());
     }
 
     /** For testing only */
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath, 
             AgentIPCService ipcService, CountDownLatch readyLatch, SSLConfigurationEncoder sslEncoder, 
-            AgentRequestDecoder requestDecoder, AgentResponseEncoder responseEncoder, StorageGetter getter, 
+            AgentRequestDecoder requestDecoder, AgentResponseEncoder responseEncoder,
             ProcessUserInfoBuilder userInfoBuilder, FileSystemUtils fsUtils, ProcessCreator procCreator) {
-        this.storageGetter = getter;
         this.receivers = receivers;
         this.sslConf = sslConf;
         this.binPath = binPath;
@@ -302,37 +291,12 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     }
 
     private boolean authenticateRequestIfNecessary(Request request) {
-        Storage storage = storageGetter.get();
-        boolean result = false;
-        if (storage instanceof SecureStorage) {
-            result = authenticateRequest(request, (SecureStorage) storage);
-            if (result) {
-                logger.finest("Authentication and authorization for request " + request + " succeeded!");
-            } else {
-                logger.finest("Request " + request + " failed to authenticate or authorize");
-            }
-        } else {
-            result = true;
-        }
-        storageGetter.unget();
-        return result;
-    }
-
-    private boolean authenticateRequest(Request request, SecureStorage storage) {
-        String clientTokenStr = request.getParameter(Request.CLIENT_TOKEN);
-        byte[] clientToken = Base64.decodeBase64(clientTokenStr);
-        String authTokenStr = request.getParameter(Request.AUTH_TOKEN);
-        byte[] authToken = Base64.decodeBase64(authTokenStr);
-        AuthToken token = new AuthToken(authToken, clientToken);
-        String actionName = request.getParameter(Request.ACTION);
-        try {
-            // actionName must not be null here. If we somehow get a bogus request
-            // at this point where this does not exist, verifyToken will throw a
-            // NPE.
-            return storage.verifyToken(token, actionName);
-        } catch (NullPointerException e) {
-            return false; 
-        }
+        /*
+         * FIXME Authentication no longer works after the introduction of the
+         * web gateway. For now, we bypass authentication until the new
+         * WebSockets command channel is integrated.
+         */
+        return true;
     }
 
     private boolean checkStart(byte[] data) {
@@ -360,22 +324,6 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
         }
     }
 
-    /** for testing only */
-    static class StorageGetter {
-        Storage get() {
-            BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-            ServiceReference<Storage> storageRef = bCtx.getServiceReference(Storage.class);
-            Storage storage = (Storage) bCtx.getService(storageRef);
-            return storage;
-        }
-        
-        void unget() {
-            BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-            ServiceReference<Storage> storageRef = bCtx.getServiceReference(Storage.class);
-            bCtx.ungetService(storageRef);
-        }
-    }
-    
     /** for testing only */
     static class ProcessCreator {
         Process startProcess(ProcessBuilder builder) throws IOException {

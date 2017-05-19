@@ -45,7 +45,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 
@@ -56,7 +55,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
-class VmTlabStatDAOImpl extends AbstractDao implements VmTlabStatDAO {
+class VmTlabStatDAOImpl implements VmTlabStatDAO {
 
     private static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
     private static final String GATEWAY_PATH = "/jvm-memory/0.0.2/";
@@ -106,7 +105,6 @@ class VmTlabStatDAOImpl extends AbstractDao implements VmTlabStatDAO {
         }
     }
 
-    @Override
     protected Logger getLogger() {
         return logger;
     }

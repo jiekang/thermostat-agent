@@ -38,11 +38,8 @@ package com.redhat.thermostat.vm.memory.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 

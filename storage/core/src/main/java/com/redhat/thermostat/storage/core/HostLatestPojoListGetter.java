@@ -40,14 +40,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
  * @see HostTimeIntervalPojoListGetter
  */
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
+public class HostLatestPojoListGetter<T extends TimeStampedPojo>  {
 
     public static final String HOST_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
@@ -56,12 +54,10 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends Abstrac
 
     private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
 
-    private final Storage storage;
     private final Category<T> cat;
     private final String queryLatest;
 
-    public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
-        this.storage = storage;
+    public HostLatestPojoListGetter(Category<T> cat) {
         this.cat = cat;
         this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
     }
@@ -75,14 +71,7 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends Abstrac
     }
 
     public List<T> getLatest(final AgentId agentId, final long since) {
-        return executeQuery(new AbstractDaoQuery<T>(storage, cat, queryLatest) {
-            @Override
-            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, agentId.get());
-                preparedStatement.setLong(1, since);
-                return preparedStatement;
-            }
-        }).asList();
+        return null;
     }
 
     // package private for testing
@@ -90,7 +79,6 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends Abstrac
         return queryLatest;
     }
 
-    @Override
     protected Logger getLogger() {
         return logger;
     }

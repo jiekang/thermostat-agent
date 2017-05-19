@@ -554,12 +554,12 @@
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-cpu-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-cpu-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-gc-distribution</artifactId>
