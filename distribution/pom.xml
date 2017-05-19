@@ -497,63 +497,63 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-cpu-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-memory-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-numa-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-host-cpu-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-host-memory-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-numa-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
     <!-- thermostat-vm-byteman-distribution does not depend on
          thermostat-vm-byteman-helper. List it explicitly so
          that copy deps works. -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-byteman-helper-distro</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-byteman-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-numa-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-byteman-helper-distro</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-byteman-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-numa-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-thread-distribution</artifactId>-->
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-classstat-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-compiler-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-classstat-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-compiler-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-cpu-distribution</artifactId>
@@ -566,36 +566,36 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-heap-analysis-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-io-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-jmx-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-heap-analysis-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-io-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-jmx-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-memory-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-profiler-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-profiler-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-killvm-distribution</artifactId>
