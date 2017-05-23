@@ -127,9 +127,8 @@ class JvmStatHostListener implements HostListener {
         if (vm != null) {
             JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
             String vmId = UUID.randomUUID().toString();
-            long startTime = System.currentTimeMillis();
             long stopTime = Long.MIN_VALUE;
-            VmInfo info = createVmInfo(vmId, vmPid, startTime, stopTime, extractor);
+            VmInfo info = createVmInfo(vmId, vmPid, stopTime, extractor);
 
             // Check blacklist
             if (!blacklist.isBlacklisted(info.getMainClass())) {
@@ -146,14 +145,14 @@ class JvmStatHostListener implements HostListener {
         }
     }
 
-    VmInfo createVmInfo(String vmId, Integer vmPid, long startTime, long stopTime,
+    VmInfo createVmInfo(String vmId, Integer vmPid, long stopTime,
             JvmStatDataExtractor extractor) throws MonitorException {
         Map<String, String> properties = new HashMap<String, String>();
         Map<String, String> environment = InfoBuilderFactory.INSTANCE.createProcessEnvironmentBuilder().build(vmPid);
         // TODO actually figure out the loaded libraries.
         String[] loadedNativeLibraries = new String[0];
         ProcessUserInfo userInfo = userInfoBuilder.build(vmPid);
-        VmInfo info = new VmInfo(writerId.getWriterID(), vmId, vmPid, startTime, stopTime,
+        VmInfo info = new VmInfo(writerId.getWriterID(), vmId, vmPid, extractor.getVmStartTime(), stopTime,
                 extractor.getJavaVersion(), extractor.getJavaHome(),
                 extractor.getMainClass(), extractor.getCommandLine(),
                 extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),

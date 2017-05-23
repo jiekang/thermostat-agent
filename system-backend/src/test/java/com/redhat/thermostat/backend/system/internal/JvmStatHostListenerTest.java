@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -69,6 +70,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 import sun.jvmstat.monitor.HostIdentifier;
+import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;
@@ -88,6 +90,7 @@ public class JvmStatHostListenerTest {
     private static String INFO_VMVER = "90.01";
     private static long INFO_VMUSERID = 2000;
     private static String INFO_VMUSERNAME = "User";
+    private static final long INFO_STARTTIME = Long.MIN_VALUE;
 
     private JvmStatHostListener hostListener;
     private MonitoredHost host;
@@ -116,19 +119,22 @@ public class JvmStatHostListenerTest {
         monitoredVm1 = mock(MonitoredVm.class);
         monitoredVm2 = mock(MonitoredVm.class);
         StringMonitor monitor = mock(StringMonitor.class);
+        Monitor monitor2 = mock(Monitor.class);
         VmIdentifier vmId1 = new VmIdentifier("1");
         VmIdentifier vmId2 = new VmIdentifier("2");
-        
+
+        when(monitor2.getValue()).thenReturn(100l);
         when(host.getHostIdentifier()).thenReturn(hostId);
         when(host.getMonitoredVm(eq(vmId1))).thenReturn(monitoredVm1);
         when(host.getMonitoredVm(eq(vmId2))).thenReturn(monitoredVm2);
         when(hostId.resolve(eq(vmId1))).thenReturn(vmId1);
         when(hostId.resolve(eq(vmId2))).thenReturn(vmId2);
-        when(monitoredVm1.findByName(any(String.class))).thenReturn(monitor);
-        when(monitoredVm2.findByName(any(String.class))).thenReturn(monitor);
+        when(monitoredVm1.findByName("sun.rt.vmInitDoneTime")).thenReturn(monitor2);
+        when(monitoredVm2.findByName("sun.rt.vmInitDoneTime")).thenReturn(monitor2);
+        when(monitoredVm1.findByName(not(eq("sun.rt.vmInitDoneTime")))).thenReturn(monitor);
+        when(monitoredVm2.findByName(not(eq("sun.rt.vmInitDoneTime")))).thenReturn(monitor);
         when(monitor.stringValue()).thenReturn("test");
         when(monitor.getValue()).thenReturn("test");
-        
         extractor = mock(JvmStatDataExtractor.class);
         
         when(extractor.getCommandLine()).thenReturn(INFO_CMDLINE);
@@ -139,6 +145,7 @@ public class JvmStatHostListenerTest {
         when(extractor.getVmInfo()).thenReturn(INFO_VMINFO);
         when(extractor.getVmName()).thenReturn(INFO_VMNAME);
         when(extractor.getVmVersion()).thenReturn(INFO_VMVER);
+        when(extractor.getVmStartTime()).thenReturn(INFO_STARTTIME);
     }
     
     @Test
@@ -195,10 +202,9 @@ public class JvmStatHostListenerTest {
     }
     
     @Test
-    public void testReusedPid() {
+    public void testReusedPid() throws MonitorException {
         final Set<Integer> started = new HashSet<>();
         started.add(1);
-        
         // Start VM
         VmStatusChangeEvent event = mock(VmStatusChangeEvent.class);
         when(event.getMonitoredHost()).thenReturn(host);
@@ -250,9 +256,8 @@ public class JvmStatHostListenerTest {
     public void testCreateVmInfo() throws MonitorException {
         final String INFO_ID = "vmId";
         final int INFO_PID = 1;
-        final long INFO_STARTTIME = Long.MIN_VALUE;
         final long INFO_STOPTIME = Long.MAX_VALUE;
-        VmInfo info = hostListener.createVmInfo(INFO_ID, INFO_PID, INFO_STARTTIME, INFO_STOPTIME, extractor);
+        VmInfo info = hostListener.createVmInfo(INFO_ID, INFO_PID, INFO_STOPTIME, extractor);
         
         assertEquals(INFO_PID, info.getVmPid());
         assertEquals(INFO_STARTTIME, info.getStartTimeStamp());

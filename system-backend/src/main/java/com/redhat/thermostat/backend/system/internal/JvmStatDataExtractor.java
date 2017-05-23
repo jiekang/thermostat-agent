@@ -98,5 +98,9 @@ public class JvmStatDataExtractor {
         return MonitoredVmUtil.jvmArgs(vm);
     }
 
+    public long getVmStartTime() throws MonitorException {
+        return (long) vm.findByName("sun.rt.vmInitDoneTime").getValue();
+    }
+
 }
 
