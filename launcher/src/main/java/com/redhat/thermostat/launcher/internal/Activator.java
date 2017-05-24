@@ -43,26 +43,21 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
-import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
+
 import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class Activator implements BundleActivator {
-
-    private CompleterServiceRegistry completerServiceRegistry;
 
     @SuppressWarnings({ "rawtypes" })
     class RegisterLauncherAction implements Action {
@@ -134,7 +129,6 @@ public class Activator implements BundleActivator {
 
     private CommandRegistry registry;
 
-    private TabCompletion tabCompletion;
     private MultipleServiceTracker commandInfoSourceTracker;
 
     @SuppressWarnings({ "rawtypes" })
@@ -149,28 +143,7 @@ public class Activator implements BundleActivator {
                 registerLauncherAction);
         launcherDepsTracker.open();
 
-        tabCompletion = new TabCompletion();
-
-        completerServiceRegistry = new CompleterServiceRegistry(context);
-        completerServiceRegistry.addActionListener(new ActionListener<ThermostatExtensionRegistry.Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<ThermostatExtensionRegistry.Action> actionEvent) {
-                CompleterService service = (CompleterService) actionEvent.getPayload();
-                switch (actionEvent.getActionId()) {
-                    case SERVICE_ADDED:
-                        tabCompletion.addCompleterService(service);
-                        break;
-                    case SERVICE_REMOVED:
-                        tabCompletion.removeCompleterService(service);
-                        break;
-                    default:
-                        throw new NotImplementedException("Unknown action: " + actionEvent.getActionId());
-                }
-            }
-        });
-
         final HelpCommand helpCommand = new HelpCommand();
-        final HelpCommandCompleterService helpCommandCompleterService = new HelpCommandCompleterService();
         final Class<?>[] helpCommandClasses = new Class<?>[] {
                 CommandInfoSource.class,
                 CommandGroupMetadataSource.class
@@ -180,7 +153,6 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(DependencyProvider services) {
                 CommandInfoSource infoSource = services.get(CommandInfoSource.class);
                 helpCommand.setCommandInfoSource(infoSource);
-                helpCommandCompleterService.bindCommandInfoSource(infoSource);
 
                 CommandGroupMetadataSource commandGroupMetadataSource = services.get(CommandGroupMetadataSource.class);
                 helpCommand.setCommandGroupMetadataSource(commandGroupMetadataSource);
@@ -190,14 +162,11 @@ public class Activator implements BundleActivator {
             public void dependenciesUnavailable() {
                 helpCommand.setCommandInfoSource(null);
                 helpCommand.setCommandGroupMetadataSource(null);
-                helpCommandCompleterService.unbindCommandInfoSource();
             }
         });
         commandInfoSourceTracker.open();
 
         registry.registerCommand("help", helpCommand);
-
-        context.registerService(CompleterService.class.getName(), helpCommandCompleterService, null);
     }
 
     @Override
@@ -207,9 +176,6 @@ public class Activator implements BundleActivator {
         }
         if (commandInfoSourceTracker != null) {
             commandInfoSourceTracker.close();
-        }
-        if (completerServiceRegistry != null) {
-            completerServiceRegistry.stop();
         }
         registry.unregisterCommands();
     }
