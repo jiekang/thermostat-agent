@@ -36,42 +36,39 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import org.junit.Test;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.vm.memory.common.internal.Activator.DAOCreator;
 
-public class ActivatorTest {
-
-    @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        DAOCreator creator = mock(DAOCreator.class);
-        VmMemoryStatDAOImpl memoryDao = mock(VmMemoryStatDAOImpl.class);
-        VmTlabStatDAOImpl tlabDao = mock(VmTlabStatDAOImpl.class);
-        when(creator.createMemoryStatDAO(any(VmMemoryStatConfiguration.class))).thenReturn(memoryDao);
-        when(creator.createTlabStatDAO(any(VmMemoryStatConfiguration.class))).thenReturn(tlabDao);
-        
-        ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(ConfigurationInfoSource.class.getName(), source, null);
-
-        Activator activator = new Activator(creator);
-
-        activator.start(context);
-
-        assertEquals(3, context.getAllServices().size());
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+class VmMemoryStatConfiguration {
+    
+    private static final String PLUGIN_ID = "vm-memory";
+    private static final String CONFIG_FILE = "gateway.properties";
+    private static final String URL_PROP = "gatewayURL";
+    
+    private final ConfigurationInfoSource source;
+    
+    VmMemoryStatConfiguration(ConfigurationInfoSource source) {
+        this.source = source;
+    }
+    
+    String getGatewayURL() throws IOException {
+        Map<String, String> props = source.getConfiguration(PLUGIN_ID, CONFIG_FILE);
+        String url = props.get(URL_PROP);
+        if (url == null) {
+            throw new IOException("No gateway URL found for " + PLUGIN_ID + " in " + getConfigFilePath());
+        }
+        return url;
+    }
+    
+    private String getConfigFilePath() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("$THERMOSTAT_HOME").append(File.separator).append("etc").append(File.separator)
+                .append("plugins.d").append(File.separator).append(PLUGIN_ID).append(File.separator)
+                .append(CONFIG_FILE);
+        return builder.toString();
     }
 
 }
-

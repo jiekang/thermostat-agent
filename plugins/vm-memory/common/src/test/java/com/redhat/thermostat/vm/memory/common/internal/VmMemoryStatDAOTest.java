@@ -38,8 +38,11 @@ package com.redhat.thermostat.vm.memory.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,30 +60,25 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.HttpHelper;
+import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.JsonHelper;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 
-import static com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.HttpHelper;
-import static com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.JsonHelper;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.anyListOf;
-
 public class VmMemoryStatDAOTest {
 
+    private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
+    private static final String CONTENT_TYPE = "application/json";
+    private static final String GATEWAY_URL = "http://example.com/jvm-memory/0.0.2/";
+    
     private HttpClient httpClient;
     private HttpHelper httpHelper;
     private JsonHelper jsonHelper;
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
-    private static final String VM_ID = "0xcafe";
-    private static final String AGENT_ID = "agent";
-    private static final String CONTENT_TYPE = "application/json";
-    private static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
-    private static final String GATEWAY_PATH = "/jvm-memory/0.0.2/";
+    private VmMemoryStatConfiguration config;
 
     @Before
     public void setUp() throws Exception {
@@ -96,12 +94,13 @@ public class VmMemoryStatDAOTest {
         when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmMemoryStat.class))).thenReturn(JSON);
+        
+        config = mock(VmMemoryStatConfiguration.class);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testPutVmMemoryStat() throws Exception {
-
         List<Generation> generations = new ArrayList<Generation>();
 
         int i = 0;
@@ -133,11 +132,10 @@ public class VmMemoryStatDAOTest {
         VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]),
                 2, 3, 4, 5);
         
-        VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(httpClient, httpHelper, jsonHelper);
+        VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(config, httpClient, httpHelper, jsonHelper);
         dao.putVmMemoryStat(stat);
 
-        String url = GATEWAY_URL + GATEWAY_PATH;
-        verify(httpClient).newRequest(url);
+        verify(httpClient).newRequest(GATEWAY_URL);
         verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(Arrays.asList(stat));
         verify(httpHelper).createContentProvider(JSON);

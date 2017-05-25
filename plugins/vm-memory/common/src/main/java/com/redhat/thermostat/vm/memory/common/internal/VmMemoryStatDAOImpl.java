@@ -57,20 +57,20 @@ import org.eclipse.jetty.http.HttpStatus;
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
+    private static final String CONTENT_TYPE = "application/json";
 
+    private final String gatewayURL;
     private final HttpClient client;
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
 
-    private static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
-    private static final String GATEWAY_PATH = "/jvm-memory/0.0.2/";
-    private static final String CONTENT_TYPE = "application/json";
-
-    VmMemoryStatDAOImpl() throws Exception {
-        this(new HttpClient(), new HttpHelper(), new JsonHelper(new VmMemoryStatTypeAdapter()));
+    VmMemoryStatDAOImpl(VmMemoryStatConfiguration config) throws Exception {
+        this(config, new HttpClient(), new HttpHelper(), new JsonHelper(new VmMemoryStatTypeAdapter()));
     }
 
-    VmMemoryStatDAOImpl(HttpClient client, HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+    VmMemoryStatDAOImpl(VmMemoryStatConfiguration config, HttpClient client, HttpHelper httpHelper, 
+            JsonHelper jsonHelper) throws Exception {
+        this.gatewayURL = config.getGatewayURL();
         this.client = client;
         this.httpHelper = httpHelper;
         this.jsonHelper = jsonHelper;
@@ -84,8 +84,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
             String json = jsonHelper.toJson(Arrays.asList(stat));
             StringContentProvider provider = httpHelper.createContentProvider(json);
 
-            String url = GATEWAY_URL + GATEWAY_PATH;
-            Request httpRequest = client.newRequest(url);
+            Request httpRequest = client.newRequest(gatewayURL);
             httpRequest.method(HttpMethod.POST);
             httpRequest.content(provider, CONTENT_TYPE);
             sendRequest(httpRequest);

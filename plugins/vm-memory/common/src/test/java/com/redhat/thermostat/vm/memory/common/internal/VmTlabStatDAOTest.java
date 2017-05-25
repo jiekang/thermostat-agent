@@ -60,18 +60,19 @@ import static com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImpl.
 
 public class VmTlabStatDAOTest {
 
+    private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
+    private static final String VM_ID = "0xcafe";
+    private static final String AGENT_ID = "agent";
+    private static final String CONTENT_TYPE = "application/json";
+    private static final String GATEWAY_URL = "http://example.com/jvm-memory/0.0.2/";
+    
     private HttpClient httpClient;
     private HttpHelper httpHelper;
     private JsonHelper jsonHelper;
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
-    private static final String VM_ID = "0xcafe";
-    private static final String AGENT_ID = "agent";
-    private static final String CONTENT_TYPE = "application/json";
-    private static final String GATEWAY_URL = "http://localhost:30000"; // TODO configurable
-    private static final String GATEWAY_PATH = "/jvm-memory/0.0.2/";
+    private VmMemoryStatConfiguration config;
 
     @Before
     public void setUp() throws Exception {
@@ -87,6 +88,9 @@ public class VmTlabStatDAOTest {
         when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmTlabStat.class))).thenReturn(JSON);
+        
+        config = mock(VmMemoryStatConfiguration.class);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
     }
 
     @Test
@@ -108,11 +112,10 @@ public class VmTlabStatDAOTest {
         stat.setTotalFastWaste(678l);
         stat.setMaxFastWaste(333l);
 
-        VmTlabStatDAO dao = new VmTlabStatDAOImpl(httpClient, httpHelper, jsonHelper);
+        VmTlabStatDAO dao = new VmTlabStatDAOImpl(config, httpClient, httpHelper, jsonHelper);
         dao.putStat(stat);
 
-        String url = GATEWAY_URL + GATEWAY_PATH;
-        verify(httpClient).newRequest(url);
+        verify(httpClient).newRequest(GATEWAY_URL);
         verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(Arrays.asList(stat));
         verify(httpHelper).createContentProvider(JSON);

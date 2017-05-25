@@ -36,24 +36,80 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
 public class Activator implements BundleActivator {
+    
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+    
+    private final DAOCreator creator;
+    private ServiceTracker tracker;
+    private ServiceRegistration memoryReg;
+    private ServiceRegistration tlabReg;
+    
+    public Activator() {
+        this(new DAOCreator());
+    }
+    
+    Activator(DAOCreator creator) {
+        this.creator = creator;
+    }
 
     @Override
     public void start(BundleContext context) throws Exception {
-        VmTlabStatDAO vmTlabStatDao = new VmTlabStatDAOImpl();
-        context.registerService(VmTlabStatDAO.class.getName(), vmTlabStatDao, null);
-        VmMemoryStatDAO vmMemoryStatDao = new VmMemoryStatDAOImpl();
-        context.registerService(VmMemoryStatDAO.class.getName(), vmMemoryStatDao, null);
+        tracker = new ServiceTracker(context, ConfigurationInfoSource.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                ConfigurationInfoSource source = (ConfigurationInfoSource) super.addingService(reference);
+                VmMemoryStatConfiguration config = new VmMemoryStatConfiguration(source);
+                try {
+                    VmMemoryStatDAO vmMemoryStatDao = creator.createMemoryStatDAO(config);
+                    memoryReg = context.registerService(VmMemoryStatDAO.class.getName(), vmMemoryStatDao, null);
+                    VmTlabStatDAO vmTlabStatDao = creator.createTlabStatDAO(config);
+                    tlabReg = context.registerService(VmTlabStatDAO.class.getName(), vmTlabStatDao, null);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Failed to create DAOs", e);
+                }
+                return source;
+            }
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                if (memoryReg != null) {
+                    memoryReg.unregister();
+                }
+                if (tlabReg != null) {
+                    tlabReg.unregister();
+                }
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // Nothing to do here.
+        tracker.close();
+    }
+    
+    static class DAOCreator {
+        VmMemoryStatDAO createMemoryStatDAO(VmMemoryStatConfiguration config) throws Exception {
+            return new VmMemoryStatDAOImpl(config);
+        }
+        VmTlabStatDAO createTlabStatDAO(VmMemoryStatConfiguration config) throws Exception {
+            return new VmTlabStatDAOImpl(config);
+        }
     }
 
 }
