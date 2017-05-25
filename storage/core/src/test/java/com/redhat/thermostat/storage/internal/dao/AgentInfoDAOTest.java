@@ -37,7 +37,6 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -47,7 +46,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
@@ -58,8 +56,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.AgentInformationUpdate;
 import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.HttpHelper;
@@ -100,32 +96,6 @@ public class AgentInfoDAOTest {
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(AgentInformation.class))).thenReturn(SOME_JSON);
         when(jsonHelper.toJson(any(AgentInformationUpdate.class))).thenReturn(SOME_OTHER_JSON);
-    }
-
-    @Test
-    public void verifyCategoryName() {
-        Category<AgentInformation> category = AgentInfoDAO.CATEGORY;
-        assertEquals("agent-config", category.getName());
-    }
-
-    @Test
-    public void verifyKeyNames() {
-        assertEquals("agentId", Key.AGENT_ID.getName());
-        assertEquals("alive", AgentInfoDAO.ALIVE_KEY.getName());
-        assertEquals("startTime", AgentInfoDAO.START_TIME_KEY.getName());
-        assertEquals("stopTime", AgentInfoDAO.STOP_TIME_KEY.getName());
-        assertEquals("configListenAddress", AgentInfoDAO.CONFIG_LISTEN_ADDRESS.getName());
-    }
-
-    @Test
-    public void verifyCategoryHasAllKeys() {
-        Collection<Key<?>> keys = AgentInfoDAO.CATEGORY.getKeys();
-
-        assertTrue(keys.contains(Key.AGENT_ID));
-        assertTrue(keys.contains(AgentInfoDAO.ALIVE_KEY));
-        assertTrue(keys.contains(AgentInfoDAO.START_TIME_KEY));
-        assertTrue(keys.contains(AgentInfoDAO.STOP_TIME_KEY));
-        assertTrue(keys.contains(AgentInfoDAO.CONFIG_LISTEN_ADDRESS));
     }
 
     @Test

@@ -37,19 +37,10 @@
 package com.redhat.thermostat.storage.dao;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 @Service
 public interface NetworkInterfaceInfoDAO {
-
-    static Key<String> ifaceKey = new Key<>("interfaceName");
-    static Key<String> ip4AddrKey = new Key<>("ip4Addr");
-    static Key<String> ip6AddrKey = new Key<>("ip6Addr");
-
-    static final Category<NetworkInterfaceInfo> networkInfoCategory = new Category<>("network-info", NetworkInterfaceInfo.class,
-            Key.AGENT_ID, ifaceKey, ip4AddrKey, ip6AddrKey);
 
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info);
 }

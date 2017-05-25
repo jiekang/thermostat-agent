@@ -37,7 +37,6 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -47,7 +46,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,13 +58,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl.HttpHelper;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl.JsonHelper;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl.VmInfoUpdate;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.storage.model.VmInfo.KeyValuePair;
 
 public class VmInfoDAOTest {
 
@@ -118,31 +114,6 @@ public class VmInfoDAOTest {
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmInfo.class))).thenReturn(SOME_JSON);
         when(jsonHelper.toJson(any(VmInfoUpdate.class))).thenReturn(SOME_OTHER_JSON);
-    }
-    
-    @Test
-    public void testCategory() {
-        assertEquals("vm-info", VmInfoDAO.vmInfoCategory.getName());
-        Collection<Key<?>> keys = VmInfoDAO.vmInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId")));
-        assertTrue(keys.contains(new Key<Integer>("vmId")));
-        assertTrue(keys.contains(new Key<Integer>("vmPid")));
-        assertTrue(keys.contains(new Key<String>("javaVersion")));
-        assertTrue(keys.contains(new Key<String>("javaHome")));
-        assertTrue(keys.contains(new Key<String>("mainClass")));
-        assertTrue(keys.contains(new Key<String>("javaCommandLine")));
-        assertTrue(keys.contains(new Key<String>("vmArguments")));
-        assertTrue(keys.contains(new Key<String>("vmName")));
-        assertTrue(keys.contains(new Key<String>("vmInfo")));
-        assertTrue(keys.contains(new Key<String>("vmVersion")));
-        assertTrue(keys.contains(new Key<KeyValuePair[]>("propertiesAsArray")));
-        assertTrue(keys.contains(new Key<KeyValuePair[]>("environmentAsArray")));
-        assertTrue(keys.contains(new Key<String[]>("loadedNativeLibraries")));
-        assertTrue(keys.contains(new Key<Long>("startTimeStamp")));
-        assertTrue(keys.contains(new Key<Long>("stopTimeStamp")));
-        assertTrue(keys.contains(new Key<Long>("uid")));
-        assertTrue(keys.contains(new Key<Long>("username")));
-        assertEquals(18, keys.size());
     }
 
     @Test

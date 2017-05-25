@@ -41,8 +41,6 @@ import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
 /**
@@ -50,18 +48,6 @@ import com.redhat.thermostat.storage.model.AgentInformation;
  */
 @Service
 public interface AgentInfoDAO {
-
-    static final Key<Long> START_TIME_KEY = new Key<>("startTime");
-    static final Key<Long> STOP_TIME_KEY = new Key<>("stopTime");
-    static final Key<Boolean> ALIVE_KEY = new Key<>("alive");
-    static final Key<String> CONFIG_LISTEN_ADDRESS = new Key<>("configListenAddress");
-
-    static final Category<AgentInformation> CATEGORY = new Category<>("agent-config", AgentInformation.class,
-            Key.AGENT_ID,
-            START_TIME_KEY,
-            STOP_TIME_KEY,
-            ALIVE_KEY,
-            CONFIG_LISTEN_ADDRESS);
     
     /**
      * Get information about all known agents.

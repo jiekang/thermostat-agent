@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.host.overview.common.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -46,7 +44,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
@@ -56,11 +53,9 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.host.overview.common.HostInfoDAO;
 import com.redhat.thermostat.host.overview.common.internal.HostInfoDAOImpl.HttpHelper;
 import com.redhat.thermostat.host.overview.common.internal.HostInfoDAOImpl.JsonHelper;
 import com.redhat.thermostat.host.overview.common.model.HostInfo;
-import com.redhat.thermostat.storage.core.Key;
 
 public class HostInfoDAOTest {
 
@@ -96,20 +91,6 @@ public class HostInfoDAOTest {
         
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(HostInfo.class))).thenReturn(SOME_JSON);
-    }
-
-    @Test
-    public void testCategory() {
-        assertEquals("host-info", HostInfoDAO.hostInfoCategory.getName());
-        Collection<Key<?>> keys = HostInfoDAO.hostInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId")));
-        assertTrue(keys.contains(new Key<String>("hostname")));
-        assertTrue(keys.contains(new Key<String>("osName")));
-        assertTrue(keys.contains(new Key<String>("osKernel")));
-        assertTrue(keys.contains(new Key<String>("cpuModel")));
-        assertTrue(keys.contains(new Key<Integer>("cpuCount")));
-        assertTrue(keys.contains(new Key<Long>("totalMemory")));
-        assertEquals(7, keys.size());
     }
 
     @Test

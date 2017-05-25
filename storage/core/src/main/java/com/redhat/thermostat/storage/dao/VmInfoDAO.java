@@ -40,39 +40,11 @@ import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.storage.model.VmInfo.KeyValuePair;
 
 @Service
 public interface VmInfoDAO {
-
-    static final Key<Integer> vmPidKey = new Key<>("vmPid");
-    static final Key<String> runtimeVersionKey = new Key<>("javaVersion");
-    static final Key<String> javaHomeKey = new Key<>("javaHome");
-    static final Key<String> mainClassKey = new Key<>("mainClass");
-    static final Key<String> commandLineKey = new Key<>("javaCommandLine");
-    static final Key<String> vmArgumentsKey = new Key<>("vmArguments");
-    static final Key<String> vmNameKey = new Key<>("vmName");
-    static final Key<String> vmInfoKey = new Key<>("vmInfo");
-    static final Key<String> vmVersionKey = new Key<>("vmVersion");
-    static final Key<KeyValuePair[]> propertiesKey = new Key<>("propertiesAsArray");
-    static final Key<KeyValuePair[]> environmentKey = new Key<>("environmentAsArray");
-    static final Key<String[]> librariesKey = new Key<>("loadedNativeLibraries");
-    static final Key<Long> startTimeKey = new Key<>("startTimeStamp");
-    static final Key<Long> stopTimeKey = new Key<>("stopTimeStamp");
-    static final Key<Long> uidKey = new Key<>("uid");
-    static final Key<String> usernameKey = new Key<>("username");
-
-    static final Category<VmInfo> vmInfoCategory = new Category<>("vm-info", VmInfo.class,
-            Key.AGENT_ID, Key.VM_ID, vmPidKey, runtimeVersionKey, javaHomeKey,
-            mainClassKey, commandLineKey,
-            vmArgumentsKey, vmNameKey, vmInfoKey, vmVersionKey,
-            propertiesKey, environmentKey, librariesKey,
-            startTimeKey, stopTimeKey,
-            uidKey, usernameKey);
 
     /** @return {@code null} if no information can be found */
     VmInfo getVmInfo(VmId id);

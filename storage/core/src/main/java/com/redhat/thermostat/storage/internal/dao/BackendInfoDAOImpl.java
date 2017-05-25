@@ -68,7 +68,7 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
     private static final String GATEWAY_PATH = "/backend-info/systems/*/agents/";
     private static final String CONTENT_TYPE = "application/json";
     private static final String GATEWAY_QUERY = "?q=";
-    private static final String DELETE_QUERY_PARAM = BACKEND_NAME.getName() + "==";
+    private static final String DELETE_QUERY_PARAM = "name==";
 
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,7 +60,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl.HttpHelper;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl.JsonHelper;
@@ -110,20 +107,7 @@ public class NetworkInterfaceInfoDAOTest {
         when(jsonHelper.fromJson(EMPTY_JSON)).thenReturn(emptyList);
         when(jsonHelper.fromJson(SOME_JSON)).thenReturn(Arrays.asList(info));
     }
-    
-    @Test
-    public void testCategory() {
-        Collection<Key<?>> keys;
 
-        assertEquals("network-info", NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        keys = NetworkInterfaceInfoDAO.networkInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId")));
-        assertTrue(keys.contains(new Key<String>("interfaceName")));
-        assertTrue(keys.contains(new Key<String>("ip4Addr")));
-        assertTrue(keys.contains(new Key<String>("ip6Addr")));
-        assertEquals(4, keys.size());
-    }
-    
     @Test
     public void testPutNetworkInterfaceInfoAdd() throws Exception {
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(httpHelper, jsonHelper);

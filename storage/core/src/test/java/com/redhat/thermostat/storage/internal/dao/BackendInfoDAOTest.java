@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -46,7 +44,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
@@ -56,8 +53,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl.HttpHelper;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl.JsonHelper;
@@ -99,26 +94,6 @@ public class BackendInfoDAOTest {
         
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(BackendInformation.class))).thenReturn(SOME_JSON);
-    }
-    
-    @Test
-    public void verifyCategoryName() {
-        Category<BackendInformation> c = BackendInfoDAO.CATEGORY;
-        assertEquals("backend-info", c.getName());
-    }
-
-    @Test
-    public void verifyCategoryHasAllKeys() {
-        Category<BackendInformation> c = BackendInfoDAO.CATEGORY;
-        Collection<Key<?>> keys = c.getKeys();
-
-        assertTrue(keys.contains(Key.AGENT_ID));
-        assertTrue(keys.contains(BackendInfoDAO.BACKEND_NAME));
-        assertTrue(keys.contains(BackendInfoDAO.BACKEND_DESCRIPTION));
-        assertTrue(keys.contains(BackendInfoDAO.IS_ACTIVE));
-        assertTrue(keys.contains(BackendInfoDAO.PIDS_TO_MONITOR));
-        assertTrue(keys.contains(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES));
-        assertTrue(keys.contains(BackendInfoDAO.ORDER_VALUE));
     }
 
     @Test

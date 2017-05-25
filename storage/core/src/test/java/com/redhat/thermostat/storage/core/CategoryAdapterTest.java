@@ -36,27 +36,12 @@
 
 package com.redhat.thermostat.storage.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.AggregateCount;
-
 public class CategoryAdapterTest {
-
-    @Test
-    public void canAdaptToAggregateResultDataClass() {
-        CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(AgentInfoDAO.CATEGORY);
-        Category<AggregateCount> aggregateCountCat = adapter.getAdapted(AggregateCount.class);
-        assertEquals(AggregateCount.class, aggregateCountCat.getDataClass());
-        assertEquals(AgentInfoDAO.CATEGORY.getName(), aggregateCountCat.getName());
-        assertFalse(AgentInfoDAO.CATEGORY.equals(aggregateCountCat));
-    }
     
     @Test
     public void canCreateAdapterFromNull() {

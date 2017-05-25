@@ -36,31 +36,11 @@
 
 package com.redhat.thermostat.storage.dao;
 
-import java.util.List;
-
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.BackendInformation;
 
 @Service
 public interface BackendInfoDAO {
-
-    static final Key<String> BACKEND_NAME = new Key<>("name");
-    static final Key<String> BACKEND_DESCRIPTION = new Key<>("description");
-    static final Key<Boolean> IS_ACTIVE = new Key<>("active");
-    static final Key<Boolean> SHOULD_MONITOR_NEW_PROCESSES = new Key<>("observeNewJvm");
-    static final Key<List<Integer>> PIDS_TO_MONITOR = new Key<>("pids");
-    static final Key<Integer> ORDER_VALUE = new Key<>("orderValue");
-
-    static final Category<BackendInformation> CATEGORY = new Category<>("backend-info", BackendInformation.class,
-            Key.AGENT_ID,
-            BACKEND_NAME,
-            BACKEND_DESCRIPTION,
-            IS_ACTIVE,
-            SHOULD_MONITOR_NEW_PROCESSES,
-            PIDS_TO_MONITOR,
-            ORDER_VALUE);
 
     void addBackendInformation(BackendInformation info);
 

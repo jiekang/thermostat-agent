@@ -69,7 +69,7 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
     private static final String GATEWAY_PATH = "/network-info/systems/*/agents/";
     private static final String CONTENT_TYPE = "application/json";
     private static final String GATEWAY_QUERY = "?q=";
-    private static final String QUERY_INTERFACE_PARAM = ifaceKey.getName() + "==";
+    private static final String QUERY_INTERFACE_PARAM = "interfaceName==";
     
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;

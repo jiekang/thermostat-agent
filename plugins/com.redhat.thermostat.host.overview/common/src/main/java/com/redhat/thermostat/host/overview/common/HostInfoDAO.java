@@ -38,22 +38,9 @@ package com.redhat.thermostat.host.overview.common;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.host.overview.common.model.HostInfo;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 
 @Service
 public interface HostInfoDAO {
-
-    static Key<String> hostNameKey = new Key<>("hostname");
-    static Key<String> osNameKey = new Key<>("osName");
-    static Key<String> osKernelKey = new Key<>("osKernel");
-    static Key<Integer> cpuCountKey = new Key<>("cpuCount");
-    static Key<String> cpuModelKey = new Key<>("cpuModel");
-    static Key<Long> hostMemoryTotalKey = new Key<>("totalMemory");
-
-    static final Category<HostInfo> hostInfoCategory = new Category<>("host-info", HostInfo.class,
-            Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,
-            cpuCountKey, cpuModelKey, hostMemoryTotalKey);
 
     void putHostInfo(HostInfo info);
 
