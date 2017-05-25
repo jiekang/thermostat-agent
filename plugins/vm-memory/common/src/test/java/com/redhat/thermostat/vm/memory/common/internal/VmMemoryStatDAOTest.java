@@ -98,23 +98,6 @@ public class VmMemoryStatDAOTest {
         when(jsonHelper.toJson(anyListOf(VmMemoryStat.class))).thenReturn(JSON);
     }
 
-    @Test
-    public void testCategories() {
-        Collection<Key<?>> keys;
-
-        assertEquals("vm-memory-stats", VmMemoryStatDAO.vmMemoryStatsCategory.getName());
-        keys = VmMemoryStatDAO.vmMemoryStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId")));
-        assertTrue(keys.contains(new Key<Integer>("vmId")));
-        assertTrue(keys.contains(new Key<Long>("timeStamp")));
-        assertTrue(keys.contains(new Key<Long>("metaspaceMaxCapacity")));
-        assertTrue(keys.contains(new Key<Long>("metaspaceMinCapacity")));
-        assertTrue(keys.contains(new Key<Long>("metaspaceCapacity")));
-        assertTrue(keys.contains(new Key<Long>("metaspaceUsed")));
-        assertTrue(keys.contains(new Key<Generation[]>("generations")));
-        assertEquals(8, keys.size());
-    }
-
     @SuppressWarnings("unchecked")
     @Test
     public void testPutVmMemoryStat() throws Exception {

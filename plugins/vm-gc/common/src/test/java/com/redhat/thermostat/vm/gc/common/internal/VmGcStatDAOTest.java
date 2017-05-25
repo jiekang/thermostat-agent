@@ -119,19 +119,5 @@ public class VmGcStatDAOTest {
         verify(response).getStatus();
     }
 
-    @Test
-    public void testCategory() {
-        assertEquals("vm-gc-stats", VmGcStatDAO.vmGcStatCategory.getName());
-        Collection<Key<?>> keys = VmGcStatDAO.vmGcStatCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId")));
-        assertTrue(keys.contains(new Key<Integer>("vmId")));
-        assertTrue(keys.contains(new Key<Long>("timeStamp")));
-        assertTrue(keys.contains(new Key<String>("collectorName")));
-        assertTrue(keys.contains(new Key<Long>("runCount")));
-        assertTrue(keys.contains(new Key<Long>("wallTime")));
-        assertEquals(6, keys.size());
-    }
-
-
 }
 

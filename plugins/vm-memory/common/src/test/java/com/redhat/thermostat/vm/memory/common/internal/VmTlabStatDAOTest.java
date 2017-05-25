@@ -58,9 +58,6 @@ import static org.mockito.Mockito.when;
 import static com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImpl.HttpHelper;
 import static com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImpl.JsonHelper;
 
-/**
- * Created by jmatsuok on 03/05/17.
- */
 public class VmTlabStatDAOTest {
 
     private HttpClient httpClient;

@@ -40,28 +40,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 @Service
 public interface VmMemoryStatDAO {
-
-    static final Key<Generation[]> generationsKey = new Key<>("generations");
-    static final Key<Long> KEY_METASPACE_MAX_CAPACITY = new Key<>("metaspaceMaxCapacity");
-    static final Key<Long> KEY_METASPACE_MIN_CAPACITY = new Key<>("metaspaceMinCapacity");
-    static final Key<Long> KEY_METASPACE_CAPACITY = new Key<>("metaspaceCapacity");
-    static final Key<Long> KEY_METASPACE_USED = new Key<>("metaspaceUsed");
-
-    static final Category<VmMemoryStat> vmMemoryStatsCategory = new Category<>("vm-memory-stats", VmMemoryStat.class,
-            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
-                    KEY_METASPACE_MAX_CAPACITY, KEY_METASPACE_MIN_CAPACITY, KEY_METASPACE_CAPACITY, KEY_METASPACE_USED,
-                    generationsKey),
-            Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public void putVmMemoryStat(VmMemoryStat stat);
 

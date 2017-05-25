@@ -36,42 +36,11 @@
 
 package com.redhat.thermostat.vm.memory.common;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 
 @Service
 public interface VmTlabStatDAO {
-
-    static final Key<Long> KEY_TOTAL_ALLOCATING_THREADS = new Key<>("totalAllocatingThreads");
-    static final Key<Long> KEY_TOTAL_ALLOCATIONS = new Key<>("totalAllocations");
-    static final Key<Long> KEY_TOTAL_REFILLS = new Key<>("totalRefills");
-    static final Key<Long> KEY_MAX_REFILLS = new Key<>("maxRefills");
-    static final Key<Long> KEY_TOTAL_SLOW_ALLOCATIONS = new Key<>("totalSlowAllocations");
-    static final Key<Long> KEY_MAX_SLOW_ALLOCATIONS = new Key<>("maxSlowAllocations");
-    static final Key<Long> KEY_TOTAL_GC_WASTE = new Key<>("totalGcWaste");
-    static final Key<Long> KEY_MAX_GC_WASTE = new Key<>("maxGcWaste");
-    static final Key<Long> KEY_TOTAL_SLOW_WASTE = new Key<>("totalSlowWaste");
-    static final Key<Long> KEY_MAX_SLOW_WASTE = new Key<>("maxSlowWaste");
-    static final Key<Long> KEY_TOTAL_FAST_WASTE = new Key<>("totalFastWaste");
-    static final Key<Long> KEY_MAX_FAST_WASTE = new Key<>("maxFastWaste");
-
-    static final Category<VmTlabStat> vmTlabStatsCategory = new Category<>("vm-tlab-stats", VmTlabStat.class,
-            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
-                    KEY_TOTAL_ALLOCATING_THREADS, KEY_TOTAL_ALLOCATIONS,
-                    KEY_TOTAL_REFILLS, KEY_MAX_REFILLS,
-                    KEY_TOTAL_SLOW_ALLOCATIONS, KEY_MAX_SLOW_ALLOCATIONS,
-                    KEY_TOTAL_GC_WASTE, KEY_MAX_GC_WASTE,
-                    KEY_TOTAL_SLOW_WASTE, KEY_MAX_SLOW_WASTE,
-                    KEY_TOTAL_FAST_WASTE, KEY_MAX_FAST_WASTE),
-            Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public void putStat(VmTlabStat stat);
 

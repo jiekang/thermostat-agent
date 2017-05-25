@@ -36,29 +36,11 @@
 
 package com.redhat.thermostat.vm.gc.common;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 @Service
 public interface VmGcStatDAO {
-
-    static final Key<String> collectorKey = new Key<>("collectorName");
-    static final Key<Long> runCountKey = new Key<>("runCount");
-    /** time in microseconds */
-    static final Key<Long> wallTimeKey = new Key<>("wallTime");
-
-    static final Category<VmGcStat> vmGcStatCategory = new Category<>("vm-gc-stats", VmGcStat.class,
-            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey, runCountKey, wallTimeKey),
-            Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public void putVmGcStat(VmGcStat stat);
 }
