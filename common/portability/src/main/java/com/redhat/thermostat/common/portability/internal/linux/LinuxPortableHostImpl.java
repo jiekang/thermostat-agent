@@ -45,9 +45,9 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Size.Unit;
-import com.redhat.thermostat.common.portability.HostName;
 import com.redhat.thermostat.common.portability.PortableHost;
 import com.redhat.thermostat.common.portability.PortableMemoryStat;
+import com.redhat.thermostat.common.portability.internal.PosixHelperImpl;
 import com.redhat.thermostat.common.portability.internal.UnimplementedError;
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -85,7 +85,6 @@ public class LinuxPortableHostImpl implements PortableHost {
             this.distribution = distribution;
         }
     }
-
 
     LinuxPortableHostImpl(ProcDataSource dataSource) {
         this.dataSource = dataSource;
@@ -145,7 +144,7 @@ public class LinuxPortableHostImpl implements PortableHost {
         
         // if fails, try to get hostname without dns lookup
         if (hostname == null) {
-            hostname = HostName.getLocalHostName();
+            hostname = new PosixHelperImpl().getLocalHostName();
         }
         
         // still null, use localhost

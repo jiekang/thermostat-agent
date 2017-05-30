@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+
 /**
  * Utility class to access Windows native code
  */
@@ -146,11 +147,7 @@ public class WindowsHelperImpl extends PortableNativeLibraryLoader {
     }
 
     public boolean exists(int pid) {
-        final long hnd = getLimitedProcessHandle0(pid);
-        if (hnd != 0) {
-            closeHandle0(hnd);
-        }
-        return hnd != 0;
+        return exists0(pid) != 0;
     }
 
     public String getUserName(int pid) {
@@ -327,6 +324,7 @@ public class WindowsHelperImpl extends PortableNativeLibraryLoader {
     private static native Object getEnvironment0(long hProcess, int mode); // mode = 0 returns DirectByteBuffer, 1 = String cwd, 2 = String execuatable, 3 = String command line
     private static native boolean getProcessInfo0(int pid, long[] info);
     private static native boolean getProcessIOInfo0(int pid, long[] info);
+    private static native int exists0(int pid);
 
     private static native int getCurrentProcessID0();
     private static native long getCurrentProcessHandle0();

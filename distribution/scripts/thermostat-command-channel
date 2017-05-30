@@ -61,6 +61,7 @@ IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-core-@proje
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-portability-@project.version@.jar"
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-buffer-@netty.version@.jar"
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-common-@netty.version@.jar"

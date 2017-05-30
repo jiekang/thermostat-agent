@@ -43,6 +43,7 @@ import java.nio.ByteBuffer;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
 import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
+import com.redhat.thermostat.common.portability.ProcessWatcher;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
@@ -52,7 +53,11 @@ public class CommandChannelServerMain {
     
     static final String IPC_SERVER_NAME = "command-channel";
     static final String CONFIG_FILE_PROP = "ipcConfigFile";
-    
+
+    private static final int HOSTNAME_ARG_POS = 0;
+    private static final int HOSTPORT_ARG_POS = 1;
+    private static final int PARENT_PID_ARG_POS = 2;
+
     private static SSLConfigurationParser sslConfParser = new SSLConfigurationParser();
     private static ServerCreator serverCreator = new ServerCreator();
     private static ShutdownHookHandler shutdownHandler = new ShutdownHookHandler();
@@ -62,13 +67,13 @@ public class CommandChannelServerMain {
 
     // TODO Add some keep alive check
     public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            throw new IOException("usage: thermostat-command-channel <hostname> <port>");
+        if (args.length != 2 && args.length != 3) {
+            throw new IOException("usage: thermostat-command-channel <hostname> <port> [<parent pid>]");
         }
-        String hostname = args[0];
+        String hostname = args[HOSTNAME_ARG_POS];
         Integer port;
         try {
-            port = Integer.valueOf(args[1]);
+            port = Integer.valueOf(args[HOSTPORT_ARG_POS]);
         } catch (NumberFormatException e) {
             throw new IOException("Port number must be a valid integer");
         }
@@ -89,7 +94,22 @@ public class CommandChannelServerMain {
         }
         // Connect to IPC server
         IPCMessageChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
-        
+
+
+        // if there's a parent pid, watch for it to exit and then shutdown.
+        final int parentPid = (args.length == 3) ? Integer.parseInt(args[PARENT_PID_ARG_POS]) : 0;
+        final int SLEEP_TIME_MS = 5000; // 5 seconds between checks
+        if (parentPid > 0) {
+            final ProcessWatcher watcher = new ProcessWatcher(parentPid, SLEEP_TIME_MS) {
+                @Override
+                public void onProcessExit() {
+                    // tell myself to exit
+                    System.exit(1);
+                }
+            };
+            watcher.start();
+        }
+
         try {
             // Notify server has started
             sendMessage(channel, CommandChannelConstants.SERVER_STARTED_TOKEN);

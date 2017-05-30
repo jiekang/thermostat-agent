@@ -34,34 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+#include "com_redhat_thermostat_common_portability_internal_PosixHelperImpl.h"
 
-public interface PortableHost {
+#include <jni.h>
+#include <unistd.h>
+#include <string.h>
 
-    String getHostName();
+#if !defined(_WIN32)
+# include <netdb.h>
+#else // windows
+# include <winsock2.h>
+#endif
 
-    String getOSName();
+#ifndef NI_MAXHOST
+#define NI_MAXHOST 1025
+#endif /* NI_MAXHOST */
 
-    String getOSVersion();
+JNIEXPORT jstring JNICALL
+Java_com_redhat_thermostat_common_portability_internal_PosixHelperImpl_getHostName0
+  (JNIEnv *env, jclass HostNameClass)
+{
+    char hostname[NI_MAXHOST];
+    memset(hostname, 0, sizeof(hostname));
 
-    String getCPUModel();
+    if (gethostname(hostname,  sizeof(hostname)) == 0) {
+        return (*env)->NewStringUTF(env, hostname);
+    }
+    return NULL;
+}
 
-    int getCPUCount();
 
-    long getTotalMemory();
-
-    long getClockTicksPerSecond();
-
-    PortableMemoryStat getMemoryStat();
-
-    // represents size of array with idle, system and user ticks or percentages
-    int CPU_TIMES_SIZE = 3;
-
-    // returns an array (one row per CPU) of an array of ints (idle, system and user ticks)
-    long[][] getCPUUsageTicks();
-
-    // returns an array (one row per logical CPU) of an array of ints (idle, system and user percent)
-    // the order of the CPUs is (from outer counter to inner) group, package, chip, core, hyperthread
-    int[][] getCPUUsagePercent();
-
+JNIEXPORT jint JNICALL
+Java_com_redhat_thermostat_common_portability_internal_PosixHelperImpl_getCurrentProcessID0
+  (JNIEnv *env, jclass posixHelperClass)
+{
+    return (jint)getpid();
 }

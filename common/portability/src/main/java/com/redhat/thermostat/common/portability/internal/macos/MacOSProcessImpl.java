@@ -40,6 +40,7 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.portability.PortableProcess;
 import com.redhat.thermostat.common.portability.PortableProcessStat;
 import com.redhat.thermostat.common.portability.PortableVmIoStat;
+import com.redhat.thermostat.common.portability.internal.PosixHelperImpl;
 
 import java.util.Map;
 
@@ -47,6 +48,7 @@ public class MacOSProcessImpl implements PortableProcess {
 
     public static final MacOSProcessImpl INSTANCE = new MacOSProcessImpl();
     private static final MacOSHelperImpl helper = MacOSHelperImpl.INSTANCE;
+    private PosixHelperImpl posixHelper = new PosixHelperImpl();
 
     @Override
     public boolean exists(int pid) {
@@ -94,5 +96,10 @@ public class MacOSProcessImpl implements PortableProcess {
     @Override
     public boolean terminateProcess(int pid, int exitcode, int waitMillis) {
         return helper.terminateProcess(pid, exitcode, waitMillis);
+    }
+
+    @Override
+    public int getCurrentProcessPid() {
+        return posixHelper.getCurrentProcessPid();
     }
 }

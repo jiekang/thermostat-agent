@@ -497,11 +497,23 @@ typedef struct RTL_USER_PROCESS_PARAMETERS64 {
  */
 JNIEXPORT jobject JNICALL
 Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getEnvironment0
-  (JNIEnv *env, jclass winHelperClass, jlong hProcess, jint callmode) {
+  (JNIEnv *env, jclass winHelperClass, jlong lhProcess, jint callmode) {
+
+    HANDLE hProcess = (HANDLE)(lhProcess);
+
+    BOOL isWowProcess = FALSE;
+    IsWow64Process(hProcess, &isWowProcess);
+    if (isWowProcess) {
+#if defined(DEBUG_GETENV)
+        fprintf(stderr, "process pid=%I64d hnd=%ld is 32-bit; getEnvironment() is unsupported\n", (long long)hProcess, (long)GetProcessId(hProcess));
+#endif
+        return NULL;
+    }
+
     PROCESS_BASIC_INFORMATION procBasicInfo = { 0 };
 
     ULONG uReturnLength = 0;
-    NTSTATUS ntStat = QueryInformationProcesss((HANDLE)hProcess,
+    NTSTATUS ntStat = QueryInformationProcesss(hProcess,
         ProcessBasicInformation,
         &procBasicInfo,
         sizeof(procBasicInfo),
@@ -526,8 +538,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
 #endif //DEBUG_GETENV
 
     // read the PEB from the other process (which is assumed to be 64-bit)
-    if (!ReadProcessMemory((HANDLE)hProcess,(LPCVOID)procBasicInfo.PebBaseAddress, &procEnvBlock, sizeof(procEnvBlock), &returnByteCount)) {
-        fprintf(stderr, "Error Reading Process Memory err=%ld", GetLastError());
+    if (!ReadProcessMemory(hProcess,(LPCVOID)procBasicInfo.PebBaseAddress, &procEnvBlock, sizeof(procEnvBlock), &returnByteCount)) {
+        fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d, err=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError());
         return NULL;
     }
 
@@ -548,8 +560,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
     fprintf(stderr, "testing RTL_USER_PROCESS_PARAMETERS memory at 0x%ld\n", (long)pRTLUserInfo);
 #endif //DEBUG_GETENV
 
-    if (!checkReadAccess((HANDLE)hProcess, pRTLUserInfo, &readableSize)) {
-        fprintf(stderr, "Error Reading Process Memory err=%ld", GetLastError());
+    if (!checkReadAccess(hProcess, pRTLUserInfo, &readableSize)) {
+        fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d err=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError());
         return NULL;
     }
 
@@ -560,8 +572,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
 
     // Get the first 0x64 bytes of RTL_USER_PROCESS_PARAMETERS strcuture
     RTL_USER_PROCESS_PARAMETERS64 upp = {0};
-    if (!ReadProcessMemory((HANDLE)hProcess, (LPCVOID)pRTLUserInfo, &upp, sizeof(RTL_USER_PROCESS_PARAMETERS64), &returnByteCount)) {
-        fprintf(stderr, "Error Reading Process Memory err=%ld", GetLastError());
+    if (!ReadProcessMemory(hProcess, (LPCVOID)pRTLUserInfo, &upp, sizeof(RTL_USER_PROCESS_PARAMETERS64), &returnByteCount)) {
+        fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d err=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError());
         return NULL;
     }
 
@@ -582,8 +594,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
         fprintf(stderr, "reading CurrentWorkingDirectory string at 0x%lx length %ld\n", (long)upp.CurrentWorkingDirectory.Buffer, (long)upp.CurrentWorkingDirectory.Length);
 #endif //DEBUG_GETENV
         WCHAR* sb = malloc(upp.CurrentWorkingDirectory.Length);
-        if (!ReadProcessMemory((HANDLE)hProcess, (LPCVOID)upp.CurrentWorkingDirectory.Buffer, sb, upp.CurrentWorkingDirectory.Length, &returnByteCount)) {
-            fprintf(stderr, "Error Reading Process Memory err=%ld bytes=%ld\n", GetLastError(), (long)returnByteCount);
+        if (!ReadProcessMemory(hProcess, (LPCVOID)upp.CurrentWorkingDirectory.Buffer, sb, upp.CurrentWorkingDirectory.Length, &returnByteCount)) {
+            fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d err=%ld bytes=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError(), (long)returnByteCount);
             free(sb);
             return NULL;
         }
@@ -598,8 +610,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
         fprintf(stderr, "reading string at 0x%lx length %ld\n", (long)upp.ImagePathName.Buffer, (long)upp.ImagePathName.Length);
 #endif //DEBUG_GETENV
         WCHAR* sb = malloc(upp.ImagePathName.Length);
-        if (!ReadProcessMemory((HANDLE)hProcess, (LPCVOID)upp.ImagePathName.Buffer, sb, upp.ImagePathName.Length, &returnByteCount)) {
-            fprintf(stderr, "Error Reading Process Memory err=%ld bytes=%ld\n", GetLastError(), (long)returnByteCount);
+        if (!ReadProcessMemory(hProcess, (LPCVOID)upp.ImagePathName.Buffer, sb, upp.ImagePathName.Length, &returnByteCount)) {
+            fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d err=%ld bytes=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError(), (long)returnByteCount);
             free(sb);
             return NULL;
         }
@@ -614,8 +626,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
         fprintf(stderr, "reading string at 0x%lx length %ld\n", (long)upp.CommandLine.Buffer, (long)upp.CommandLine.Length);
 #endif //DEBUG_GETENV
         WCHAR* sb = malloc(upp.CommandLine.Length);
-        if (!ReadProcessMemory((HANDLE)hProcess, (LPCVOID)upp.CommandLine.Buffer, sb, upp.CommandLine.Length, &returnByteCount)) {
-            fprintf(stderr, "Error Reading Process Memory err=%ld bytes=%ld\n", GetLastError(), (long)returnByteCount);
+        if (!ReadProcessMemory(hProcess, (LPCVOID)upp.CommandLine.Buffer, sb, upp.CommandLine.Length, &returnByteCount)) {
+            fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d err=%ld bytes=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError(), (long)returnByteCount);
             free(sb);
             return NULL;
         }
@@ -630,8 +642,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
 
         // find out how much we can read, and then read it
         // this will read more than just the environment, but there's not a lot we can do cleanly
-        if (!checkReadAccess((HANDLE)hProcess, strPtr, &readableSize)) {
-            fprintf(stderr, "Error Reading Process Memory err=%ld siz=0x%lx", GetLastError(), (long)readableSize);
+        if (!checkReadAccess(hProcess, strPtr, &readableSize)) {
+            fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d err=%ld siz=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError(), (long)readableSize);
             return NULL;
         }
         // constrain readableSize to some maximum
@@ -644,8 +656,8 @@ Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
         fprintf(stderr, "reading string at 0x%lx length %ld\n", (long)strPtr, (long)readableSize);
 #endif //DEBUG_GETENV
         WCHAR* sb = malloc(readableSize);
-        if (!ReadProcessMemory((HANDLE)hProcess, (LPCVOID)strPtr, sb, readableSize, &returnByteCount)) {
-            fprintf(stderr, "Error Reading Process Memory err=%ld bytes=%ld\n", GetLastError(), (long)returnByteCount);
+        if (!ReadProcessMemory(hProcess, (LPCVOID)strPtr, sb, readableSize, &returnByteCount)) {
+            fprintf(stderr, "Error reading process memory hnd=%I64d pid=%ld line=%d err=%ld readable=%ld retbytes=%ld\n", (long long)hProcess, (long)GetProcessId(hProcess), __LINE__, GetLastError(), (long)readableSize, (long)returnByteCount);
             free(sb);
             return NULL;
         }
@@ -926,6 +938,30 @@ JNIEXPORT jlong JNICALL Java_com_redhat_thermostat_common_portability_internal_w
 
     HANDLE hProcess = (pid == 0) ? GetCurrentProcess() : OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
     return (jlong) hProcess;
+}
+
+/*
+ * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
+ * Method:    exists0
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_exists0
+  (JNIEnv *env, jclass winHelperClass, jint pid) {
+
+    if (pid == 0)
+        return 1;
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (hProcess == 0)
+        return 0;
+    LPDWORD ret = 0;
+    int rc = GetExitCodeProcess(hProcess, &ret);
+    CloseHandle(hProcess);
+    if (rc) {
+        return ret == STILL_ACTIVE;
+    }
+    else {
+        return 0;
+    }
 }
 
 /*

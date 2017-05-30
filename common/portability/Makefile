@@ -30,9 +30,9 @@ endif
 
 INCLUDE    = -I $(TARGET_DIR) -I "$(JAVA_HOME)/include/" -I "$(JAVA_HOME)/include/$(JNI_PLATFORM)"
 
-HOSTNAME_SOURCES    = src/main/native/HostName.c
-HOSTNAME_TARGET     = $(TARGET_DIR)/HostName.c
-HOSTNAME_OBJECTS    = $(HOSTNAME_TARGET:.c=.o)
+POSIX_HELPER_SOURCES    = src/main/native/PosixHelperImpl.c
+POSIX_HELPER_TARGET     = $(TARGET_DIR)/PosixHelperImpl.c
+POSIX_HELPER_OBJECTS    = $(POSIX_HELPER_TARGET:.c=.o)
 
 USERNAME_SOURCES    = src/main/native/UserNameUtilImpl.c
 USERNAME_TARGET     = $(TARGET_DIR)/UserNameUtilImpl.c
@@ -53,7 +53,7 @@ endif
 EXECUTABLES          = $(EXECUTABLE)
 
 .PHONY:UserNameUtilImpl
-JNI_LIST = com.redhat.thermostat.common.portability.HostName com.redhat.thermostat.common.portability.internal.linux.UserNameUtilImpl
+JNI_LIST = com.redhat.thermostat.common.portability.internal.PosixHelperImpl com.redhat.thermostat.common.portability.internal.linux.UserNameUtilImpl
 
 ifeq ($(JNI_PLATFORM),win32)
     JNI_LIST     +=  com.redhat.thermostat.common.portability.internal.windows.WindowsHelperImpl
@@ -67,19 +67,18 @@ endif
 $(JNI_LIST):
 	$(JAVAH) -force -classpath $(CLASSPATH) -d $(TARGET_DIR) $(JNI_LIST)
 
-all: $(JNI_LIST) init $(HOSTNAME_SOURCES) $(USERNAME_SOURCES) $(HELPER_SOURCES) $(EXECUTABLES)
+all: $(JNI_LIST) init $(POSIX_HELPER_SOURCES) $(USERNAME_SOURCES) $(HELPER_SOURCES) $(EXECUTABLES)
 
 .PHONY:
 init:
-	$(COPY) $(HOSTNAME_SOURCES) $(HOSTNAME_TARGET)
+	$(COPY) $(POSIX_HELPER_SOURCES) $(POSIX_HELPER_TARGET)
 	$(COPY) $(USERNAME_SOURCES) $(USERNAME_TARGET)
 ifneq ($(strip $(HELPER_SOURCES)),)
 	$(COPY) $(HELPER_SOURCES) $(HELPER_TARGET)
 endif
 
-$(EXECUTABLE): $(HOSTNAME_OBJECTS) $(USERNAME_OBJECTS) $(HELPER_OBJECTS)
-	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(HOSTNAME_OBJECTS) $(USERNAME_OBJECTS) $(HELPER_OBJECTS) $(PLATFORM_LIBS) $(HELPER_LIBS) -o $(TARGET_DIR)/$@
-
+$(EXECUTABLE): $(POSIX_HELPER_OBJECTS) $(USERNAME_OBJECTS) $(HELPER_OBJECTS)
+	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(POSIX_HELPER_OBJECTS) $(USERNAME_OBJECTS) $(HELPER_OBJECTS) $(PLATFORM_LIBS) $(HELPER_LIBS) -o $(TARGET_DIR)/$@
 
 .c.o:
 	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@
@@ -91,7 +90,7 @@ clean-lib:
 	rm -f $(TARGET_DIR)/$(EXECUTABLE)
 
 clean-obj:
-	rm -f $(HOSTNAME_OBJECTS)
+	rm -f $(POSIX_HELPER_OBJECTS)
 	rm -f $(USERNAME_OBJECTS)
 	rm -f $(HELPER_OBJECTS)
 

@@ -34,32 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-#include "com_redhat_thermostat_common_portability_HostName.h"
+package com.redhat.thermostat.common.portability.internal;
 
-#include <jni.h>
-#include <unistd.h>
-#include <string.h>
+public class PosixHelperImpl {
 
-#if !defined(_WIN32)
-# include <netdb.h>
-#else // windows
-# include <winsock2.h>
-#endif
-
-#ifndef NI_MAXHOST
-#define NI_MAXHOST 1025
-#endif /* NI_MAXHOST */
-
-JNIEXPORT jstring JNICALL
-Java_com_redhat_thermostat_common_portability_HostName_getHostName
-  (JNIEnv *env, jclass HostNameClass)
-{
-    char hostname[NI_MAXHOST];
-    memset(hostname, 0, sizeof(hostname));
-
-    if (gethostname(hostname,  sizeof(hostname)) == 0) {
-        return (*env)->NewStringUTF(env, hostname);
+    public int getCurrentProcessPid() {
+        return getCurrentProcessID0();
     }
-    return NULL;
-}
 
+    public String getLocalHostName() {
+        return getHostName0();
+    }
+
+    private static native int getCurrentProcessID0();
+    private static native String getHostName0();
+}

@@ -36,32 +36,29 @@
 
 package com.redhat.thermostat.common.portability;
 
-public interface PortableHost {
+public class ProcessWaiterMain {
 
-    String getHostName();
+    private static final boolean verbose = false;
+    private static final int TICKTIME = 1000;
 
-    String getOSName();
-
-    String getOSVersion();
-
-    String getCPUModel();
-
-    int getCPUCount();
-
-    long getTotalMemory();
-
-    long getClockTicksPerSecond();
-
-    PortableMemoryStat getMemoryStat();
-
-    // represents size of array with idle, system and user ticks or percentages
-    int CPU_TIMES_SIZE = 3;
-
-    // returns an array (one row per CPU) of an array of ints (idle, system and user ticks)
-    long[][] getCPUUsageTicks();
-
-    // returns an array (one row per logical CPU) of an array of ints (idle, system and user percent)
-    // the order of the CPUs is (from outer counter to inner) group, package, chip, core, hyperthread
-    int[][] getCPUUsagePercent();
-
+    public static void main(String args[]) {
+        for (String pidStr : args) {
+            final int pid = Integer.parseInt(pidStr);
+            if (pid != 0) {
+                ProcessWatcher watcher = new ProcessWatcher(pid, TICKTIME) {
+                    @Override
+                    public void onProcessExit() {
+                        if (verbose) {
+                            System.err.println("process " + pid + " no longer exists");
+                        }
+                    }
+                };
+                watcher.start();
+                try {
+                    watcher.join();
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+    }
 }

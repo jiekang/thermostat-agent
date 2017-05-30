@@ -42,6 +42,7 @@ import com.redhat.thermostat.common.portability.PortableProcess;
 import com.redhat.thermostat.common.portability.PortableProcessStat;
 import com.redhat.thermostat.common.portability.PortableVmIoStat;
 import com.redhat.thermostat.common.portability.ProcessChecker;
+import com.redhat.thermostat.common.portability.internal.PosixHelperImpl;
 import com.redhat.thermostat.common.portability.internal.UnimplementedError;
 import com.redhat.thermostat.common.portability.internal.linux.vmio.LinuxVmIoStatBuilderImpl;
 import com.redhat.thermostat.common.portability.internal.linux.vmio.ProcIoDataReader;
@@ -54,6 +55,7 @@ public class LinuxPortableProcessImpl implements PortableProcess {
     private LinuxPortableProcessStatBuilderImpl procStatHelper;
     private LinuxProcessEnvironmentBuilderImpl procEnvHelper;
     private LinuxVmIoStatBuilderImpl vmioHelper;
+    private PosixHelperImpl posixHelper;
 
     public static LinuxPortableProcessImpl INSTANCE = new LinuxPortableProcessImpl(new SystemClock(), new ProcDataSource());
 
@@ -65,6 +67,7 @@ public class LinuxPortableProcessImpl implements PortableProcess {
         procStatHelper = new LinuxPortableProcessStatBuilderImpl(dataSource);
         procEnvHelper = new LinuxProcessEnvironmentBuilderImpl(dataSource);
         vmioHelper = new LinuxVmIoStatBuilderImpl(clock, new ProcIoDataReader(dataSource));
+        posixHelper = new PosixHelperImpl();
     }
 
     @Override
@@ -110,5 +113,10 @@ public class LinuxPortableProcessImpl implements PortableProcess {
     @Override
     public boolean terminateProcess(int pid, int exitcode, int waitMillis) {
         throw new UnimplementedError("terminateProcess()");
+    }
+
+    @Override
+    public int getCurrentProcessPid() {
+        return posixHelper.getCurrentProcessPid();
     }
 }

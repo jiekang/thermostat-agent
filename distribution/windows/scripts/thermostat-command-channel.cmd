@@ -36,13 +36,13 @@
 
 setlocal
 
-if "%3"=="" goto usage
-if not "%4"=="" goto usage
+if "%4"=="" goto usage
+if not "%5"=="" goto usage
 
 goto skipfuncdefs
 
 :usage
-  echo "usage: %~f0 <hostname> <port> <ipcConfigFile>"
+  echo "usage: %~f0 <hostname> <port> <ipcConfigFile> [<parentPid>]"
   exit /b 1
 
 :skipfuncdefs
@@ -50,6 +50,7 @@ goto skipfuncdefs
 set HOSTNAME=%1
 set PORT=%2
 set CONFIG_FILE=%3
+set PARENT_PID=%4
 
 :: Source thermostat-ipc-client-common from same directory as this script
 :: Defines IPC_CLASSPATH variable with JARs necessary for the IPC service
@@ -68,6 +69,7 @@ set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-common-core-@proj
 set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-shared-config-@project.version@.jar
 set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-command-@project.version@.jar
 set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-common-command-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-common-portability-@project.version@.jar
 set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-command-server-@project.version@.jar
 set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\netty-buffer-@netty.version@.jar
 set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\netty-common-@netty.version@.jar
@@ -87,7 +89,7 @@ if defined THERMOSTAT_CMDC_DEBUG (
 :: Start server
 
 set CONFIG_FILE_ARG=-DipcConfigFile=%CONFIG_FILE%
-%JAVA% %CONFIG_FILE_ARG% %LOGGING_ARGS% -cp %IPC_CLASSPATH% %DEBUG_OPTS% %CMD_CHANNEL_CLASS% %HOSTNAME% %PORT%
+%JAVA% %CONFIG_FILE_ARG% %LOGGING_ARGS% -cp %IPC_CLASSPATH% %DEBUG_OPTS% %CMD_CHANNEL_CLASS% %HOSTNAME% %PORT% %PARENT_PID%
 
 
 

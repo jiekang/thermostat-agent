@@ -36,32 +36,35 @@
 
 package com.redhat.thermostat.common.portability;
 
-public interface PortableHost {
+public abstract class ProcessWatcher extends Thread {
 
-    String getHostName();
+    private final int pidToWatch;
+    private final long sleepTimeMs;
+    private PortableProcess processChecker = PortableProcessFactory.getInstance();
 
-    String getOSName();
+    protected ProcessWatcher(int pid, long sleepTimeMs) {
+        this.pidToWatch = pid;
+        this.sleepTimeMs = sleepTimeMs;
+        setName("process watcher");
+        setDaemon(true);
+    }
 
-    String getOSVersion();
+    public void run() {
+        boolean parentIsRunning = true;
+        while (parentIsRunning) {
+            parentIsRunning = processChecker.exists(pidToWatch);
+            if (parentIsRunning) {
+                tick();
+                try {
+                    Thread.sleep(sleepTimeMs);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+        onProcessExit();
+    }
 
-    String getCPUModel();
+    public void tick() {}
 
-    int getCPUCount();
-
-    long getTotalMemory();
-
-    long getClockTicksPerSecond();
-
-    PortableMemoryStat getMemoryStat();
-
-    // represents size of array with idle, system and user ticks or percentages
-    int CPU_TIMES_SIZE = 3;
-
-    // returns an array (one row per CPU) of an array of ints (idle, system and user ticks)
-    long[][] getCPUUsageTicks();
-
-    // returns an array (one row per logical CPU) of an array of ints (idle, system and user percent)
-    // the order of the CPUs is (from outer counter to inner) group, package, chip, core, hyperthread
-    int[][] getCPUUsagePercent();
-
+    abstract public void onProcessExit();
 }

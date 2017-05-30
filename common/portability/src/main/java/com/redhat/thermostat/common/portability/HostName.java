@@ -37,16 +37,17 @@
 package com.redhat.thermostat.common.portability;
 
 import com.redhat.thermostat.common.portability.internal.PortableNativeLibraryLoader;
+import com.redhat.thermostat.common.portability.internal.PosixHelperImpl;
 
 /**
  * Finds the current host name without doing a DNS lookup
  */
 public class HostName extends PortableNativeLibraryLoader {
 
-    public static String getLocalHostName() {
-        return getHostName();
-    }
+    private static PosixHelperImpl helper = new PosixHelperImpl();
     
-    private static native String getHostName();
+    public static String getLocalHostName() {
+        return helper.getLocalHostName();
+    }
 }
 

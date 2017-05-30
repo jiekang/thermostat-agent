@@ -58,6 +58,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import com.redhat.thermostat.common.portability.PortableProcessFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -271,14 +272,16 @@ public class CommandChannelDelegateTest {
         };
 
         // in Windows we need to ensure the drive letter appears - by calling getAbsolutePath()
-        String[] winArgs = new String[] {
+        // avoid this call in non-windows to simplify test setup
+        String[] winArgs = OS.IS_WINDOWS ? new String[] {
                 "cmd",
                 "/c",
                 new File("/path/to/thermostat/home/thermostat-command-channel.cmd").getAbsolutePath(),
                 "127.0.0.1",
                 "123",
-                new File("/path/to/ipc/config").getAbsolutePath()
-        };
+                new File("/path/to/ipc/config").getAbsolutePath(),
+                Integer.toString(PortableProcessFactory.getInstance().getCurrentProcessPid())
+        } : null;
 
         final String[] expectedArgs = OS.IS_UNIX ? linuxArgs : winArgs;
         

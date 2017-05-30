@@ -59,4 +59,6 @@ public interface PortableProcess {
     boolean terminateProcess(int pid, boolean wait);
 
     boolean terminateProcess(int pid, int exitcode, int waitMillis);
+
+    int getCurrentProcessPid();
 }

@@ -101,4 +101,9 @@ public class WindowsPortableProcessImpl implements PortableProcess {
     public boolean terminateProcess(int pid, int exitcode, int waitMillis) {
         return helper.terminateProcess(pid, exitcode, waitMillis);
     }
+
+    @Override
+    public int getCurrentProcessPid() {
+        return helper.getCurrentProcessPid();
+    }
 }
