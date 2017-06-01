@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Copyright 2012-2017 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses/>.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.redhat.thermostat</groupId>
+    <artifactId>thermostat</artifactId>
+    <version>1.99.12-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>thermostat-distribution</artifactId>
+  <!-- Define packaging type "pom" since this works around an issue
+       with more than one attached artifacts which seems to confuse
+       maven. Note that maven-assembly-plugin may confuse maven
+       itself by replacing the jar artifact with a zip. -->
+  <packaging>pom</packaging>
+
+  <name>Thermostat Distribution</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <main.basedir>${project.basedir}/..</main.basedir>
+  </properties>
+
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <assemblyfile.suffix/>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>linux</id>
+      <activation>
+        <os><name>linux</name></os>
+      </activation>
+      <properties>
+        <assemblyfile.suffix/>
+        <agent_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</agent_extra_bundles>
+        <service_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</service_extra_bundles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+
+    <profile>
+      <id>macos</id>
+      <activation>
+        <os><family>mac</family></os>
+      </activation>
+      <properties>
+        <assemblyfile.suffix>macosx</assemblyfile.suffix>
+        <agent_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</agent_extra_bundles>
+        <service_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</service_extra_bundles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-keyring</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>windows</id>
+      <activation>
+        <os><family>Windows</family></os>
+      </activation>
+      <properties>
+        <assemblyfile.suffix>-windows</assemblyfile.suffix>
+        <agent_extra_bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</agent_extra_bundles>
+        <service_extra_bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</service_extra_bundles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-winpipes-server</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-winpipes-client</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-windows-scripts</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>windows/scripts</directory>
+                      <targetPath>image/bin</targetPath>
+                      <filtering>true</filtering>
+                    </resource>
+                    <resource>
+                      <directory>windows/config</directory>
+                      <targetPath>image/etc</targetPath>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <!-- the script itself has the wrong permissions, but using cmd.exe works properly -->
+                  <executable>cmd.exe</executable>
+                  <arguments>
+                    <argument>/c</argument>
+                    <argument>${project.basedir}/tools/verify-bash-completion.cmd</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <build>
+    <plugins>
+      <!-- skip unit test run-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>assemble-core</id>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/core-assembly${assemblyfile.suffix}.xml</descriptor>
+              </descriptors>
+              <finalName>image/libs</finalName>
+              <attach>false</attach>
+            </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>assemble-all-plugins</id>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/plugin-assembly.xml</descriptor>
+              </descriptors>
+              <finalName>image</finalName>
+              <attach>false</attach>
+            </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+<!-- TODO Uncomment once Byteman plugin is ported to use web-gateway
+          <execution>
+            <id>assemble-all-plugin-libs</id>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/plugin-libs-assembly.xml</descriptor>
+              </descriptors>
+              <finalName>image/plugins</finalName>
+              <attach>false</attach>
+            </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>-->
+          <execution>
+            <id>assemble-scripts</id>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/scripts-assembly.xml</descriptor>
+              </descriptors>
+              <finalName>image</finalName>
+              <attach>false</attach>
+            </configuration>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-scripts</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>tools</directory>
+                  <targetPath>tools</targetPath>
+                  <filtering>true</filtering>
+                </resource>
+                <!-- downstream packaging related files and directories below -->
+                <resource>
+                  <directory>packaging/shared/desktop</directory>
+                  <targetPath>packaging/desktop</targetPath>
+                  <filtering>true</filtering>
+                </resource>
+                <!-- systemd service unit files -->
+                <resource>
+                  <directory>packaging/shared/systemd</directory>
+                  <targetPath>packaging/systemd</targetPath>
+                  <filtering>true</filtering>
+                </resource>
+                <resource>
+                  <directory>packaging/shared/man</directory>
+                  <targetPath>packaging/man</targetPath>
+                </resource>
+                <resource>
+                  <directory>packaging/shared/bash-completion</directory>
+                  <targetPath>packaging/bash-completion</targetPath>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-icons</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>packaging/shared/icons</directory>
+                  <targetPath>packaging/icons</targetPath>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>chmod</id>
+            <phase>prepare-package</phase>
+            <configuration>
+              <target>
+                <chmod file="${project.build.directory}/image/bin/*" perm="755" />
+                <chmod file="${project.build.directory}/image/bin/thermostat-common" perm="644" />
+                <chmod file="${project.build.directory}/image/bin/thermostat-ipc-client-common" perm="644" />
+                <chmod file="${project.build.directory}/tools/*" perm="755" />
+                <chmod file="${project.build.directory}/image/etc/agent.auth" perm="600" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- thermostat core parts. Be sure to
+         also adjust ../distribution/assembly/core-assembly*.xml -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-main</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-launcher</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-command-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-proxy-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-tcpsocket-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-tcpsocket-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>jnr-x86asm</artifactId>
+      <version>${jnr-x86asm.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-portability</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-process-handler</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-system-backend</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+
+    <!-- Plugins -->
+
+    <!-- Be sure to add the distribution module of your plugin below
+         with type "zip", and also to ../distribution/assembly/plugin-assembly*.xml -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-host-cpu-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-host-memory-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-numa-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!-- thermostat-vm-byteman-distribution does not depend on
+         thermostat-vm-byteman-helper. List it explicitly so
+         that copy deps works. -->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-byteman-helper-distro</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-byteman-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-numa-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-thread-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-classstat-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-compiler-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-cpu-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-heap-analysis-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-io-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-jmx-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.redhat.thermostat</groupId>-->
+      <!--<artifactId>thermostat-vm-profiler-distribution</artifactId>-->
+      <!--<version>${project.version}</version>-->
+      <!--<type>zip</type>-->
+    <!--</dependency>-->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+  </dependencies>
+
+</project>
+

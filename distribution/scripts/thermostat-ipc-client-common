@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Source thermostat-common from same directory as this script
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
+
+# Build classpath shared by all IPC clients
+IPC_CLASSPATH="${THERMOSTAT_LIBS}/thermostat-agent-ipc-client-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-common-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-unixsocket-client-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-unixsocket-common-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-tcpsocket-client-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-tcpsocket-common-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jnr-unixsocket-@jnr-unixsocket.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jnr-enxio-@jnr-enxio.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jnr-constants-@jnr-constants.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jnr-posix-@jnr-posix.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jnr-ffi-@jnr-ffi.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jnr-x86asm-@jnr-x86asm.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jffi-@jffi.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jffi-@jffi.version@-native.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-@asm.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-commons-@asm.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-util-@asm.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-analysis-@asm.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-tree-@asm.version@.jar"
+
+if [ $CYGWIN_MODE -eq 1 ]; then
+  IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-winpipes-client-@project.version@.jar"
+  IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-winpipes-common-@project.version@.jar"
+fi

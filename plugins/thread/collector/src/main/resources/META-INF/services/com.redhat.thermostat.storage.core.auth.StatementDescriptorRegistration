@@ -1,0 +1,2 @@
+com.redhat.thermostat.thread.dao.internal.ThreadDaoImplStatementDescriptorRegistration
+com.redhat.thermostat.thread.dao.internal.LockInfoDaoImplStatementDescriptorRegistration

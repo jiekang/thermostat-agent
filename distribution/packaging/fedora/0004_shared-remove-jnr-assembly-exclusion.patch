@@ -1,0 +1,17 @@
+diff --git a/distribution/assembly/core-assembly.xml b/distribution/assembly/core-assembly.xml
+--- a/distribution/assembly/core-assembly.xml
++++ b/distribution/assembly/core-assembly.xml
+@@ -76,13 +76,9 @@
+         <include>com.redhat.thermostat:thermostat-laf-utils</include>
+         <include>org.osgi:org.osgi.compendium</include>
+         <include>org.apache:org.apache.felix.scr</include>
+-        <!-- Remove once upstream has OSGi metadata -->
+-        <include>com.redhat.thermostat:jnr-x86asm</include>
+       </includes>
+       <excludes>
+         <exclude>org.osgi:org.osgi.core</exclude>
+-        <!-- Exclude upstream jnr-x86asm jar in favour of our wrapped bundle -->
+-        <exclude>com.github.jnr:jnr-x86asm</exclude>
+       </excludes>
+       <useTransitiveDependencies>true</useTransitiveDependencies>
+       <useTransitiveFiltering>true</useTransitiveFiltering>

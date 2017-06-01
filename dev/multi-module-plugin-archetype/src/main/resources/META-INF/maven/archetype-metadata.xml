@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Copyright 2012-2017 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses/>.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<archetype-descriptor xsi:schemaLocation="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0 http://maven.apache.org/xsd/archetype-descriptor-1.0.0.xsd" name="thermostat-kernel-cmdline"
+    xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <requiredProperties>
+    <requiredProperty key="thermostat-core-version">
+      <defaultValue>1.99.12-SNAPSHOT</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="pluginDescription">
+      <defaultValue>Thermostat example plugin</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="helloMessage">
+      <defaultValue>Hello World!</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="pluginDeployDir">
+      <defaultValue>example-plugin</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="thermostat-java-version">
+      <defaultValue>${thermostat.java.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="mongo-driver-osgi-version">
+      <defaultValue>${mongo-driver.osgi-version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-beanutils-version">
+      <defaultValue>${commons-beanutils.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-codec-osgi-version">
+      <defaultValue>${commons-codec.osgi-version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-collections-version">
+      <defaultValue>${commons-collections.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-logging-version">
+      <defaultValue>${commons-logging.version}</defaultValue>
+    </requiredProperty> 
+    <requiredProperty key="osgi-core-version">
+      <defaultValue>${osgi.core.version}</defaultValue>
+    </requiredProperty> 
+    <requiredProperty key="junit-version">
+      <defaultValue>${junit.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="httpcomponents-core-version">
+      <defaultValue>${httpcomponents.core.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="httpcomponents-client-version">
+      <defaultValue>${httpcomponents.client.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="gson-version">
+      <defaultValue>${gson.version}</defaultValue>
+    </requiredProperty>
+     <requiredProperty key="osgi-compendium-osgi-version">
+      <defaultValue>${osgi.compendium.osgi-version}</defaultValue>
+    </requiredProperty>
+     <requiredProperty key="osgi-compendium-bundle-symbolic-name">
+      <defaultValue>${osgi.compendium.bundle.symbolic-name}</defaultValue>
+    </requiredProperty>
+  </requiredProperties>
+  <fileSets>
+    <fileSet filtered="true" encoding="UTF-8">
+      <directory></directory>
+      <includes>
+        <include>deploy.sh</include>
+        <include>README</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+  <modules>
+    <module id="\${rootArtifactId}-cli" dir="client-cli" name="\${rootArtifactId}-cli">
+      <fileSets>
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+          <directory>src/main/java</directory>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </fileSet>
+      </fileSets>
+    </module>
+    <module id="\${rootArtifactId}-agent" dir="agent" name="\${rootArtifactId}-agent">
+      <fileSets>
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+          <directory>src/main/java</directory>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </fileSet>
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+          <directory>src/test/java</directory>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </fileSet>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory>src/test/resources</directory>
+          <includes>
+            <include>**/*.txt</include>
+          </includes>
+        </fileSet>
+      </fileSets>
+    </module>
+    <module id="\${rootArtifactId}-storage-common" dir="storage-common" name="\${rootArtifactId}-storage-common">
+      <fileSets>
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+          <directory>src/main/java</directory>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </fileSet>
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+          <directory>src/test/java</directory>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </fileSet>
+        <!--Auth files needed for CategoryRegistration and StatementDescriptorRegistration-->
+	<fileSet filtered="true" packaged="false" encoding="UTF-8">
+          <directory>src/main/resources</directory>
+          <includes>
+            <include>**/*.auth.*</include>
+          </includes>
+        </fileSet>
+      </fileSets>
+    </module>
+    <module id="\${rootArtifactId}-distribution" dir="distribution" name="\${rootArtifactId}-distribution">
+      <fileSets>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory></directory>
+          <includes>
+            <include>thermostat-plugin.xml</include>
+          </includes>
+        </fileSet>
+      </fileSets>
+    </module>
+  </modules>
+</archetype-descriptor>

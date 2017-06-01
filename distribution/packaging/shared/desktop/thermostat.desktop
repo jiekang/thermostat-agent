@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=${thermostat.desktop.app.name}
+Comment=A monitoring and serviceability tool for OpenJDK
+Exec=${thermostat.home}/bin/thermostat local --show-splash
+Icon=${pkg_name}

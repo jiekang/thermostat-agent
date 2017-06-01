@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Copyright 2012-2017 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses/>.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>thermostat-vm-byteman</artifactId>
+    <groupId>com.redhat.thermostat</groupId>
+    <version>1.99.12-SNAPSHOT</version>
+  </parent>
+  <artifactId>thermostat-vm-byteman-helper</artifactId>
+  <packaging>jar</packaging>
+  <name>Thermostat Byteman Helper</name>
+  <description>This is a stand-alone byteman helper enabling byteman to send metrics back to Thermostat</description>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <configuration>
+          <shadedArtifactAttached>true</shadedArtifactAttached>
+          <artifactSet>
+            <includes>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-client</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-common</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-client</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-common</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-client</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-common</include>
+              <include>com.github.jnr:jnr-ffi</include>
+              <include>com.github.jnr:jnr-enxio</include>
+              <include>com.github.jnr:jnr-constants</include>
+              <include>com.github.jnr:jnr-posix</include>
+              <include>com.github.jnr:jnr-unixsocket</include>
+              <include>com.github.jnr:jnr-x86asm</include>
+              <include>com.github.jnr:jffi</include>
+              <include>com.github.jnr:jffi:*:native</include>
+              <!-- deps of jnr-ffi -->
+              <include>org.ow2.asm:asm</include>
+              <include>org.ow2.asm:asm-util</include>
+              <include>org.ow2.asm:asm-tree</include>
+              <include>org.ow2.asm:asm-analysis</include>
+              <include>org.ow2.asm:asm-commons</include>
+            </includes>
+          </artifactSet>
+          <relocations>
+            <relocation>
+              <pattern>org.objectweb.asm</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.objectweb.asm</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.client</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.client</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.common</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.common</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.unixsocket.client</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.unixsocket.client</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.unixsocket.common</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.unixsocket.common</shadedPattern>
+            </relocation>
+            <!-- jnr-ffi -->
+            <relocation>
+              <pattern>jnr.ffi</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.ffi</shadedPattern>
+            </relocation>
+            <!-- jnr-unixsocket -->
+            <relocation>
+              <pattern>jnr.unixsocket</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.unixsocket</shadedPattern>
+            </relocation>
+            <!-- FIXME:
+                 jffi cannot be relocated easily since it contains JNI functions for
+                 com.kenai.jffi.Foreign. Thus it can only be done if natives get renamed accordingly and
+                 subsequently recompiled too. -->
+            <!--
+            <relocation>
+              <pattern>com.kenai.jffi</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.com.kenai.jffi</shadedPattern>
+            </relocation>
+            -->
+            <!-- jnr-x86asm -->
+            <relocation>
+              <pattern>com.kenai.jnr.x86asm</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.com.kenai.jnr.x86asm</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>jnr.x86asm</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.x86asm</shadedPattern>
+            </relocation>
+            <!-- jnr-constants -->
+            <relocation>
+              <pattern>com.kenai.constantine</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.com.kenai.constantine</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>jnr.constants</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.constants</shadedPattern>
+            </relocation>
+            <!-- jnr-enxio -->
+            <relocation>
+              <pattern>jnr.enxio</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.enxio</shadedPattern>
+            </relocation>
+            <!-- jnr-posix -->
+            <relocation>
+              <pattern>jnr.posix</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.posix</shadedPattern>
+            </relocation>
+          </relocations>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <!-- We need to shade deps as this would otherwise result in undesired behaviour in
+                 target JVMs which get the helper jar added to classpath/boot classpath. -->
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <!-- Skip inclusion of untransformed META-INF/services files. We use our own, relocated,
+                   versions included as resources. Use maven-shade-plugin 2.0+ compatible syntax. -->
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                  <resource>com.redhat.thermostat.agent.ipc.client.internal.ClientTransportProvider</resource>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                  <resource>com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesProvider</resource>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- not a compile time dep, but a dep for service providers to be there
+         for the helper. see vm-byteman/byteman-helper-distro/pom.xml -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-tcpsocket-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-annotations</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman</artifactId>
+      <version>${byteman.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+</project>

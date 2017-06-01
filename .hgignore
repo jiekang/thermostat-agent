@@ -1,0 +1,23 @@
+/target/
+# standalone integration-test's shade plugin seems to generate this
+# pom. As it's derivable, hgignore it :)
+integration-tests/standalone/dependency-reduced-pom.xml
+# vm-profiler's shade plugin seems to generate this
+# pom. As it's derivable, hgignore it :)
+vm-profiler/jvm-agent/dependency-reduced-pom.xml
+vm-byteman/byteman-helper/dependency-reduced-pom.xml
+
+syntax: glob
+target/*
+bin/*
+*~
+.settings
+.classpath
+.project
+nbactions*.xml
+nb-configuration.xml
+*.versionsBackup
+*.iml
+.idea/*
+.gradle/*
+

@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# Copyright 2012-2015 Red Hat, Inc.
+#
+# This file is part of Thermostat.
+#
+# Thermostat is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation; either version 2, or (at your
+# option) any later version.
+#
+# Thermostat is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Thermostat; see the file COPYING.  If not see
+# <http://www.gnu.org/licenses/>.
+#
+# Linking this code with other modules is making a combined work
+# based on this code.  Thus, the terms and conditions of the GNU
+# General Public License cover the whole combination.
+#
+# As a special exception, the copyright holders of this code give
+# you permission to link this code with independent modules to
+# produce an executable, regardless of the license terms of these
+# independent modules, and to copy and distribute the resulting
+# executable under terms of your choice, provided that you also
+# meet, for each linked independent module, the terms and conditions
+# of the license of that module.  An independent module is a module
+# which is not derived from or based on this code.  If you modify
+# this code, you may extend this exception to your version of the
+# library, but you are not obligated to do so.  If you do not wish
+# to do so, delete this exception statement from your version.
+#
+#####################################################################
+#
+
+if [ "$#" -lt 3 ]; then
+  echo "usage: $0 <hostname> <port> <ipcConfigFile>" >&2
+  exit 1
+fi
+HOSTNAME="$1"
+PORT="$2"
+CONFIG_FILE="$3"
+
+# Source thermostat-ipc-client-common from same directory as this script
+# Defines IPC_CLASSPATH variable with JARs necessary for the IPC service
+CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "${CWD}"/thermostat-ipc-client-common
+
+# Ensure thermostat-ipc-client-common sourced correctly
+if [ -z "${IPC_CLASSPATH}" ]; then
+  echo "Classpath not properly defined for command channel" >&2
+  exit 1
+fi
+
+# Additional JARs necessary for the server
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-portability-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-buffer-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-common-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-transport-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-codec-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-handler-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/gson-@gson.version@.jar"
+
+CMD_CHANNEL_CLASS="com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain"
+
+# Set this to remote debug
+if [ x"$THERMOSTAT_CMDC_DEBUG" != x ] ; then
+  DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,quiet=y,address=1083"
+fi
+
+# Determine owner of this file
+THIS_SCRIPT="$CWD/thermostat-command-channel"
+if [ $DARWIN_MODE -eq 0 ]; then
+  SCRIPT_OWNER=$(stat -c '%U' "${THIS_SCRIPT}")
+else
+  # posix
+  SCRIPT_OWNER=$(stat -f '%Su' "${THIS_SCRIPT}")
+fi
+
+# Start server
+if [ $CYGWIN_MODE -eq 1 ]; then
+	CONFIG_FILE_ARG="-DipcConfigFile=`cygpath -w ${CONFIG_FILE}`"
+	# Drop permissions, if root
+	if [ "$(id -u)" -eq 0 ]; then
+	  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} "${LOGGING_ARGS[@]}" -cp "`cygpath -w -p ${IPC_CLASSPATH}`" ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}"
+	else
+	  exec ${JAVA} "${CONFIG_FILE_ARG}" "${LOGGING_ARGS[@]}" -cp "`cygpath -w -p ${IPC_CLASSPATH}`" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
+	fi
+else
+	CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
+	# Drop permissions, if root
+	if [ "$(id -u)" -eq 0 ]; then
+	  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} "${LOGGING_ARGS[@]}" -cp "${IPC_CLASSPATH}" ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}"
+	else
+	  exec ${JAVA} "${CONFIG_FILE_ARG}" "${LOGGING_ARGS[@]}" -cp "${IPC_CLASSPATH}" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
+	fi
+fi

@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+           elementFormDefault="qualified">
+
+
+<!-- definition of simple elements -->
+<xs:element name="name" type="xs:string"/>
+
+<xs:element name="symbolic-name" type="xs:string"/>
+
+<xs:element name="version" type="xs:string"/>
+
+<xs:element name="usage" type="xs:string"/>
+
+<xs:element name="summary" type="xs:string">
+  <xs:annotation>
+    <xs:documentation>A very short summary of what this command does.
+    Ideally around 50 characters.</xs:documentation>
+  </xs:annotation>
+</xs:element>
+
+<xs:element name="description" type="xs:string">
+  <xs:annotation>
+    <xs:documentation>A complete description of what this command
+    does. Can be long.</xs:documentation>
+  </xs:annotation>
+</xs:element>
+
+<xs:element name="command-groups">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="command-group" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="command-group" type="xs:string">
+  <xs:annotation>
+    <xs:documentation>
+      A simple one-word tag used to group related commands together,
+      such as "vm", "agent", "thread", or "numa". Useful for scenarios
+      where subcommands are not applicable. Commands within a group are
+      placed together in help output and receive a "see also" mention
+      in help output for other commands within their group.
+    </xs:documentation>
+  </xs:annotation>
+</xs:element>
+
+<xs:element name="command-group-metadatas">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="command-group-metadata" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="command-group-metadata">
+  <xs:annotation>
+    <xs:documentation>
+      Metadata for the "command-group" elements which tag collections of related
+      commands. This metadata is used to provide stylized names and descriptions
+      as well as the order of appearance of command groups as displayed in 'help'
+      output. Metadata elements are expected to map 1:1 with command-group
+      elements and may be provided within the same thermostat-plugin.xml, or in
+      a separate thermostat-plugin.xml.
+    </xs:documentation>
+  </xs:annotation>
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element name="description" type="xs:string"/>
+      <xs:element name="sort-order" type="xs:integer"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="short" type="xs:string"/>
+
+<xs:element name="long" type="xs:string"/>
+
+<xs:element name="argument" type="xs:string"/>
+
+<xs:element name="required" type="xs:boolean"/>
+
+<xs:element name="id" type="xs:string"/>
+
+<xs:element name="configuration" type="xs:string"/>
+
+
+<!-- definition of complex elements -->
+<xs:element name="plugin">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="id" minOccurs="0" maxOccurs="1"/>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element ref="commands"/>
+          <xs:element ref="command-group-metadatas" minOccurs="0" maxOccurs="1"/>
+          <xs:element ref="extensions" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:element ref="extensions"/>
+      </xs:choice>
+      <xs:element ref="configurations" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="commands">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="command" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="extensions">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="extension" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="extension">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element ref="bundles"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="command">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element ref="usage" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="summary"/>
+      <xs:element ref="description"/>
+      <xs:element ref="command-groups" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="subcommands" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="options" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="environments"/>
+      <xs:element ref="bundles"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="subcommands">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="subcommand" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="subcommand">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element ref="description"/>
+      <xs:element ref="options" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="arguments">
+  <xs:complexType>
+    <xs:annotation>
+      <xs:documentation>
+        "Arguments" tag has been set as optional for commands that don't need any specified argument 
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref="argument" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="options">
+  <xs:complexType>
+    <xs:annotation>
+      <xs:documentation>
+        "Options" tag has been set as optional for commands that don't need any specified option 
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref="group" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="option" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="group">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="required" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="option" minOccurs="2" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="option">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element ref="long"/>
+          <xs:element ref="short" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:element ref="short"/>
+      </xs:choice>
+      <xs:element ref="argument" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="required" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="description" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="common" type="xs:boolean" use="optional"/>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="environments">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="environment" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="environment">
+  <xs:simpleType>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="shell">
+        <xs:annotation>
+          <xs:documentation>Indicates that the command is available to be invoked from within the thermostat shell.</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="cli">
+        <xs:annotation>
+          <xs:documentation>Indicates that the command is available to be invoked as an argument to the main thermostat program.</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:element>
+
+<xs:element name="bundles">
+  <xs:annotation>
+    <xs:documentation>
+      Specifies OSGi bundles
+    </xs:documentation>
+  </xs:annotation>
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="bundle" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="bundle">
+  <xs:annotation>
+    <xs:documentation>
+      Specifies an OSGi bundle
+    </xs:documentation>
+  </xs:annotation>
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="symbolic-name">
+        <xs:annotation>
+          <xs:documentation>
+            The 'Bundle-SymbolicName' of the OSGi bundle
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element ref="version">
+        <xs:annotation>
+          <xs:documentation>
+            The 'Bundle-Version' of the OSGi bundle
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="configurations">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="configuration" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+</xs:schema>
