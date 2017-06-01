@@ -67,9 +67,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
     
-    private static final String GATEWAY_URL = "http://localhost:26000/api/v100"; // TODO configurable
-    private static final String GATEWAY_PATH = "/vm-info/systems/*/agents/";
-    private static final String GATEWAY_PATH_JVM_SUFFIX = "/jvms/";
+    private static final String GATEWAY_URL = "http://10.15.17.101:30000/jvms/0.0.1"; // TODO configurable
     private static final String CONTENT_TYPE = "application/json";
     
     private final HttpHelper httpHelper;
@@ -103,7 +101,9 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             String json = jsonHelper.toJson(Arrays.asList(info));
             StringContentProvider provider = httpHelper.createContentProvider(json);
             
-            String url = getAddURL(info.getAgentId());
+            String sysid = info.getAgentId();
+            String url = GATEWAY_URL + "/systems/" + sysid;
+
             Request httpRequest = httpHelper.newRequest(url);
             httpRequest.method(HttpMethod.POST);
             httpRequest.content(provider, CONTENT_TYPE);
@@ -117,11 +117,10 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     public void putVmStoppedTime(final String agentId, final String vmId, final long timestamp) {
         try {
             // Encode as JSON and send as PUT request
-            VmInfoUpdate update = new VmInfoUpdate(timestamp);
-            String json = jsonHelper.toJson(update);
+            String json = "{\"set\" : {\"stopTime\":"+ timestamp + "}}";
             StringContentProvider provider = httpHelper.createContentProvider(json);
-            
-            String url = getUpdateURL(agentId, vmId);
+            String url = GATEWAY_URL + "/systems/" + agentId + "/jvms/" + vmId;
+
             Request httpRequest = httpHelper.newRequest(url);
             httpRequest.method(HttpMethod.PUT);
             httpRequest.content(provider, CONTENT_TYPE);
@@ -138,26 +137,6 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         if (status != HttpStatus.OK_200) {
             throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
         }
-    }
-    
-    private String getAddURL(String agentId) {
-        StringBuilder builder = buildURL(agentId);
-        return builder.toString();
-    }
-
-    private StringBuilder buildURL(String agentId) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(GATEWAY_URL);
-        builder.append(GATEWAY_PATH);
-        builder.append(agentId);
-        return builder;
-    }
-    
-    private String getUpdateURL(String agentId, String vmId) {
-        StringBuilder builder = buildURL(agentId);
-        builder.append(GATEWAY_PATH_JVM_SUFFIX);
-        builder.append(vmId);
-        return builder.toString();
     }
     
     static class VmInfoUpdate {
@@ -212,8 +191,12 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             return new StringContentProvider(content);
         }
         
-        Request newRequest(String url) {
+        Request newMockRequest(String url) {
             return new MockRequest(httpClient, URI.create(url));
+        }
+
+        Request newRequest(String url) {
+            return this.httpClient.newRequest(url);
         }
         
     }

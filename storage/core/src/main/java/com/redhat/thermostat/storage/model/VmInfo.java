@@ -94,21 +94,18 @@ public class VmInfo extends BasePojo {
         
     }
 
-    private String vmId;
-    private int vmPid = 0;
+    private String jvmId;
+    private int jvmPid = 0;
     private long startTime = System.currentTimeMillis();
     private long stopTime = Long.MIN_VALUE;
     private String javaVersion = "unknown";
     private String javaHome = "unknown";
     private String javaCommandLine = "unknown";
     private String mainClass = "unknown";
-    private String vmName = "unknown";
-    private String vmInfo = "unknown";
-    private String vmVersion = "unknown";
-    private String vmArguments = "unknown";
-    private Map<String, String> properties = new HashMap<String, String>();
+    private String jvmName = "unknown";
+    private String jvmInfo = "unknown";
+    private String jvmVersion = "unknown";
     private Map<String, String> environment = new HashMap<String, String>();
-    private String[] loadedNativeLibraries;
     private long uid;
     private String username;
 
@@ -117,50 +114,47 @@ public class VmInfo extends BasePojo {
         super(null);
     }
 
-    public VmInfo(String writerId, String vmId, int vmPid, long startTime, long stopTime,
-            String javaVersion, String javaHome,
-            String mainClass, String commandLine,
-            String vmName, String vmInfo, String vmVersion, String vmArguments,
-            Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries,
-            long uid, String username) {
+    public VmInfo(String writerId, String jvmId, int jvmPid, long startTime, long stopTime,
+                  String javaVersion, String javaHome,
+                  String mainClass, String commandLine,
+                  String jvmName, String jvmInfo, String jvmVersion, String vmArguments,
+                  Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries,
+                  long uid, String username) {
         super(writerId);
-        this.vmId = vmId;
-        this.vmPid = vmPid;
+        this.jvmId = jvmId;
+        this.jvmPid = jvmPid;
         this.startTime = startTime;
         this.stopTime = stopTime;
         this.javaVersion = javaVersion;
         this.javaHome = javaHome;
         this.mainClass = mainClass;
         this.javaCommandLine = commandLine;
-        this.vmName = vmName;
-        this.vmInfo = vmInfo;
-        this.vmVersion = vmVersion;
-        this.vmArguments = vmArguments;
-        this.properties = properties;
+        this.jvmName = jvmName;
+        this.jvmInfo = jvmInfo;
+        this.jvmVersion = jvmVersion;
         this.environment = environment;
-        this.loadedNativeLibraries = loadedNativeLibraries;
         this.uid = uid;
         this.username = username;
     }
 
     @Persist
-    public String getVmId() {
-        return vmId;
+    public String getJvmId() {
+        return jvmId;
     }
 
     @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
+    public void setJvmId(String jvmId) {
+        this.jvmId = jvmId;
     }
 
     @Persist
-    public int getVmPid() {
-        return vmPid;
+    public int getJvmPid() {
+        return jvmPid;
     }
 
     @Persist
-    public void setVmPid(int vmPid) {
-        this.vmPid = vmPid;
+    public void setJvmPid(int jvmPid) {
+        this.jvmPid = jvmPid;
     }
 
     @Persist
@@ -228,43 +222,33 @@ public class VmInfo extends BasePojo {
     }
 
     @Persist
-    public String getVmName() {
-        return vmName;
+    public String getJvmName() {
+        return jvmName;
     }
 
     @Persist
-    public void setVmName(String vmName) {
-        this.vmName = vmName;
+    public void setJvmName(String jvmName) {
+        this.jvmName = jvmName;
     }
 
     @Persist
-    public String getVmArguments() {
-        return vmArguments;
+    public String getJvmInfo() {
+        return jvmInfo;
     }
 
     @Persist
-    public void setVmArguments(String vmArguments) {
-        this.vmArguments = vmArguments;
+    public void setJvmInfo(String jvmInfo) {
+        this.jvmInfo = jvmInfo;
     }
 
     @Persist
-    public String getVmInfo() {
-        return vmInfo;
+    public String getJvmVersion() {
+        return jvmVersion;
     }
 
     @Persist
-    public void setVmInfo(String vmInfo) {
-        this.vmInfo = vmInfo;
-    }
-
-    @Persist
-    public String getVmVersion() {
-        return vmVersion;
-    }
-
-    @Persist
-    public void setVmVersion(String vmVersion) {
-        this.vmVersion = vmVersion;
+    public void setJvmVersion(String jvmVersion) {
+        this.jvmVersion = jvmVersion;
     }
 
     /**
@@ -283,24 +267,6 @@ public class VmInfo extends BasePojo {
         } else {
             return (isAlive() ? AliveStatus.UNKNOWN: AliveStatus.EXITED);
         }
-    }
-
-    public Map<String, String> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(Map<String, String> properties) {
-        this.properties = properties;
-    }
-
-    @Persist
-    public KeyValuePair[] getPropertiesAsArray() {
-        return getMapAsArray(properties);
-    }
-
-    @Persist
-    public void setPropertiesAsArray(KeyValuePair[] properties) {
-        this.properties = getArrayAsMap(properties);
     }
 
     public Map<String, String> getEnvironment() {
@@ -346,16 +312,6 @@ public class VmInfo extends BasePojo {
         return map;
     }
 
-    @Persist
-    public String[] getLoadedNativeLibraries() {
-        return loadedNativeLibraries;
-    }
-
-    @Persist
-    public void setLoadedNativeLibraries(String[] loadedNativeLibraries) {
-        this.loadedNativeLibraries = loadedNativeLibraries;
-    }
-    
     /**
      * Returns the system user id for the owner of this JVM process,
      * or -1 if an owner could not be found.

@@ -43,12 +43,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl.VmInfoUpdate;
 import com.redhat.thermostat.storage.internal.dao.VmInfoTypeAdapter.VmInfoUpdateTypeAdapter;
 import com.redhat.thermostat.storage.model.VmInfo;
 
+@Ignore
 public class VmInfoTypeAdapterTest {
     
     @Test

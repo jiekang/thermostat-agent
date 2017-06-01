@@ -54,8 +54,8 @@ public class VmRef implements Ref {
 
     public VmRef(HostRef hostRef, VmInfo vmInfo) {
         this.hostRef = hostRef;
-        this.id = vmInfo.getVmId();
-        this.pid = vmInfo.getVmPid();
+        this.id = vmInfo.getJvmId();
+        this.pid = vmInfo.getJvmPid();
         this.name = vmInfo.getMainClass();
     }
 

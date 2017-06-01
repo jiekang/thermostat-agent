@@ -51,21 +51,19 @@ import com.redhat.thermostat.storage.model.VmInfo;
 public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
     
     private static final String AGENT_ID = "agentId";
-    private static final String VM_ID = "vmId";
-    private static final String VM_PID = "vmPid";
+    private static final String VM_ID = "jvmId";
+    private static final String VM_PID = "jvmPid";
     private static final String JAVA_VERSION = "javaVersion";
     private static final String JAVA_HOME = "javaHome";
     private static final String MAIN_CLASS = "mainClass";
     private static final String JAVA_COMMAND_LINE = "javaCommandLine";
-    private static final String VM_ARGUMENTS = "vmArguments";
-    private static final String VM_NAME = "vmName";
-    private static final String VM_INFO = "vmInfo";
-    private static final String VM_VERSION = "vmVersion";
-    private static final String PROPERTIES_AS_ARRAY = "propertiesAsArray";
+    private static final String VM_ARGUMENTS = "jvmArguments";
+    private static final String VM_NAME = "jvmName";
+    private static final String VM_INFO = "jvmInfo";
+    private static final String VM_VERSION = "jvmVersion";
     private static final String ENVIRONMENT_AS_ARRAY = "environmentAsArray";
-    private static final String LOADED_NATIVE_LIBRARIES = "loadedNativeLibraries";
-    private static final String START_TIME_STAMP = "startTimeStamp";
-    private static final String STOP_TIME_STAMP = "stopTimeStamp";
+    private static final String START_TIME_STAMP = "startTime";
+    private static final String STOP_TIME_STAMP = "stopTime";
     private static final String UID = "uid";
     private static final String USERNAME = "username";
     private static final String TYPE_LONG = "$numberLong";
@@ -91,9 +89,9 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
         out.name(AGENT_ID);
         out.value(info.getAgentId());
         out.name(VM_ID);
-        out.value(info.getVmId());
+        out.value(info.getJvmId());
         out.name(VM_PID);
-        out.value(info.getVmPid());
+        out.value(info.getJvmPid());
         out.name(START_TIME_STAMP);
         writeLong(out, info.getStartTimeStamp());
         out.name(STOP_TIME_STAMP);
@@ -107,19 +105,13 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
         out.name(JAVA_COMMAND_LINE);
         out.value(info.getJavaCommandLine());
         out.name(VM_NAME);
-        out.value(info.getVmName());
-        out.name(VM_ARGUMENTS);
-        out.value(info.getVmArguments());
+        out.value(info.getJvmName());
         out.name(VM_INFO);
-        out.value(info.getVmInfo());
+        out.value(info.getJvmInfo());
         out.name(VM_VERSION);
-        out.value(info.getVmVersion());
-        out.name(PROPERTIES_AS_ARRAY);
-        writeStringMap(out, info.getProperties());
+        out.value(info.getJvmVersion());
         out.name(ENVIRONMENT_AS_ARRAY);
         writeStringMap(out, info.getEnvironment());
-        out.name(LOADED_NATIVE_LIBRARIES);
-        writeStringArray(out, info.getLoadedNativeLibraries());
         out.name(UID);
         writeLong(out, info.getUid());
         out.name(USERNAME);
@@ -159,10 +151,7 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
     
     private static void writeLong(JsonWriter out, long value) throws IOException {
         // Write MongoDB representation of a Long
-        out.beginObject();
-        out.name(TYPE_LONG);
-        out.value(String.valueOf(value));
-        out.endObject();
+        out.value(value);
     }
 
     @Override
