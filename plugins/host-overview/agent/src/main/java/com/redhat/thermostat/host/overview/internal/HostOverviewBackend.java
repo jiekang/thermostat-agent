@@ -42,7 +42,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BaseBackend;
@@ -60,24 +60,17 @@ public class HostOverviewBackend extends BaseBackend {
     
     @Reference
     private HostInfoDAO hostInfoDAO;
-    
     @Reference
     private WriterID writerID;
     
     private boolean started;
 
     public HostOverviewBackend() {
-        this(new Version(FrameworkUtil.getBundle(HostOverviewBackend.class)), null, null, new HostInfoBuilderCreator());
+        this(new HostInfoBuilderCreator());
     }
 
-    HostOverviewBackend(Version version, HostInfoDAO hostInfoDAO, WriterID writerID, 
-            HostInfoBuilderCreator builderCreator) {
-        super("Host Overview Backend",
-                "Gathers general information about a host",
-                "Red Hat, Inc.",
-                version.getVersionNumber());
-        this.hostInfoDAO = hostInfoDAO;
-        this.writerID = writerID;
+    HostOverviewBackend(HostInfoBuilderCreator builderCreator) {
+        super("Host Overview Backend", "Gathers general information about a host", "Red Hat, Inc.");
         this.builderCreator = builderCreator;
     }
 
@@ -114,12 +107,26 @@ public class HostOverviewBackend extends BaseBackend {
     }
     
     @Activate
+    protected void componentActivated(BundleContext context) {
+        Version version = new Version(context.getBundle());
+        setVersion(version.getVersionNumber());
+    }
+    
     @Deactivate
-    protected void noop() {
-        /* Map unused DS activate/deactivate methods to this NOOP method to
-         * prevent it from trying to use Backend.activate/deactivate and
-         * giving an error about them being incompatible.
-         */
+    protected void componentDeactivated() {
+        if (isActive()) {
+            deactivate();
+        }
+    }
+    
+    // DS bind method
+    protected void bindHostInfoDAO(HostInfoDAO dao) {
+        this.hostInfoDAO = dao;
+    }
+    
+    // DS bind method
+    protected void bindWriterID(WriterID id) {
+        this.writerID = id;
     }
 
 }

@@ -57,8 +57,10 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.ConfigurationCreator;
 import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.HttpHelper;
 import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.JsonHelper;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
@@ -76,7 +78,7 @@ public class VmGcStatDAOTest {
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private VmGcStatDAO dao;
+    private VmGcStatDAOImpl dao;
 
     @Before
     public void setup() throws Exception {
@@ -101,13 +103,17 @@ public class VmGcStatDAOTest {
         contentProvider = mock(StringContentProvider.class);
         when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
         
+        ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
         VmGcStatConfiguration config = mock(VmGcStatConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
-        dao = new VmGcStatDAOImpl(config, httpClient, jsonHelper, httpHelper);
+        ConfigurationCreator creator = mock(ConfigurationCreator.class);
+        when(creator.create(source)).thenReturn(config);
+        dao = new VmGcStatDAOImpl(httpClient, jsonHelper, httpHelper, creator, source);
     }
 
     @Test
     public void verifyAddVmGcStat() throws Exception {
+        dao.activate();
         dao.putVmGcStat(stat);
 
         verify(httpClient).newRequest(GATEWAY_URL);

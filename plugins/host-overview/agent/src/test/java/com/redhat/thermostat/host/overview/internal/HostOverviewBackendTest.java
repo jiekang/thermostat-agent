@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.host.overview.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -44,8 +45,10 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Version;
 
-import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.overview.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.host.overview.internal.models.HostInfoDAO;
 import com.redhat.thermostat.host.overview.model.HostInfo;
@@ -63,8 +66,6 @@ public class HostOverviewBackendTest {
     @Before
     public void setup() {
         hostInfoDAO = mock(HostInfoDAO.class);
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
         writerID = mock(WriterID.class);
         
         info = mock(HostInfo.class);
@@ -73,7 +74,9 @@ public class HostOverviewBackendTest {
         builderCreator = mock(HostOverviewBackend.HostInfoBuilderCreator.class);
         when(builderCreator.create(writerID)).thenReturn(builder);
         
-        backend = new HostOverviewBackend(version, hostInfoDAO, writerID, builderCreator);
+        backend = new HostOverviewBackend(builderCreator);
+        backend.bindHostInfoDAO(hostInfoDAO);
+        backend.bindWriterID(writerID);
     }
 
     @Test
@@ -90,6 +93,27 @@ public class HostOverviewBackendTest {
     public void testDeactivate() {
         backend.activate();
         backend.deactivate();
+        assertFalse(backend.isActive());
+    }
+    
+    @Test
+    public void testComponentActivated() {
+        BundleContext context = mock(BundleContext.class);
+        Bundle bundle = mock(Bundle.class);
+        Version version = new Version(1, 2, 3);
+        when(bundle.getVersion()).thenReturn(version);
+        when(context.getBundle()).thenReturn(bundle);
+        
+        backend.componentActivated(context);
+        
+        assertEquals("1.2.3", backend.getVersion());
+    }
+    
+    @Test
+    public void testComponentDeactivated() {
+        backend.activate();
+        assertTrue(backend.isActive());
+        backend.componentDeactivated();
         assertFalse(backend.isActive());
     }
 }

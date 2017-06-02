@@ -61,9 +61,9 @@ abstract class PollingBackend extends BaseBackend {
     PollingBackend(String name, String description, String vendor,
             Version version,
             ScheduledExecutorService executor) {
-        super(name, description, vendor,
-              version.getVersionNumber(), true);
+        super(name, description, vendor, true);
         this.executor = executor;
+        setVersion(version.getVersionNumber());
     }
 
     @Override

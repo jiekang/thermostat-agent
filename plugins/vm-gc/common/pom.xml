@@ -76,7 +76,6 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.gc.common</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.vm.gc.common.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.vm.gc.common,
               com.redhat.thermostat.vm.gc.common.model,
@@ -89,6 +88,18 @@
             <_nouses>true</_nouses>
           </instructions>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -128,6 +139,11 @@
       <artifactId>thermostat-common-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+    </dependency>
+    <!-- declarative services -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
   </dependencies>
 </project>

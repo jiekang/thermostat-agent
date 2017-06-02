@@ -58,11 +58,6 @@ public class BaseBackendTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testConstructorRejectsNullVersion() {
-        new TestBaseBackend("", "", "", null);
-    }
-
-    @Test(expected = NullPointerException.class)
     public void testConstructorRejectsNullDescription() {
         new TestBaseBackend("", null, "", "");
     }
@@ -139,12 +134,14 @@ public class BaseBackendTest {
 
         public TestBaseBackend(String name, String description, String vendor,
                 String version) {
-            super(name, description, vendor, version);
+            super(name, description, vendor);
+            setVersion(version);
         }
 
         public TestBaseBackend(String name, String description, String vendor,
                 String version, boolean observeNewJvm) {
-            super(name, description, vendor, version, observeNewJvm);
+            super(name, description, vendor, observeNewJvm);
+            setVersion(version);
         }
 
         @Override

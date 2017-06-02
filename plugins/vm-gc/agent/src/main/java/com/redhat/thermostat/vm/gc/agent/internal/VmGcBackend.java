@@ -36,7 +36,15 @@
 
 package com.redhat.thermostat.vm.gc.agent.internal;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.osgi.framework.BundleContext;
+
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Version;
@@ -44,16 +52,24 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.common.Constants;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
+@Component
+@Service(value = Backend.class)
 public class VmGcBackend extends VmListenerBackend {
 
-    private final VmGcStatDAO vmGcStats;
-
-    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM GC Backend",
-                "Gathers garbage collection statistics about a JVM",
-                "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
-        this.vmGcStats = vmGcStatDAO;
+    private final ListenerCreator listenerCreator;
+    
+    @Reference
+    private VmGcStatDAO vmGcStats;
+    @Reference
+    private WriterID writerId;
+    
+    public VmGcBackend() {
+        this(new ListenerCreator());
+    }
+    
+    VmGcBackend(ListenerCreator creator) {
+        super("VM GC Backend", "Gathers garbage collection statistics about a JVM", "Red Hat, Inc.", true);
+        this.listenerCreator = creator;
     }
 
     @Override
@@ -63,8 +79,39 @@ public class VmGcBackend extends VmListenerBackend {
 
     @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmGcVmListener(writerId, vmGcStats, vmId);
+        return listenerCreator.create(writerId, vmGcStats, vmId);
     }
 
+    @Activate
+    protected void componentActivated(BundleContext context) {
+        VmStatusListenerRegistrar registrar = new VmStatusListenerRegistrar(context);
+        Version version = new Version(context.getBundle());
+        initialize(writerId, registrar, version.getVersionNumber());
+    }
+    
+    @Deactivate
+    protected void componentDeactivated() {
+        if (isActive()) {
+            deactivate();
+        }
+    }
+    
+    // DS bind method
+    protected void bindVmGcStats(VmGcStatDAO dao) {
+        this.vmGcStats = dao;
+    }
+    
+    // DS bind method
+    protected void bindWriterId(WriterID id) {
+        this.writerId = id;
+    }
+    
+    // For testing purposes
+    static class ListenerCreator {
+        VmGcVmListener create(String writerId, VmGcStatDAO dao, String vmId) {
+            return new VmGcVmListener(writerId, dao, vmId);
+        }
+    }
+    
 }
 

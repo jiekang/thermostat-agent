@@ -55,10 +55,11 @@ public class VmMemoryBackend extends VmListenerBackend {
             VmStatusListenerRegistrar registrar, WriterID writerId) {
         super("VM Memory Backend",
                 "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.", version.getVersionNumber(),
-                true, registrar, writerId);
+                "Red Hat, Inc.",
+                true);
         this.vmMemoryStats = vmMemoryStatDAO;
         this.tlabStats = vmTlabStatDAO;
+        initialize(writerId, registrar, version.getVersionNumber());
     }
 
     @Override

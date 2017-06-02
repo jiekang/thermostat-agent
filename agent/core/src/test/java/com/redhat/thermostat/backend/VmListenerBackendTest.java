@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -58,6 +59,7 @@ import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.storage.core.WriterID;
 
 public class VmListenerBackendTest {
+    private static final String VERSION = "0.0.0";
     private static final String VM_ID = "vmId";
     private static final int VM_PID = 1;
     
@@ -65,13 +67,13 @@ public class VmListenerBackendTest {
     private VmStatusListenerRegistrar registrar;
     private VmMonitor monitor;
     private VmUpdateListener listener;
+    private WriterID writerId;
 
     @Before
     public void setup() {
         registrar = mock(VmStatusListenerRegistrar.class);
-        WriterID id = mock(WriterID.class);
-        backend = new TestBackend("Test Backend", "Backend for test", "Test Co.",
-                "0.0.0", registrar, id);
+        writerId = mock(WriterID.class);
+        backend = new TestBackend("Test Backend", "Backend for test", "Test Co.");
         monitor = mock(VmMonitor.class);
         listener = mock(VmUpdateListener.class);
         backend.setMonitor(monitor);
@@ -79,13 +81,22 @@ public class VmListenerBackendTest {
     
     @Test
     public void testActivate() {
+        backend.initialize(writerId, registrar, VERSION);
         backend.activate();
         assertTrue(backend.isActive());
         verify(registrar).register(backend);
     }
+    
+    @Test
+    public void testActivateNoInit() {
+        backend.activate();
+        assertFalse(backend.isActive());
+        verify(registrar, never()).register(backend);
+    }
 
     @Test
     public void testActivateTwice() {
+        backend.initialize(writerId, registrar, VERSION);
         assertTrue(backend.activate());
         assertTrue(backend.isActive());
 
@@ -95,6 +106,7 @@ public class VmListenerBackendTest {
 
     @Test
     public void testCanNotActivateWithoutMonitor() {
+        backend.initialize(writerId, registrar, VERSION);
         backend.setMonitor(null);
 
         assertFalse(backend.activate());
@@ -103,6 +115,7 @@ public class VmListenerBackendTest {
     
     @Test
     public void testDeactivate() {
+        backend.initialize(writerId, registrar, VERSION);
         backend.activate();
         backend.deactivate();
         verify(registrar).unregister(backend);
@@ -111,6 +124,7 @@ public class VmListenerBackendTest {
 
     @Test
     public void testDeactivateTwice() {
+        backend.initialize(writerId, registrar, VERSION);
         backend.activate();
 
         assertTrue(backend.deactivate());
@@ -120,6 +134,7 @@ public class VmListenerBackendTest {
     
     @Test
     public void testNewVM() {
+        backend.initialize(writerId, registrar, VERSION);
         // Should be no response if not observing new jvm.
         backend.setObserveNewJvm(false);
         backend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
@@ -141,11 +156,9 @@ public class VmListenerBackendTest {
          url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3242")
     @Test
     public void testNewVMCreateListenerWithExceptions() {
-        VmStatusListenerRegistrar customRegistrar = mock(VmStatusListenerRegistrar.class);
-        WriterID wid = mock(WriterID.class);
         VmListenerBackend testBackend = new ExceptionThrowingCreateVmListenerBackend(
-                "Test Backend", "Backend for test", "Test Co.",
-                "0.0.0", customRegistrar, wid);
+                "Test Backend", "Backend for test", "Test Co.", VERSION);
+        testBackend.initialize(writerId, registrar, VERSION);
         testBackend.setObserveNewJvm(true);
         VmMonitor testMonitor = mock(VmMonitor.class);
         testBackend.setMonitor(testMonitor);
@@ -155,6 +168,7 @@ public class VmListenerBackendTest {
 
     @Test
     public void testAlreadyRunningVM() {
+        backend.initialize(writerId, registrar, VERSION);
         backend.setObserveNewJvm(true);
         backend.vmStatusChanged(Status.VM_ACTIVE, VM_ID, VM_PID);
 
@@ -163,6 +177,7 @@ public class VmListenerBackendTest {
 
     @Test
     public void testStoppedVM() throws MonitorException, URISyntaxException {
+        backend.initialize(writerId, registrar, VERSION);
         backend.setObserveNewJvm(true);
         backend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
         backend.vmStatusChanged(Status.VM_STOPPED, VM_ID, VM_PID);
@@ -172,6 +187,7 @@ public class VmListenerBackendTest {
 
     @Test
     public void testDeactivateUnregistersListener() throws URISyntaxException, MonitorException {
+        backend.initialize(writerId, registrar, VERSION);
         backend.activate();
         
         backend.setObserveNewJvm(true);
@@ -182,9 +198,8 @@ public class VmListenerBackendTest {
     
     private class TestBackend extends VmListenerBackend {
 
-        public TestBackend(String name, String description, String vendor,
-                String version, VmStatusListenerRegistrar registrar, WriterID writerId) {
-            super(name, description, vendor, version, registrar, writerId);
+        public TestBackend(String name, String description, String vendor) {
+            super(name, description, vendor);
         }
 
         @Override
@@ -202,8 +217,8 @@ public class VmListenerBackendTest {
     private class ExceptionThrowingCreateVmListenerBackend extends TestBackend {
         
         public ExceptionThrowingCreateVmListenerBackend(String name, String description, String vendor,
-                String version, VmStatusListenerRegistrar registrar, WriterID writerId) {
-            super(name, description, vendor, version, registrar, writerId);
+                String version) {
+            super(name, description, vendor);
         }
         
         @Override
