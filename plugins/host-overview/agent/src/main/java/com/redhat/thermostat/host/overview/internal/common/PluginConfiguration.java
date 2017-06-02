@@ -34,43 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.agent.internal;
+package com.redhat.thermostat.host.overview.internal.common;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.memory.common.Constants;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 
-public class VmMemoryBackend extends VmListenerBackend {
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
-    private final VmMemoryStatDAO vmMemoryStats;
-    private final VmTlabStatDAO tlabStats;
-    
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, VmTlabStatDAO vmTlabStatDAO,
-            Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM Memory Backend",
-                "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.",
-                true);
-        this.vmMemoryStats = vmMemoryStatDAO;
-        this.tlabStats = vmTlabStatDAO;
-        initialize(writerId, registrar, version.getVersionNumber());
+public class PluginConfiguration {
+
+    private static final String CONFIG_FILE = "gateway.properties";
+    private static final String URL_PROP = "gatewayURL";
+
+    private final ConfigurationInfoSource source;
+    private final String pluginId;
+
+    public PluginConfiguration(ConfigurationInfoSource source, final String pluginId) {
+        this.source = source;
+        this.pluginId = pluginId;
     }
 
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
+    public String getGatewayURL() throws IOException {
+        Map<String, String> props = source.getConfiguration(pluginId, CONFIG_FILE);
+        String url = props.get(URL_PROP);
+        if (url == null) {
+            throw new IOException("No gateway URL found for " + pluginId + " in " + getConfigFilePath());
+        }
+        return url;
     }
 
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmMemoryVmListener(writerId, vmMemoryStats, tlabStats, vmId);
+    private String getConfigFilePath() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("$THERMOSTAT_HOME").append(File.separator).append("etc").append(File.separator)
+                .append("plugins.d").append(File.separator).append(pluginId).append(File.separator)
+                .append(CONFIG_FILE);
+        return builder.toString();
     }
-    
 }
-

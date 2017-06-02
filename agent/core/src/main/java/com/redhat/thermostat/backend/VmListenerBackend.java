@@ -59,22 +59,18 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
     
     private static final Logger logger = LoggingUtils.getLogger(VmListenerBackend.class);
     
-    private final VmStatusListenerRegistrar registrar;
-    private final WriterID writerId;
+    private WriterID writerId;
+    private VmStatusListenerRegistrar registrar;
     private VmMonitor monitor;
     private boolean started;
+    private boolean initialized;
 
-    public VmListenerBackend(String backendName, String description,
-            String vendor, String version, VmStatusListenerRegistrar registrar,
-            WriterID writerId) {
-        this(backendName, description, vendor, version, false, registrar, writerId);
+    public VmListenerBackend(String backendName, String description, String vendor) {
+        this(backendName, description, vendor, false);
     }
     public VmListenerBackend(String backendName, String description,
-            String vendor, String version, boolean observeNewJvm,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super(backendName, description, vendor, version, observeNewJvm);
-        this.registrar = registrar;
-        this.writerId = writerId;
+            String vendor, boolean observeNewJvm) {
+        super(backendName, description, vendor, observeNewJvm);
         try {
             this.monitor = new VmMonitor();
         } catch (BackendException e) {
@@ -89,16 +85,22 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      * Registers a VmUpdateListener to begin receiving VM lifecycle events.
      * Subclasses should call <code>super.activate()</code> when overriding this method.
      * </p>
+     * <p>
+     * This {@link VmListenerBackend} should be initialized via 
+     * {@link #initialize(WriterID, VmStatusListenerRegistrar)} before calling this method.
+     * </p>
      */
     @Override
     public boolean activate() {
-        if (!started && monitor != null) {
+        if (!initialized) {
+            logger.warning("Backend not started, initialize must be called before activate");
+        } else if (!started && monitor != null) {
             registrar.register(this);
             started = true;
         }
         return started;
     }
-
+    
     /**
      * {@inheritDoc}
      * 
@@ -150,6 +152,20 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
         }
     }
 
+    /**
+     * Initializes this {@link VmListenerBackend} with necessary services. This method
+     * must be called before {@link #activate()}.
+     * @param writerId service uniquely identifying this agent
+     * @param registrar responsible for registering and unregistering instances of {@link VmStatusListener}
+     * @param version version number of this backend
+     */
+    protected void initialize(WriterID writerId, VmStatusListenerRegistrar registrar, String version) {
+        this.writerId = writerId;
+        this.registrar = registrar;
+        setVersion(version);
+        this.initialized = true;
+    }
+    
     /**
      * Creates a new {@link VmUpdateListener} for the virtual machine
      * specified by the pid. This method is called when a new

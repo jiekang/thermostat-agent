@@ -41,33 +41,18 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-plugins</artifactId>
     <version>1.99.12-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-plugins</artifactId>
+  <artifactId>thermostat-host-overview</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Plugins</name>
+  <name>Thermostat Host Overview plugin</name>
 
   <modules>
-    <!--<module>thread</module>-->
-    <module>killvm</module>
-    <module>host-overview</module>
-    <!--<module>host-cpu</module>-->
-    <!--<module>host-memory</module>-->
-    <!--<module>vm-byteman</module>-->
-    <!--<module>vm-cpu</module>-->
-    <module>vm-gc</module>
-    <!--<module>vm-classstat</module>-->
-    <!--<module>vm-compiler</module>-->
-    <module>vm-memory</module>
-    <!--<module>vm-heap-analysis</module>-->
-    <!--<module>vm-io</module>-->
-    <!--<module>vm-jmx</module>-->
-    <!--<module>vm-profiler</module>-->
-    <!--<module>numa</module>-->
-    <!--<module>vm-numa</module>-->
+    <module>agent</module>
+    <module>distribution</module>
   </modules>
 
 </project>

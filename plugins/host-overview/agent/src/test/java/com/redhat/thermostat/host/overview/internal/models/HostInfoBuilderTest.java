@@ -34,43 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.agent.internal;
+package com.redhat.thermostat.host.overview.internal.models;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.common.portability.PortableHost;
+import com.redhat.thermostat.host.overview.model.HostInfo;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.memory.common.Constants;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
-public class VmMemoryBackend extends VmListenerBackend {
+public class HostInfoBuilderTest {
 
-    private final VmMemoryStatDAO vmMemoryStats;
-    private final VmTlabStatDAO tlabStats;
-    
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, VmTlabStatDAO vmTlabStatDAO,
-            Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM Memory Backend",
-                "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.",
-                true);
-        this.vmMemoryStats = vmMemoryStatDAO;
-        this.tlabStats = vmTlabStatDAO;
-        initialize(writerId, registrar, version.getVersionNumber());
+    private WriterID writerId;
+    private PortableHost helper;
+
+    @Before
+    public void setup() {
+        writerId = mock(WriterID.class);
+        helper = mock(PortableHost.class);
+        when(helper.getHostName()).thenReturn("testhost");
+        when(helper.getOSName()).thenReturn("testos");
+        when(helper.getOSVersion()).thenReturn("testversion");
+        when(helper.getCPUModel()).thenReturn("testcpu");
+        when(helper.getCPUCount()).thenReturn(4567);
+        when(helper.getTotalMemory()).thenReturn(9876L);
     }
 
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
+    @Test
+    public void testSimpleBuild() {
+        Assume.assumeTrue(OS.IS_WINDOWS);
+        HostInfo info = new HostInfoBuilderImpl(writerId).build();
+        assertNotNull(info);
     }
 
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmMemoryVmListener(writerId, vmMemoryStats, tlabStats, vmId);
+    @Test
+    public void testGetInfo() {
+        final HostInfoBuilder ib = new HostInfoBuilderImpl(writerId, helper);
+        final HostInfo hi = ib.build();
+        assertEquals("testhost",hi.getHostname());
+        assertEquals("testos", hi.getOsName());
+        assertEquals("testcpu", hi.getCpuModel());
+        assertEquals("testversion", hi.getOsKernel());
+        assertEquals(4567, hi.getCpuCount());
+        assertEquals(9876L, hi.getTotalMemory());
     }
-    
 }
 
