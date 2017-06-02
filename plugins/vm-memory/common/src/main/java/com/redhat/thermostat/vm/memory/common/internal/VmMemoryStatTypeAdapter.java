@@ -50,7 +50,7 @@ import static com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 public class VmMemoryStatTypeAdapter extends TypeAdapter<List<VmMemoryStat>> {
 
     private static final String GENERATIONS = "generations";
-    private static final String TIMESTAMP = "timestamp";
+    private static final String TIMESTAMP = "timeStamp";
     private static final String AGENT_ID = "agentId";
     private static final String VM_ID = "vmId";
     private static final String METASPACE_MAX_CAPACITY = "metaspaceMaxCapacity";
