@@ -125,5 +125,6 @@ public interface CommonPaths {
     
     public File getUserIPCConfigurationFile() throws InvalidConfigurationException;
 
+    public File getGatewayPropertiesFile() throws InvalidConfigurationException;
 }
 

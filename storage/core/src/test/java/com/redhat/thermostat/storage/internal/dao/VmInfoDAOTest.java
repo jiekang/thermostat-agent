@@ -60,6 +60,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.internal.StorageCoreConfiguration;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl.HttpHelper;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl.JsonHelper;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl.VmInfoUpdate;
@@ -79,6 +80,7 @@ public class VmInfoDAOTest {
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
+    private StorageCoreConfiguration config;
 
     @Before
     public void setUp() throws Exception {
@@ -115,12 +117,15 @@ public class VmInfoDAOTest {
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmInfo.class))).thenReturn(SOME_JSON);
         when(jsonHelper.toJson(any(VmInfoUpdate.class))).thenReturn(SOME_OTHER_JSON);
+
+        config = mock(StorageCoreConfiguration.class);
+        when(config.getGatewayURL()).thenReturn(URL);
     }
 
     @Test
     @Ignore
     public void testPutVmInfo() throws Exception {
-        VmInfoDAO dao = new VmInfoDAOImpl(httpHelper, jsonHelper);
+        VmInfoDAO dao = new VmInfoDAOImpl(config, httpHelper, jsonHelper);
         dao.putVmInfo(info);
         
         verify(httpHelper).newMockRequest(URL);
@@ -135,7 +140,7 @@ public class VmInfoDAOTest {
     @Test
     @Ignore
     public void testPutVmStoppedTime() throws Exception {
-        VmInfoDAO dao = new VmInfoDAOImpl(httpHelper, jsonHelper);
+        VmInfoDAO dao = new VmInfoDAOImpl(config, httpHelper, jsonHelper);
         dao.putVmStoppedTime("foo-agent", "vmId", 3L);
 
         verify(httpHelper).newMockRequest(UPDATE_URL);

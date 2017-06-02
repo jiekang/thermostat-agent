@@ -60,24 +60,26 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.internal.StorageCoreConfiguration;
 import com.redhat.thermostat.storage.internal.dao.VmInfoTypeAdapter.VmInfoUpdateTypeAdapter;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class VmInfoDAOImpl implements VmInfoDAO {
     
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
-    
-    private static final String GATEWAY_URL = "http://10.15.17.101:30000/jvms/0.0.1"; // TODO configurable
+
     private static final String CONTENT_TYPE = "application/json";
-    
+
+    private String gatewayURL;
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
 
-    public VmInfoDAOImpl() throws Exception {
-        this(new HttpHelper(new HttpClient()), new JsonHelper(new VmInfoTypeAdapter(), new VmInfoUpdateTypeAdapter()));
+    public VmInfoDAOImpl(StorageCoreConfiguration cfg) throws Exception {
+        this(cfg, new HttpHelper(new HttpClient()), new JsonHelper(new VmInfoTypeAdapter(), new VmInfoUpdateTypeAdapter()));
     }
 
-    VmInfoDAOImpl(HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+    VmInfoDAOImpl(StorageCoreConfiguration cfg, HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+        this.gatewayURL = cfg.getGatewayURL();
         this.jsonHelper = jsonHelper;
         this.httpHelper = httpHelper;
         
@@ -102,7 +104,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             StringContentProvider provider = httpHelper.createContentProvider(json);
             
             String sysid = info.getAgentId();
-            String url = GATEWAY_URL + "/systems/" + sysid;
+            String url = gatewayURL + "/systems/" + sysid;
 
             Request httpRequest = httpHelper.newRequest(url);
             httpRequest.method(HttpMethod.POST);
@@ -119,7 +121,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             // Encode as JSON and send as PUT request
             String json = "{\"set\" : {\"stopTime\":"+ timestamp + "}}";
             StringContentProvider provider = httpHelper.createContentProvider(json);
-            String url = GATEWAY_URL + "/systems/" + agentId + "/jvms/" + vmId;
+            String url = gatewayURL + "/systems/" + agentId + "/jvms/" + vmId;
 
             Request httpRequest = httpHelper.newRequest(url);
             httpRequest.method(HttpMethod.PUT);

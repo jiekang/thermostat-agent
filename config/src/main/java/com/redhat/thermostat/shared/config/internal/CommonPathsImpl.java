@@ -320,6 +320,11 @@ public class CommonPathsImpl implements CommonPaths {
         return new File(getUserPersistentDataDirectory(), "splashscreen.stamp");
     }
 
+    @Override
+    public File getGatewayPropertiesFile() throws InvalidConfigurationException {
+        return new File(getSystemConfigurationDirectory(), "gateway.properties");
+    }
+
     // TODO add logging files here (see LoggingUtils)
     // TODO add ssl.properties file here (see SSLConfiguration)
 

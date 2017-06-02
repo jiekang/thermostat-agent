@@ -38,12 +38,18 @@ package com.redhat.thermostat.storage.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -57,37 +63,63 @@ import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
 public class Activator implements BundleActivator {
     
     private static final String WRITER_UUID = UUID.randomUUID().toString();
-    
+
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+
     List<ServiceRegistration<?>> regs;
+    private ServiceTracker tracker;
+    private DAOCreator creator;
     
     public Activator() {
-        regs = new ArrayList<>();
+        this(new DAOCreator());
     }
 
+    public Activator(DAOCreator creator) {
+        this.creator = creator;
+        regs = new ArrayList<>();
+    }
     @Override
     public void start(final BundleContext context) throws Exception {
         // WriterID has to be registered unconditionally (at least not as part
         // of the Storage.class tracker, since that is only registered once
         // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-        
-        AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl();
-        reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
-        regs.add(reg);
+        tracker = new ServiceTracker(context, CommonPaths.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                CommonPaths paths = (CommonPaths) super.addingService(reference);
+                StorageCoreConfiguration cfg = new StorageCoreConfiguration(paths);
+                try {
+                    final WriterID writerID = new WriterIDImpl(WRITER_UUID);
+                    ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
+                    regs.add(reg);
 
-        BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl();
-        reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
-        regs.add(reg);
+                    AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl();
+                    reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
+                    regs.add(reg);
 
-        NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();
-        reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
-        regs.add(reg);
+                    BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl();
+                    reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
+                    regs.add(reg);
 
-        VmInfoDAO vmInfoDao = new VmInfoDAOImpl();
-        reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
-        regs.add(reg);
+                    NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();
+                    reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
+                    regs.add(reg);
+
+                    VmInfoDAO vmInfoDao = creator.createVmInfoDAO(cfg);
+                    reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
+                    regs.add(reg);
+                } catch (Exception e) {
+                    logger.warning("Failed to create DAOs");
+                }
+                return paths;
+            }
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                unregisterServices();
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
     }
 
     private void unregisterServices() {
@@ -99,7 +131,13 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        unregisterServices();
+        tracker.close();
+    }
+
+    static class DAOCreator {
+        VmInfoDAO createVmInfoDAO(StorageCoreConfiguration cfg) throws Exception {
+            return new VmInfoDAOImpl(cfg);
+        }
     }
 }
 

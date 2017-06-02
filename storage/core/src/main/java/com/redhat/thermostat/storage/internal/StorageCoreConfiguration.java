@@ -34,29 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.common.internal;
+package com.redhat.thermostat.storage.internal;
 
-import static org.junit.Assert.assertEquals;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
 
-import java.util.Arrays;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
-import org.junit.Test;
+public class StorageCoreConfiguration {
 
-import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
+    private static final String CONFIG_FILE = "gateway.properties";
+    private static final String URL_PROP = "gatewayUrl";
 
-public class VmGcStatTypeAdapterTest {
+    private CommonPaths paths;
 
-    @Test
-    public void testWrite() throws Exception {
-        VmGcStatTypeAdapter typeAdapter = new VmGcStatTypeAdapter();
-        VmGcStat stat = new VmGcStat();
-        stat.setAgentId("1");
-        stat.setVmId("2");
-        stat.setTimeStamp(100l);
-        stat.setCollectorName("Collector");
-        stat.setRunCount(10l);
-        stat.setWallTime(200l);
-        assertEquals("[{\"agentId\":\"1\",\"jvmId\":\"2\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collectorName\":\"Collector\",\"runCount\":10,\"wallTimeInMicros\":200}]",
-                typeAdapter.toJson(Arrays.asList(stat)));
+    public StorageCoreConfiguration(CommonPaths paths) {
+        this.paths = paths;
     }
+
+    public String getGatewayURL() throws IOException {
+        Properties props = getProperties(paths.getGatewayPropertiesFile());
+        String url = (String) props.get(URL_PROP);
+        if (url == null) {
+            throw new IOException("No Gateway URL found in " + getConfigFilePath());
+        }
+        return url;
+    }
+
+    private Properties getProperties(File filename) {
+        Properties systemConfig = new Properties();
+        if (filename != null) {
+            try {
+                systemConfig.load(new FileInputStream(filename));
+            } catch (IOException e) {
+                throw new InvalidConfigurationException(e);
+            }
+        }
+        return systemConfig;
+    }
+
+    private String getConfigFilePath() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("$THERMOSTAT_HOME").append(File.separator).append("etc").append(File.separator)
+                .append(CONFIG_FILE);
+        return builder.toString();
+    }
+
 }

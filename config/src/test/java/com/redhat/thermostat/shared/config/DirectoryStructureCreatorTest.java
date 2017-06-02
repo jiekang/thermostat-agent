@@ -91,6 +91,11 @@ public class DirectoryStructureCreatorTest {
         }
 
         @Override
+        public File getGatewayPropertiesFile() throws InvalidConfigurationException {
+            return null;
+        }
+
+        @Override
         public File getSystemThermostatHome()
                 throws InvalidConfigurationException {
             return systemThermostatHome;

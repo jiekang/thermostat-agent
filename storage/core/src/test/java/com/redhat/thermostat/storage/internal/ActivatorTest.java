@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.storage.internal;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +50,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -56,34 +60,51 @@ import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
+import com.redhat.thermostat.storage.internal.dao.VmInfoDAOTest;
 import com.redhat.thermostat.testutils.StubBundleContext;
+
+import static com.redhat.thermostat.storage.internal.Activator.DAOCreator;
 
 public class ActivatorTest {
     
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        Activator activator = new Activator();
+        DAOCreator creator = mock(DAOCreator.class);
+        VmInfoDAOImpl dao = mock(VmInfoDAOImpl.class);
+        when(creator.createVmInfoDAO(any(StorageCoreConfiguration.class))).thenReturn(dao);
+
+        CommonPaths paths = mock(CommonPaths.class);
+        context.registerService(CommonPaths.class, paths, null);
+
+        Activator activator = new Activator(creator);
 
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), dao.getClass()));
         assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
 
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        
-        assertEquals(0, context.getAllServices().size());
+
+        assertEquals(1, context.getAllServices().size());
     }
 
     @Test
     public void verifyActivatorUnregistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        Activator activator = new Activator();
+        DAOCreator creator = mock(DAOCreator.class);
+        VmInfoDAOImpl dao = mock(VmInfoDAOImpl.class);
+        when(creator.createVmInfoDAO(any(StorageCoreConfiguration.class))).thenReturn(dao);
+
+        CommonPaths paths = mock(CommonPaths.class);
+        context.registerService(CommonPaths.class, paths, null);
+
+        Activator activator = new Activator(creator);
 
         activator.start(context);
 
@@ -96,7 +117,7 @@ public class ActivatorTest {
         assertFalse(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
         
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(0, context.getAllServices().size());
+        assertEquals(1, context.getAllServices().size());
     }
     
     @Test
@@ -109,12 +130,19 @@ public class ActivatorTest {
         when(timerFactory.createTimer()).thenReturn(timer);
         context.registerService(ApplicationService.class, appService, null);
 
-        Activator activator = new Activator();
+        DAOCreator creator = mock(DAOCreator.class);
+        VmInfoDAOImpl dao = mock(VmInfoDAOImpl.class);
+        when(creator.createVmInfoDAO(any(StorageCoreConfiguration.class))).thenReturn(dao);
+
+        CommonPaths paths = mock(CommonPaths.class);
+        context.registerService(CommonPaths.class, paths, null);
+
+        Activator activator = new Activator(creator);
 
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), dao.getClass()));
         assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
@@ -122,12 +150,12 @@ public class ActivatorTest {
         activator.stop(context);
         
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
         
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), dao.getClass()));
         assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
@@ -135,7 +163,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
         
     }
 }
