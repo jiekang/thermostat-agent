@@ -44,15 +44,14 @@ public abstract class BaseBackend implements Backend {
     
     private String name, description, vendor, version;
 
-    public BaseBackend(String name, String description, String vendor, String version) {
-        this(name, description, vendor, version, false);
+    public BaseBackend(String name, String description, String vendor) {
+        this(name, description, vendor, false);
     }
 
-    public BaseBackend(String name, String description, String vendor, String version, boolean observeNewJvm) {
+    public BaseBackend(String name, String description, String vendor, boolean observeNewJvm) {
         this.name = Objects.requireNonNull(name);
         this.description = Objects.requireNonNull(description);
         this.vendor = Objects.requireNonNull(vendor);
-        this.version = Objects.requireNonNull(version);
         this.observeNewJvm = observeNewJvm;
     }
 
@@ -74,6 +73,15 @@ public abstract class BaseBackend implements Backend {
     @Override
     public String getVersion() {
         return version;
+    }
+    
+    /**
+     * Sets version number of this {@link Backend}. Subclasses should
+     * call this method prior to registering this Backend.
+     * @param version version number of this Backend
+     */
+    protected void setVersion(String version) {
+        this.version = version;
     }
 
     @Override

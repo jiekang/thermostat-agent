@@ -34,15 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.agent.internal;
+package com.redhat.thermostat.host.overview.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -50,21 +49,51 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.host.overview.internal.models.HostInfoBuilder;
+import com.redhat.thermostat.host.overview.internal.models.HostInfoDAO;
+import com.redhat.thermostat.host.overview.model.HostInfo;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.gc.agent.internal.VmGcBackend.ListenerCreator;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
-public class VmGcBackendTest {
-
-    private TestVmGcBackend backend;
-    private ListenerCreator listenerCreator;
+public class HostOverviewBackendTest {
+    
+    private HostOverviewBackend backend;
+    private HostInfoDAO hostInfoDAO;
+    private WriterID writerID;
+    private HostInfo info;
+    private HostInfoBuilder builder;
+    private HostOverviewBackend.HostInfoBuilderCreator builderCreator;
 
     @Before
     public void setup() {
-        listenerCreator = mock(ListenerCreator.class);
-        backend = new TestVmGcBackend(listenerCreator);
+        hostInfoDAO = mock(HostInfoDAO.class);
+        writerID = mock(WriterID.class);
+        
+        info = mock(HostInfo.class);
+        builder = mock(HostInfoBuilder.class);
+        when(builder.build()).thenReturn(info);
+        builderCreator = mock(HostOverviewBackend.HostInfoBuilderCreator.class);
+        when(builderCreator.create(writerID)).thenReturn(builder);
+        
+        backend = new HostOverviewBackend(builderCreator);
+        backend.bindHostInfoDAO(hostInfoDAO);
+        backend.bindWriterID(writerID);
+    }
+
+    @Test
+    public void testActivate() {
+        backend.activate();
+        assertTrue(backend.isActive());
+        
+        verify(builderCreator).create(writerID);
+        verify(builder).build();
+        verify(hostInfoDAO).put(info.getHostname(), info);
+    }
+    
+    @Test
+    public void testDeactivate() {
+        backend.activate();
+        backend.deactivate();
+        assertFalse(backend.isActive());
     }
     
     @Test
@@ -75,73 +104,17 @@ public class VmGcBackendTest {
         when(bundle.getVersion()).thenReturn(version);
         when(context.getBundle()).thenReturn(bundle);
         
-        WriterID id = mock(WriterID.class);
-        backend.bindWriterId(id);
         backend.componentActivated(context);
         
-        assertEquals(id, backend.writerId);
-        assertEquals("1.2.3", backend.version);
-        assertNotNull(backend.registrar);
+        assertEquals("1.2.3", backend.getVersion());
     }
     
     @Test
     public void testComponentDeactivated() {
-        // Begin with backend appearing active for this test
-        backend.active = true;
-        
+        backend.activate();
         assertTrue(backend.isActive());
         backend.componentDeactivated();
         assertFalse(backend.isActive());
-    }
-    
-    @Test
-    public void testCreateVmListener() {
-        final String writerId = "myAgent";
-        final String vmId = "myJVM";
-        final int pid = 1234;
-        
-        VmGcStatDAO dao = mock(VmGcStatDAO.class);
-        backend.bindVmGcStats(dao);
-        backend.createVmListener(writerId, vmId, pid);
-        
-        verify(listenerCreator).create(writerId, dao, vmId);
-    }
-    
-    @Test
-    public void testOrderValue() {
-        int order = backend.getOrderValue();
-        assertTrue(order >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(order < Ordered.ORDER_NETWORK_GROUP);
-    }
-    
-    static class TestVmGcBackend extends VmGcBackend {
-        WriterID writerId;
-        VmStatusListenerRegistrar registrar;
-        String version;
-        boolean active;
-        
-        TestVmGcBackend(ListenerCreator creator) {
-            super(creator);
-        }
-        
-        // Override to capture values
-        @Override
-        protected void initialize(WriterID writerId, VmStatusListenerRegistrar registrar, String version) {
-            this.writerId = writerId;
-            this.registrar = registrar;
-            this.version = version;
-        }
-        
-        // Override the following to test backend is deactivated when dependencies are lost
-        @Override
-        public boolean isActive() {
-            return active;
-        }
-        @Override
-        public boolean deactivate() {
-            active = false;
-            return true;
-        }
     }
 }
 

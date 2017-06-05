@@ -34,43 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.agent.internal;
+package com.redhat.thermostat.host.overview.internal.models;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.memory.common.Constants;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
+import com.redhat.thermostat.host.overview.model.HostInfo;
 
-public class VmMemoryBackend extends VmListenerBackend {
-
-    private final VmMemoryStatDAO vmMemoryStats;
-    private final VmTlabStatDAO tlabStats;
-    
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, VmTlabStatDAO vmTlabStatDAO,
-            Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM Memory Backend",
-                "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.",
-                true);
-        this.vmMemoryStats = vmMemoryStatDAO;
-        this.tlabStats = vmTlabStatDAO;
-        initialize(writerId, registrar, version.getVersionNumber());
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
-    }
-
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmMemoryVmListener(writerId, vmMemoryStats, tlabStats, vmId);
-    }
-    
+/**
+ * Interface for building a HostInfo structure
+ * HostInfo contains information about a target machine's OS and hardware
+ */
+public interface HostInfoBuilder {
+    HostInfo build();
 }
-

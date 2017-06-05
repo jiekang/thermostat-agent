@@ -85,12 +85,13 @@ public class SystemBackend extends BaseBackend {
         super("System Backend",
                 "Gathers basic information from the system",
                 "Red Hat, Inc.",
-                version.getVersionNumber(), true);
+                true);
         this.networkInterfaces = netInfoDAO;
         this.vmInfoDAO = vmInfoDAO;
         this.notifier = notifier;
         this.writerId = writerId;
         this.blacklist = blacklist;
+        setVersion(version.getVersionNumber());
 
         userInfoBuilder = InfoBuilderFactory.INSTANCE.createProcessUserInfoBuilder(userNameUtil);
         networkInfoBuilder = new NetworkInfoBuilder(writerId);
