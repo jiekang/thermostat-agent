@@ -45,6 +45,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -94,7 +95,11 @@ public class VmTlabStatDAOTest {
     }
 
     @Test
+    @Ignore
     public void verifyPutStat() throws Exception {
+//      TODO: Remove @Ignore when web-gateway service for TLAB stats is available
+//      See VmTlabStatDAOImpl.putStat()
+
         VmTlabStat stat = new VmTlabStat();
         stat.setAgentId(AGENT_ID);
         stat.setVmId(VM_ID);

@@ -82,17 +82,20 @@ class VmTlabStatDAOImpl implements VmTlabStatDAO {
 
     @Override
     public void putStat(final VmTlabStat stat) {
-        try {
-            String json = jsonHelper.toJson(Arrays.asList(stat));
-            StringContentProvider provider = httpHelper.createContentProvider(json);
-
-            Request httpRequest = client.newRequest(gatewayURL);
-            httpRequest.method(HttpMethod.POST);
-            httpRequest.content(provider, CONTENT_TYPE);
-            sendRequest(httpRequest);
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to send VmTlabStat to Web Gateway", e);
-        }
+//      TODO: Re-enable when web-gateway service for TLAB stats is available
+//      Also see VmTlabStatDAOTest for disabled tests
+        return;
+//        try {
+//            String json = jsonHelper.toJson(Arrays.asList(stat));
+//            StringContentProvider provider = httpHelper.createContentProvider(json);
+//
+//            Request httpRequest = client.newRequest(gatewayURL);
+//            httpRequest.method(HttpMethod.POST);
+//            httpRequest.content(provider, CONTENT_TYPE);
+//            sendRequest(httpRequest);
+//        } catch (Exception e) {
+//            logger.log(Level.WARNING, "Failed to send VmTlabStat to Web Gateway", e);
+//        }
     }
 
     private void sendRequest(Request httpRequest)
