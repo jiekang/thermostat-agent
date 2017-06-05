@@ -78,7 +78,7 @@ public class HostOverviewBackend extends BaseBackend {
     public boolean activate() {
         HostInfoBuilder builder = builderCreator.create(writerID);
         HostInfo hostInfo = builder.build();
-        hostInfoDAO.put(hostInfo.getHostname(), hostInfo);
+        hostInfoDAO.put(hostInfo.getAgentId(), hostInfo);
         started = true;
         return true;
     }

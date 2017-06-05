@@ -66,8 +66,9 @@ import com.redhat.thermostat.storage.model.VmInfo;
 public class VmInfoDAOImpl implements VmInfoDAO {
     
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
-    
-    private static final String GATEWAY_URL = "http://10.15.17.101:30000/jvms/0.0.1"; // TODO configurable
+
+    private static final String IP = "127.0.0.1";
+    private static final String GATEWAY_URL = "http://" + IP + ":30000/jvms/0.0.1"; // TODO configurable
     private static final String CONTENT_TYPE = "application/json";
     
     private final HttpHelper httpHelper;
