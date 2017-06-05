@@ -48,7 +48,7 @@ public class VmGcStatTypeAdapter extends TypeAdapter<List<VmGcStat>> {
 
     private static final String TYPE_LONG = "$numberLong";
     private static final String AGENT_ID = "agentId";
-    private static final String VM_ID = "vmId";
+    private static final String VM_ID = "jvmId";
     private static final String TIMESTAMP = "timeStamp";
     private static final String COLLECTOR_NAME = "collectorName";
     private static final String RUN_COUNT = "runCount";
