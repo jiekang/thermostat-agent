@@ -79,9 +79,9 @@ public class VmGcStatTypeAdapter extends TypeAdapter<List<VmGcStat>> {
         out.name(COLLECTOR_NAME);
         out.value(stat.getCollectorName());
         out.name(RUN_COUNT);
-        out.value(stat.getRunCount());
+        writeLong(out, stat.getRunCount());
         out.name(WALL_TIME_IN_MICROS);
-        out.value(stat.getWallTime());
+        writeLong(out, stat.getWallTime());
         out.endObject();
     }
 

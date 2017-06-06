@@ -56,7 +56,7 @@ public class VmGcStatTypeAdapterTest {
         stat.setCollectorName("Collector");
         stat.setRunCount(10l);
         stat.setWallTime(200l);
-        assertEquals("[{\"agentId\":\"1\",\"jvmId\":\"2\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collectorName\":\"Collector\",\"runCount\":10,\"wallTimeInMicros\":200}]",
+        assertEquals("[{\"agentId\":\"1\",\"jvmId\":\"2\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collectorName\":\"Collector\",\"runCount\":{\"$numberLong\":\"10\"},\"wallTimeInMicros\":{\"$numberLong\":\"200\"}}]",
                 typeAdapter.toJson(Arrays.asList(stat)));
     }
 }
