@@ -49,12 +49,14 @@ import java.util.Map;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.host.overview.internal.common.PluginConfiguration;
+import com.redhat.thermostat.host.overview.internal.models.HostInfoDAOImpl.ConfigurationCreator;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
@@ -73,7 +75,6 @@ public class HostInfoDAOTest {
     private static final String CPU_MODEL = "some cpu that runs fast";
     private static final int CPU_NUM = -1;
     private static final long MEMORY_TOTAL = 0xCAFEBABEl;
-    private static final String CONTENT_TYPE = "application/json";
 
     private static final String URL_PROP = "gatewayURL";
 
@@ -85,6 +86,7 @@ public class HostInfoDAOTest {
     private Request request;
     private ContentResponse response;
     private ConfigurationInfoSource cfiSource;
+    private ConfigurationCreator configCreator;
     
     @Before
     public void setup() throws Exception {
@@ -97,7 +99,6 @@ public class HostInfoDAOTest {
         httpClient = mock(HttpClient.class);
         request = mock(Request.class);
         when(httpClient.newRequest(anyString())).thenReturn(request);
-        when(httpHelper.newRequest(anyString())).thenReturn(request);
         response = mock(ContentResponse.class);
         when(response.getStatus()).thenReturn(HttpStatus.OK_200);
         when(request.send()).thenReturn(response);
@@ -109,18 +110,23 @@ public class HostInfoDAOTest {
         Map<String,String> map = new HashMap<>();
         map.put(URL_PROP, URL);
         when(cfiSource.getConfiguration(anyString(),anyString())).thenReturn(map);
+        configCreator = mock(ConfigurationCreator.class);
+        when(configCreator.create(eq(cfiSource))).thenReturn(new PluginConfiguration(cfiSource, HostInfoDAOImpl.PLUGIN_ID));
     }
 
     @Test
     public void testPutHostInfo() throws Exception {
 
-        HostInfoDAOImpl dao = new HostInfoDAOImpl(new PluginConfiguration(cfiSource, HostInfoDAOImpl.PLUGIN_ID), httpClient, jsonHelper, httpHelper);
+        HostInfoDAOImpl dao = new HostInfoDAOImpl(httpClient, jsonHelper, httpHelper, configCreator, cfiSource);
+        dao.activate();
+        
         dao.put(info.getAgentId(), info);
         
         verify(httpClient).newRequest(URL + "/systems/" + info.getAgentId());
         verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(eq(Arrays.asList(info)));
-        verify(request).content(Matchers.any(ContentProvider.class), eq(CONTENT_TYPE));
+        verify(request).content(Matchers.any(ContentProvider.class));
+        verify(request).header(HttpHeader.CONTENT_TYPE, "application/json");
         verify(request).send();
         verify(response).getStatus();
     }
