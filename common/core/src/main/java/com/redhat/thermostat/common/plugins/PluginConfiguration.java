@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.overview.internal.common;
+package com.redhat.thermostat.common.plugins;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 

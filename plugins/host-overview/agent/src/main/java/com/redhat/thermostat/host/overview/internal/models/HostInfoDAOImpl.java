@@ -49,9 +49,9 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.util.StringContentProvider;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.overview.internal.HostInfoTypeAdapter;
-import com.redhat.thermostat.host.overview.internal.common.PluginConfiguration;
 import com.redhat.thermostat.host.overview.internal.common.PluginDAOBase;
 import com.redhat.thermostat.host.overview.model.HostInfo;
 

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 import org.eclipse.jetty.client.HttpClient;
@@ -73,7 +74,7 @@ public class VmTlabStatDAOTest {
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private VmMemoryStatConfiguration config;
+    private PluginConfiguration config;
 
     @Before
     public void setUp() throws Exception {
@@ -90,7 +91,7 @@ public class VmTlabStatDAOTest {
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmTlabStat.class))).thenReturn(JSON);
         
-        config = mock(VmMemoryStatConfiguration.class);
+        config = mock(PluginConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
     }
 

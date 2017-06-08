@@ -34,20 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common.internal;
+package com.redhat.thermostat.vm.gc.common.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -58,30 +54,38 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.HttpHelper;
-import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.JsonHelper;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.ConfigurationCreator;
+import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.HttpHelper;
+import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.JsonHelper;
+import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
-public class VmMemoryStatDAOTest {
+public class VmGcStatDAOImplTest {
 
-    private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
-    private static final String CONTENT_TYPE = "application/json";
-    private static final String GATEWAY_URL = "http://example.com/jvm-memory/0.0.2/";
+    private static final String AGENT_ID = "some-agent";
+    private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
+    private static final String GATEWAY_URL = "http://example.com/jvm-gc";
     
+    private VmGcStat stat;
     private HttpClient httpClient;
     private HttpHelper httpHelper;
     private JsonHelper jsonHelper;
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private VmMemoryStatConfiguration config;
+    private VmGcStatDAOImpl dao;
 
     @Before
-    public void setUp() throws Exception {
+    public void setup() throws Exception {
+        stat = new VmGcStat();
+        stat.setAgentId(AGENT_ID);
+        stat.setTimeStamp(1234l);
+        stat.setWallTime(4000l);
+        stat.setRunCount(1000l);
+        stat.setVmId("Vm-1");
+        stat.setCollectorName("Collector");
+
         httpClient = mock(HttpClient.class);
         request = mock(Request.class);
         when(httpClient.newRequest(anyString())).thenReturn(request);
@@ -89,60 +93,33 @@ public class VmMemoryStatDAOTest {
         when(response.getStatus()).thenReturn(HttpStatus.OK_200);
         when(request.send()).thenReturn(response);
 
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(VmGcStat.class))).thenReturn(JSON);
         httpHelper = mock(HttpHelper.class);
         contentProvider = mock(StringContentProvider.class);
         when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
-        jsonHelper = mock(JsonHelper.class);
-        when(jsonHelper.toJson(anyListOf(VmMemoryStat.class))).thenReturn(JSON);
         
-        config = mock(VmMemoryStatConfiguration.class);
+        ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
+        PluginConfiguration config = mock(PluginConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+        ConfigurationCreator creator = mock(ConfigurationCreator.class);
+        when(creator.create(source)).thenReturn(config);
+        dao = new VmGcStatDAOImpl(httpClient, jsonHelper, httpHelper, creator, source);
     }
 
     @Test
-    public void testPutVmMemoryStat() throws Exception {
-        List<Generation> generations = new ArrayList<Generation>();
-
-        int i = 0;
-        for (String genName: new String[] { "new", "old", "perm" }) {
-            Generation gen = new Generation();
-            gen.setName(genName);
-            gen.setCollector(gen.getName());
-            generations.add(gen);
-            List<Space> spaces = new ArrayList<Space>();
-            String[] spaceNames = null;
-            if (genName.equals("new")) {
-                spaceNames = new String[] { "eden", "s0", "s1" };
-            } else if (genName.equals("old")) {
-                spaceNames = new String[] { "old" };
-            } else {
-                spaceNames = new String[] { "perm" };
-            }
-            for (String spaceName: spaceNames) {
-                Space space = new Space();
-                space.setName(spaceName);
-                space.setIndex(0);
-                space.setUsed(i++);
-                space.setCapacity(i++);
-                space.setMaxCapacity(i++);
-                spaces.add(space);
-            }
-            gen.setSpaces(spaces.toArray(new Space[spaces.size()]));
-        }
-        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]),
-                2, 3, 4, 5);
-        
-        VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(config, httpClient, httpHelper, jsonHelper);
-        dao.putVmMemoryStat(stat);
+    public void verifyAddVmGcStat() throws Exception {
+        dao.activate();
+        dao.putVmGcStat(stat);
 
         verify(httpClient).newRequest(GATEWAY_URL);
         verify(request).method(HttpMethod.POST);
-        verify(jsonHelper).toJson(Arrays.asList(stat));
+        verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
         verify(httpHelper).createContentProvider(JSON);
-        verify(request).content(contentProvider, CONTENT_TYPE);
+        verify(request).content(contentProvider, VmGcStatDAOImpl.CONTENT_TYPE);
         verify(request).send();
         verify(response).getStatus();
     }
-    
+
 }
 
