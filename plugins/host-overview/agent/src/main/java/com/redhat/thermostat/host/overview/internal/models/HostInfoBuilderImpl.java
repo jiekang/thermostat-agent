@@ -34,43 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.agent.internal;
+package com.redhat.thermostat.host.overview.internal.models;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.portability.PortableHost;
+import com.redhat.thermostat.common.portability.PortableHostFactory;
+import com.redhat.thermostat.host.overview.model.HostInfo;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.memory.common.Constants;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
-public class VmMemoryBackend extends VmListenerBackend {
+/**
+ * Build Host information via helper classes
+ */
+public class HostInfoBuilderImpl implements HostInfoBuilder {
 
-    private final VmMemoryStatDAO vmMemoryStats;
-    private final VmTlabStatDAO tlabStats;
-    
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, VmTlabStatDAO vmTlabStatDAO,
-            Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM Memory Backend",
-                "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.",
-                true);
-        this.vmMemoryStats = vmMemoryStatDAO;
-        this.tlabStats = vmTlabStatDAO;
-        initialize(writerId, registrar, version.getVersionNumber());
+    private final WriterID writerID;
+    private final PortableHost helper;
+
+    public HostInfoBuilderImpl(final WriterID writerID) {
+        this(writerID, PortableHostFactory.getInstance());
+    }
+
+    HostInfoBuilderImpl(final WriterID writerID, PortableHost helper) {
+        this.writerID = writerID;
+        this.helper = helper;
     }
 
     @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
+    public HostInfo build() {
+        String wId = writerID.getWriterID();
+        return new HostInfo(wId,
+                helper.getHostName(),
+                helper.getOSName(),
+                helper.getOSVersion(),
+                helper.getCPUModel(),
+                helper.getCPUCount(),
+                helper.getTotalMemory());
     }
-
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmMemoryVmListener(writerId, vmMemoryStats, tlabStats, vmId);
-    }
-    
 }
-

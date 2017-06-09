@@ -34,43 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.agent.internal;
+package com.redhat.thermostat.host.overview.internal;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.memory.common.Constants;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
+import static org.junit.Assert.assertEquals;
 
-public class VmMemoryBackend extends VmListenerBackend {
+import java.util.Arrays;
+import java.util.List;
 
-    private final VmMemoryStatDAO vmMemoryStats;
-    private final VmTlabStatDAO tlabStats;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.host.overview.model.HostInfo;
+
+public class HostInfoTypeAdapterTest {
     
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, VmTlabStatDAO vmTlabStatDAO,
-            Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM Memory Backend",
-                "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.",
-                true);
-        this.vmMemoryStats = vmMemoryStatDAO;
-        this.tlabStats = vmTlabStatDAO;
-        initialize(writerId, registrar, version.getVersionNumber());
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
-    }
-
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmMemoryVmListener(writerId, vmMemoryStats, tlabStats, vmId);
-    }
+    private HostInfoTypeAdapter adapter;
     
+    @Before
+    public void setup() {
+        adapter = new HostInfoTypeAdapter();
+    }
+
+    @Test
+    public void testWrite() throws Exception {
+        final String expected = "[{\"agentId\":\"myAgent1\",\"hostname\":\"myHost1\"," 
+                + "\"osName\":\"myOS1\",\"osKernel\":\"myKernel1\",\"cpuModel\":\"myCPU1\"," 
+                + "\"cpuCount\":4,\"totalMemory\":{\"$numberLong\":\"400000000\"}}," 
+                + "{\"agentId\":\"myAgent2\",\"hostname\":\"myHost2\",\"osName\":\"myOS2\"," 
+                + "\"osKernel\":\"myKernel2\",\"cpuModel\":\"myCPU2\",\"cpuCount\":2," 
+                + "\"totalMemory\":{\"$numberLong\":\"800000000\"}}]";
+        
+        HostInfo first = new HostInfo("myAgent1", "myHost1", "myOS1", "myKernel1", "myCPU1", 4, 400000000L);
+        HostInfo second = new HostInfo("myAgent2", "myHost2", "myOS2", "myKernel2", "myCPU2", 2, 800000000L);
+        List<HostInfo> infos = Arrays.asList(first, second);
+        
+        String json = adapter.toJson(infos);
+        assertEquals(expected, json);
+    }
+
 }
-

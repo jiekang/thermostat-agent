@@ -34,10 +34,8 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.common.internal;
+package com.redhat.thermostat.host.overview.internal.models;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -46,9 +44,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.host.overview.internal.common.PluginConfiguration;
 
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -57,70 +60,67 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
-import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.ConfigurationCreator;
-import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.HttpHelper;
-import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.JsonHelper;
-import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
+import com.redhat.thermostat.host.overview.model.HostInfo;
+import org.mockito.Matchers;
 
-public class VmGcStatDAOTest {
+public class HostInfoDAOTest {
 
-    private static final String AGENT_ID = "some-agent";
-    private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
-    private static final String GATEWAY_URL = "http://example.com/jvm-gc";
-    
-    private VmGcStat stat;
+    private static final String URL = "http://localhost:26000/api/systems/v0.0.3";
+    private static final String SOME_JSON = "{\"some\" : \"json\"}";
+    private static final String HOST_NAME = "a host name";
+    private static final String OS_NAME = "some os";
+    private static final String OS_KERNEL = "some kernel";
+    private static final String CPU_MODEL = "some cpu that runs fast";
+    private static final int CPU_NUM = -1;
+    private static final long MEMORY_TOTAL = 0xCAFEBABEl;
+    private static final String CONTENT_TYPE = "application/json";
+
+    private static final String URL_PROP = "gatewayURL";
+
+    private HostInfo info;
     private HttpClient httpClient;
-    private HttpHelper httpHelper;
-    private JsonHelper jsonHelper;
+    private HostInfoDAOImpl.JsonHelper jsonHelper;
+    private HostInfoDAOImpl.HttpHelper httpHelper;
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private VmGcStatDAOImpl dao;
-
+    private ConfigurationInfoSource cfiSource;
+    
     @Before
     public void setup() throws Exception {
-        stat = new VmGcStat();
-        stat.setAgentId(AGENT_ID);
-        stat.setTimeStamp(1234l);
-        stat.setWallTime(4000l);
-        stat.setRunCount(1000l);
-        stat.setVmId("Vm-1");
-        stat.setCollectorName("Collector");
-
+        info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        
+        httpHelper = mock(HostInfoDAOImpl.HttpHelper.class);
+        contentProvider = mock(StringContentProvider.class);
+        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        request = mock(Request.class);
         httpClient = mock(HttpClient.class);
         request = mock(Request.class);
         when(httpClient.newRequest(anyString())).thenReturn(request);
+        when(httpHelper.newRequest(anyString())).thenReturn(request);
         response = mock(ContentResponse.class);
         when(response.getStatus()).thenReturn(HttpStatus.OK_200);
         when(request.send()).thenReturn(response);
-
-        jsonHelper = mock(JsonHelper.class);
-        when(jsonHelper.toJson(anyListOf(VmGcStat.class))).thenReturn(JSON);
-        httpHelper = mock(HttpHelper.class);
-        contentProvider = mock(StringContentProvider.class);
-        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
         
-        ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
-        VmGcStatConfiguration config = mock(VmGcStatConfiguration.class);
-        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
-        ConfigurationCreator creator = mock(ConfigurationCreator.class);
-        when(creator.create(source)).thenReturn(config);
-        dao = new VmGcStatDAOImpl(httpClient, jsonHelper, httpHelper, creator, source);
+        jsonHelper = mock(HostInfoDAOImpl.JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(HostInfo.class))).thenReturn(SOME_JSON);
+
+        cfiSource = mock(ConfigurationInfoSource.class);
+        Map<String,String> map = new HashMap<>();
+        map.put(URL_PROP, URL);
+        when(cfiSource.getConfiguration(anyString(),anyString())).thenReturn(map);
     }
 
     @Test
-    public void verifyAddVmGcStat() throws Exception {
-        dao.activate();
-        dao.putVmGcStat(stat);
+    public void testPutHostInfo() throws Exception {
 
-        verify(httpClient).newRequest(GATEWAY_URL);
+        HostInfoDAOImpl dao = new HostInfoDAOImpl(new PluginConfiguration(cfiSource, HostInfoDAOImpl.PLUGIN_ID), httpClient, jsonHelper, httpHelper);
+        dao.put(info.getAgentId(), info);
+        
+        verify(httpClient).newRequest(URL + "/systems/" + info.getAgentId());
         verify(request).method(HttpMethod.POST);
-        verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
-        verify(httpHelper).createContentProvider(JSON);
-        verify(request).content(contentProvider, VmGcStatDAOImpl.CONTENT_TYPE);
+        verify(jsonHelper).toJson(eq(Arrays.asList(info)));
+        verify(request).content(Matchers.any(ContentProvider.class), eq(CONTENT_TYPE));
         verify(request).send();
         verify(response).getStatus();
     }

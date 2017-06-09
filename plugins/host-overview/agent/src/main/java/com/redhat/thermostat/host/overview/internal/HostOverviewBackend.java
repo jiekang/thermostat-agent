@@ -34,8 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.agent.internal;
+package com.redhat.thermostat.host.overview.internal;
 
+import com.redhat.thermostat.host.overview.internal.models.HostInfoBuilderImpl;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -43,50 +44,72 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.host.overview.internal.models.HostInfoBuilder;
+import com.redhat.thermostat.host.overview.internal.models.HostInfoDAO;
+import com.redhat.thermostat.host.overview.model.HostInfo;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.gc.common.Constants;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 @Component
 @Service(value = Backend.class)
-public class VmGcBackend extends VmListenerBackend {
+public class HostOverviewBackend extends BaseBackend {
+    
+    private final HostInfoBuilderCreator builderCreator;
+    
+    @Reference
+    private HostInfoDAO hostInfoDAO;
+    @Reference
+    private WriterID writerID;
+    
+    private boolean started;
 
-    private final ListenerCreator listenerCreator;
-    
-    @Reference
-    private VmGcStatDAO vmGcStats;
-    @Reference
-    private WriterID writerId;
-    
-    public VmGcBackend() {
-        this(new ListenerCreator());
+    public HostOverviewBackend() {
+        this(new HostInfoBuilderCreator());
     }
-    
-    VmGcBackend(ListenerCreator creator) {
-        super("VM GC Backend", "Gathers garbage collection statistics about a JVM", "Red Hat, Inc.", true);
-        this.listenerCreator = creator;
+
+    HostOverviewBackend(HostInfoBuilderCreator builderCreator) {
+        super("Host Overview Backend", "Gathers general information about a host", "Red Hat, Inc.");
+        this.builderCreator = builderCreator;
+    }
+
+    @Override
+    public boolean activate() {
+        HostInfoBuilder builder = builderCreator.create(writerID);
+        HostInfo hostInfo = builder.build();
+        hostInfoDAO.put(hostInfo.getHostname(), hostInfo);
+        started = true;
+        return true;
+    }
+
+    @Override
+    public boolean deactivate() {
+        started = false;
+        return true;
+    }
+
+    @Override
+    public boolean isActive() {
+        return started;
     }
 
     @Override
     public int getOrderValue() {
-        return Constants.ORDER;
+        return ORDER_DEFAULT_GROUP;
     }
-
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return listenerCreator.create(writerId, vmGcStats, vmId);
+    
+    // For testing purposes
+    static class HostInfoBuilderCreator {
+        HostInfoBuilder create(WriterID writerID) {
+            return new HostInfoBuilderImpl(writerID);
+        }
     }
-
+    
     @Activate
     protected void componentActivated(BundleContext context) {
-        VmStatusListenerRegistrar registrar = new VmStatusListenerRegistrar(context);
         Version version = new Version(context.getBundle());
-        initialize(writerId, registrar, version.getVersionNumber());
+        setVersion(version.getVersionNumber());
     }
     
     @Deactivate
@@ -97,21 +120,14 @@ public class VmGcBackend extends VmListenerBackend {
     }
     
     // DS bind method
-    protected void bindVmGcStats(VmGcStatDAO dao) {
-        this.vmGcStats = dao;
+    protected void bindHostInfoDAO(HostInfoDAO dao) {
+        this.hostInfoDAO = dao;
     }
     
     // DS bind method
-    protected void bindWriterId(WriterID id) {
-        this.writerId = id;
+    protected void bindWriterID(WriterID id) {
+        this.writerID = id;
     }
-    
-    // For testing purposes
-    static class ListenerCreator {
-        VmGcVmListener create(String writerId, VmGcStatDAO dao, String vmId) {
-            return new VmGcVmListener(writerId, dao, vmId);
-        }
-    }
-    
+
 }
 
