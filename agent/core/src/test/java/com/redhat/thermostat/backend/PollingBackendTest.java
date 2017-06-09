@@ -74,17 +74,17 @@ public class PollingBackendTest {
             }
 
             @Override
-            void doScheduledActions() {
+            protected void doScheduledActions() {
                 // Won't be called because mock executor.
             }
 
             @Override
-            void preActivate() {
+            protected void preActivate() {
                 mockActivate.activate();
             }
 
             @Override
-            void postDeactivate() {
+            protected void postDeactivate() {
                 mockActivate.deactivate();
             }};
     }
@@ -140,7 +140,7 @@ public class PollingBackendTest {
             }
 
             @Override
-            void doScheduledActions() {
+            protected void doScheduledActions() {
                 mockAction.doAction();
             }};
         backend.activate();
@@ -156,11 +156,11 @@ public class PollingBackendTest {
     }
 
     private interface CustomActivateTester {
-        public void activate();
-        public void deactivate();
+        void activate();
+        void deactivate();
     }
 
     private interface ScheduledActionTester {
-        public void doAction();
+        void doAction();
     }
 }

@@ -134,13 +134,13 @@ public class BaseBackendTest {
 
         public TestBaseBackend(String name, String description, String vendor,
                 String version) {
-            super(name, description, vendor);
+            super(name, description, vendor, "1.0");
             setVersion(version);
         }
 
         public TestBaseBackend(String name, String description, String vendor,
                 String version, boolean observeNewJvm) {
-            super(name, description, vendor, observeNewJvm);
+            super(name, description, vendor, "1.0", observeNewJvm);
             setVersion(version);
         }
 

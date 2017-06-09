@@ -49,7 +49,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -88,7 +87,6 @@ public class ActivatorTest {
 
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(MXBeanConnectionPoolControl.class.getName(), MXBeanConnectionPoolImpl.class));
-        assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));
     }
 
     @Test

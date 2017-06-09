@@ -131,11 +131,6 @@
       <dependencies>
         <dependency>
           <groupId>com.redhat.thermostat</groupId>
-          <artifactId>thermostat-keyring</artifactId>
-          <version>${project.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>com.redhat.thermostat</groupId>
           <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
           <version>${project.version}</version>
         </dependency>
@@ -497,6 +492,30 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-jvm-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-host-cpu-distribution</artifactId>-->
@@ -560,12 +579,6 @@
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-gc-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-vm-heap-analysis-distribution</artifactId>-->
@@ -584,24 +597,12 @@
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-vm-profiler-distribution</artifactId>-->
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-killvm-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
   </dependencies>
 
 </project>

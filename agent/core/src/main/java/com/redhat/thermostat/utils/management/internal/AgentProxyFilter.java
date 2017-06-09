@@ -37,11 +37,15 @@
 package com.redhat.thermostat.utils.management.internal;
 
 import com.redhat.thermostat.common.Filter;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 
 /**
  * Prevents Agent Proxies from being monitored, which would create
  * an infinite chain of agent proxies being created.
  */
+@Component
+@Service(value = AgentProxyFilter.class)
 public class AgentProxyFilter extends Filter<String> {
     
     private static final String AGENT_PROXY_CLASS = "com.redhat.thermostat.agent.proxy.server.AgentProxy";

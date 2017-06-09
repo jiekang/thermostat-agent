@@ -44,7 +44,6 @@ public class PojoModelInstantiationTest extends DataObjectTest {
         AgentInformation.class,
         BackendInformation.class,
         NetworkInterfaceInfo.class,
-        VmInfo.class,
     };
 
     @Override

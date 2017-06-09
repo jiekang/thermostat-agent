@@ -47,11 +47,11 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 

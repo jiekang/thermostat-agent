@@ -41,12 +41,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.backend.VmUpdate;
-import com.redhat.thermostat.backend.VmUpdateException;
-import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdate;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;

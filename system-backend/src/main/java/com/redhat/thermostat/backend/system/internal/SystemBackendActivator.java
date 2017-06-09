@@ -40,7 +40,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
@@ -50,7 +49,6 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 @SuppressWarnings("rawtypes")
 public class SystemBackendActivator implements BundleActivator {
@@ -58,33 +56,25 @@ public class SystemBackendActivator implements BundleActivator {
     private MultipleServiceTracker tracker;
     private SystemBackend backend;
     private ServiceRegistration reg;
-    private VmStatusChangeNotifier notifier;
-    
+
     @Override
     public void start(final BundleContext context) throws Exception {
-        
-        notifier = new VmStatusChangeNotifier(context);
-        notifier.start();
-        
+
         Class<?>[] deps = new Class<?>[] {
                 BackendService.class,
                 NetworkInterfaceInfoDAO.class,
-                VmInfoDAO.class,
                 UserNameUtil.class,
                 WriterID.class, // system backend uses it
-                VmBlacklist.class,
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
             public void dependenciesAvailable(DependencyProvider services) {
                 NetworkInterfaceInfoDAO netInfoDAO = services.get(NetworkInterfaceInfoDAO.class);
-                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
-                UserNameUtil userNameUtil = services.get(UserNameUtil.class);
                 Version version = new Version(context.getBundle());
                 WriterID id = services.get(WriterID.class);
-                VmBlacklist blacklist = services.get(VmBlacklist.class);
-                backend = new SystemBackend(netInfoDAO, vmInfoDAO, version, notifier, 
-                        userNameUtil, id, blacklist);
+//                UserNameUtil userNameUtil = services.get(UserNameUtil.class);
+//                VmBlacklist blacklist = services.get(VmBlacklist.class);
+                backend = new SystemBackend(netInfoDAO, version, id);
                 reg = context.registerService(Backend.class, backend, null);
             }
             
@@ -107,7 +97,6 @@ public class SystemBackendActivator implements BundleActivator {
             backend.deactivate();
         }
         tracker.close();
-        notifier.stop();
     }
 }
 

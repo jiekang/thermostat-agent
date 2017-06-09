@@ -54,14 +54,15 @@
     <!--<module>thread</module>-->
     <module>killvm</module>
     <module>host-overview</module>
+    <module>jvm-overview</module>
+    <module>vm-gc</module>
+    <module>vm-memory</module>
     <!--<module>host-cpu</module>-->
     <!--<module>host-memory</module>-->
     <!--<module>vm-byteman</module>-->
     <!--<module>vm-cpu</module>-->
-    <module>vm-gc</module>
     <!--<module>vm-classstat</module>-->
     <!--<module>vm-compiler</module>-->
-    <module>vm-memory</module>
     <!--<module>vm-heap-analysis</module>-->
     <!--<module>vm-io</module>-->
     <!--<module>vm-jmx</module>-->

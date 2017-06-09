@@ -50,6 +50,9 @@
       <unpack>true</unpack>
       <includes>
         <include>com.redhat.thermostat:thermostat-host-overview-distribution</include>
+        <include>com.redhat.thermostat:thermostat-jvm-overview-distribution</include>
+        <include>com.redhat.thermostat:thermostat-vm-gc-distribution</include>
+        <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>
 <!--        <include>com.redhat.thermostat:thermostat-host-cpu-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-host-memory-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-numa-distribution</include>-->
@@ -58,11 +61,9 @@
 <!--        <include>com.redhat.thermostat:thermostat-vm-classstat-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-compiler-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-cpu-distribution</include>-->
-        <include>com.redhat.thermostat:thermostat-vm-gc-distribution</include>
 <!--        <include>com.redhat.thermostat:thermostat-vm-heap-analysis-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-io-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-jmx-distribution</include>-->
-        <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>
 <!--        <include>com.redhat.thermostat:thermostat-vm-profiler-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-killvm-distribution</include>-->
 <!--        <include>com.redhat.thermostat:thermostat-vm-numa-distribution</include>-->

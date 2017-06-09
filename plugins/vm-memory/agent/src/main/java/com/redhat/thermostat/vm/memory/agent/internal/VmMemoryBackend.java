@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.vm.memory.agent.internal;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.memory.common.Constants;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
@@ -50,9 +50,11 @@ public class VmMemoryBackend extends VmListenerBackend {
     private final VmMemoryStatDAO vmMemoryStats;
     private final VmTlabStatDAO tlabStats;
     
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, VmTlabStatDAO vmTlabStatDAO,
-            Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
+    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO,
+                           VmTlabStatDAO vmTlabStatDAO,
+                           Version version,
+                           VmStatusListenerRegistrar registrar,
+                           WriterID writerId) {
         super("VM Memory Backend",
                 "Gathers memory statistics about a JVM",
                 "Red Hat, Inc.",

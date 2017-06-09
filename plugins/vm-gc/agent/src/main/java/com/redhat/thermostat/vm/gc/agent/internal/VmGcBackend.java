@@ -36,17 +36,16 @@
 
 package com.redhat.thermostat.vm.gc.agent.internal;
 
+import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.common.Constants;

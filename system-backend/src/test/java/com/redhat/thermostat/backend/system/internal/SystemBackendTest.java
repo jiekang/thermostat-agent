@@ -42,17 +42,12 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.portability.UserNameUtil;
-import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class SystemBackendTest {
 
@@ -62,17 +57,11 @@ public class SystemBackendTest {
     @Before
     public void setUp() {
         NetworkInterfaceInfoDAO nDAO = mock(NetworkInterfaceInfoDAO.class);
-        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
-
         Version version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn(VERSION);
-        
-        VmStatusChangeNotifier notifier = mock(VmStatusChangeNotifier.class);
-        UserNameUtil util = mock(UserNameUtil.class);
-
         WriterID id = mock(WriterID.class);
-        VmBlacklist blacklist = mock(VmBlacklist.class);
-        b = new SystemBackend(nDAO, vmInfoDAO, version, notifier, util, id, blacklist);
+
+        b = new SystemBackend(nDAO, version, id);
     }
 
     @Test

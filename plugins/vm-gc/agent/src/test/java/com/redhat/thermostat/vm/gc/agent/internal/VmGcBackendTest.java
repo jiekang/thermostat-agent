@@ -44,13 +44,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.agent.internal.VmGcBackend.ListenerCreator;
