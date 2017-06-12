@@ -36,17 +36,14 @@
 
 package com.redhat.thermostat.agent.cli.internal;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.Agent;
-import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
@@ -62,7 +59,6 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -120,45 +116,12 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         parser.parse();
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void runAgent(CommandContext ctx) throws CommandException {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
 
         shutdownLatch = new CountDownLatch(1);
-        
-        configServerTracker = new ServiceTracker(bundleContext, ConfigurationServer.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                final ConfigurationServer configServer = (ConfigurationServer) super.addingService(reference);
-                final HostPortPair hostPort = configuration.getConfigListenAddress();
-
-                try {
-                    configServer.startListening(hostPort.getHost(), hostPort.getPort());
-                    prepareAgent(configServer);
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, e.getMessage());
-                    // log stack trace as info only
-                    logger.log(Level.INFO, e.getMessage(), e);
-                    shutdown(ExitStatus.EXIT_ERROR);
-                }
-                
-                return configServer;
-            }
-            
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                if (shutdownLatch.getCount() > 0) {
-                    // Lost config server while still running
-                    logger.warning("ConfigurationServer unexpectedly became unavailable");
-                }
-                // Stop listening on command channel
-                ConfigurationServer server = (ConfigurationServer) service;
-                server.stopListening();
-                super.removedService(reference, service);
-            }
-        };
-        configServerTracker.open();
+        prepareAgent();
         
         try {
             // Wait for either SIGINT or SIGTERM
@@ -204,16 +167,13 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private class CustomSignalHandler implements SignalHandler {
         
         private Agent agent;
-        private ConfigurationServer configServer;
 
-        public CustomSignalHandler(Agent agent, ConfigurationServer configServer) {
+        public CustomSignalHandler(Agent agent) {
             this.agent = agent;
-            this.configServer = configServer;
         }
         
         @Override
         public void handle(Signal arg0) {
-            configServer.stopListening();
             try {
                 agent.stop();
             } catch (Exception ex) {
@@ -270,7 +230,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         return agent;
     }
     
-    private void prepareAgent(final ConfigurationServer configServer) {
+    private void prepareAgent() {
         Class<?>[] deps = new Class<?>[] {
                 AgentInfoDAO.class,
                 BackendInfoDAO.class
@@ -283,7 +243,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                 BackendInfoDAO backendInfoDAO = services.get(BackendInfoDAO.class);
 
                 Agent agent = startAgent(agentInfoDAO, backendInfoDAO);
-                handler = new CustomSignalHandler(agent, configServer);
+                handler = new CustomSignalHandler(agent);
                 Signal.handle(new Signal(SIGINT_NAME), handler);
                 Signal.handle(new Signal(SIGTERM_NAME), handler);
             }

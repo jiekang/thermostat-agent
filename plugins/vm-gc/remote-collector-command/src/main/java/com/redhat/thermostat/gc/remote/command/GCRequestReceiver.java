@@ -39,41 +39,47 @@ package com.redhat.thermostat.gc.remote.command;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.command.RequestReceiver;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.commands.agent.receiver.RequestReceiver;
+import com.redhat.thermostat.commands.model.AgentRequest;
+import com.redhat.thermostat.commands.model.WebSocketResponse;
+import com.redhat.thermostat.commands.model.WebSocketResponse.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.gc.remote.command.internal.GC;
 import com.redhat.thermostat.gc.remote.command.internal.GCException;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
 
+@Component
+@Service(value = RequestReceiver.class)
+@Property(name = "servicename", value = "com.redhat.thermostat.gc.remote.command.GCRequestReceiver")
 public class GCRequestReceiver implements RequestReceiver {
 
     private static final Logger logger = LoggingUtils.getLogger(GCRequestReceiver.class);
+    
+    @Reference
     private MXBeanConnectionPool pool;
 
-    public GCRequestReceiver(MXBeanConnectionPool pool) {
-        this.pool = pool;
-    }
-
     @Override
-    public Response receive(Request request) {
-        Response response = new Response(ResponseType.OK);
+    public WebSocketResponse receive(AgentRequest request) {
+        WebSocketResponse response = new WebSocketResponse(request.getSequenceId(), ResponseType.OK);
         
-        String command = request.getParameter(GCAction.class.getName());
+        String command = request.getParam(GCAction.class.getName());
         switch (GCAction.valueOf(command)) {
         case REQUEST_GC:
-            String strPid = request.getParameter(GCAction.VM_PID);
+            String strPid = request.getParam(GCAction.VM_PID);
             try {
                 int vmId = Integer.parseInt(strPid);
                 new GC(pool, vmId).gc();
             } catch (GCException gce) {
-                response = new Response(ResponseType.ERROR);
+                response = new WebSocketResponse(request.getSequenceId(), ResponseType.ERROR);
                 logger.log(Level.WARNING, "GC request failed", gce);
             } catch (NumberFormatException e) {
-                response = new Response(ResponseType.ERROR);
+                response = new WebSocketResponse(request.getSequenceId(), ResponseType.ERROR);
                 logger.log(Level.WARNING, "Invalid PID: " + strPid, e);
             }
             break;
