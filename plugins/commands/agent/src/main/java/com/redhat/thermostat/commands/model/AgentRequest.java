@@ -34,25 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.commands.model;
 
-import com.redhat.thermostat.annotations.ExtensionPoint;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
+import java.util.SortedMap;
 
 /**
- * Handles requests coming in through the command-channel.
- * <p/>
- * Classes wishing to handle requests coming in through the command channel
- * should implement this class and register it using a
- * {@link ReceiverRegistry}.
- *
- * @see ReceiverRegistry#registerReceiver(RequestReceiver)
+ * A Command Channel Request relayed to an agent (a.k.a receiver).
  */
-@ExtensionPoint
-public interface RequestReceiver {
+public class AgentRequest extends WebSocketRequest implements Message {
+	
+	public static final String RECEIVER_PARAM_NAME = "receiver";
 
-    public Response receive(Request request);
+    public AgentRequest(long sequence, SortedMap<String, String> params) {
+        super(sequence, params);
+    }
 
+    @Override
+    public MessageType getMessageType() {
+        return MessageType.AGENT_REQUEST;
+    }
 }
-

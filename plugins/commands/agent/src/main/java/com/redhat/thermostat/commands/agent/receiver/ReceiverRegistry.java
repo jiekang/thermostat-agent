@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.commands.agent.receiver;
 
 import org.osgi.framework.BundleContext;
 

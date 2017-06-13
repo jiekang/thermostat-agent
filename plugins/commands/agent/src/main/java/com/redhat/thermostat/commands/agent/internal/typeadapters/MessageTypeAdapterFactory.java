@@ -34,19 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.commands.agent.internal.typeadapters;
 
-import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
+import com.redhat.thermostat.commands.model.AgentRequest;
+import com.redhat.thermostat.commands.model.ClientRequest;
+import com.redhat.thermostat.commands.model.Message;
+import com.redhat.thermostat.commands.model.WebSocketResponse;
 
-public class PingReceiver implements RequestReceiver {
+public class MessageTypeAdapterFactory implements TypeAdapterFactory {
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Response receive(Request request) {
-        return new Response(ResponseType.OK);
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+        Class<?> clazz = type.getRawType();
+        if (AgentRequest.class.isAssignableFrom(clazz)) {
+            return (TypeAdapter<T>)new AgentRequestTypeAdapter(gson);
+        } else if (WebSocketResponse.class.isAssignableFrom(clazz)) {
+            return (TypeAdapter<T>)new WebSocketResponseTypeAdapter(gson);
+        } else if (ClientRequest.class.isAssignableFrom(clazz)) {
+            return (TypeAdapter<T>)new ClientRequestTypeAdapter(gson);
+        } else if (Message.class.isAssignableFrom(clazz)) {
+            return (TypeAdapter<T>)new MessageTypeAdapter(gson);
+        }
+        return null;
     }
 
 }
-

@@ -72,6 +72,9 @@
         <include>commons-codec:commons-codec</include>
         <include>org.apache.httpcomponents:httpclient-osgi</include>
         <include>org.eclipse.jetty:jetty-client</include>
+        <include>org.eclipse.jetty:jetty-http</include>
+        <include>org.eclipse.jetty:jetty-io</include>
+        <include>org.eclipse.jetty:jetty-util</include>
         <include>javax.servlet:javax.servlet-api</include>
         <!-- Remove once upstream has OSGi metadata -->
         <include>com.redhat.thermostat:jnr-x86asm</include>

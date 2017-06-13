@@ -516,6 +516,12 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-commands-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-host-cpu-distribution</artifactId>-->
