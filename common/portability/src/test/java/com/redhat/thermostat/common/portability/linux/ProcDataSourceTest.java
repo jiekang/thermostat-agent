@@ -36,86 +36,106 @@
 
 package com.redhat.thermostat.common.portability.linux;
 
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.common.portability.linux.ProcDataSource.ReaderCreator;
 import com.redhat.thermostat.shared.config.OS;
 
-import com.redhat.thermostat.testutils.TestUtils;
-
-import org.junit.Assume;
-import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-
 public class ProcDataSourceTest {
+    
+    private ProcDataSource source;
+    private ReaderCreator readerCreator;
+    
+    @Before
+    public void setup() throws Exception {
+        readerCreator = mock(ReaderCreator.class);
+        FileReader reader = mock(FileReader.class);
+        when(readerCreator.createFileReader(anyString())).thenReturn(reader);
+        source = new ProcDataSource(readerCreator);
+    }
 
     @Test
     public void testGetCpuInfoReader() throws IOException {
         Assume.assumeTrue(OS.IS_LINUX);
-        Reader r = new ProcDataSource().getCpuInfoReader();
+        Reader r = source.getCpuInfoReader();
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/cpuinfo");
     }
 
     @Test
     public void testGetCpuLoadReader() throws IOException {
         Assume.assumeTrue(OS.IS_LINUX);
-        Reader r = new ProcDataSource().getCpuLoadReader();
+        Reader r = source.getCpuLoadReader();
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/loadavg");
     }
 
     @Test
     public void testGetMemInfoReader() throws IOException {
         Assume.assumeTrue(OS.IS_LINUX);
-        Reader r = new ProcDataSource().getMemInfoReader();
+        Reader r = source.getMemInfoReader();
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/meminfo");
     }
 
     @Test
     public void testGetStatReader() throws IOException {
         Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getStatReader(pid);
+        Reader r = source.getStatReader();
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/stat");
     }
 
     @Test
     public void testGetEnvironReader() throws IOException {
         Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getEnvironReader(pid);
+        Reader r = source.getEnvironReader(1234);
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/1234/environ");
     }
 
     @Test
     public void testIoReader() throws Exception {
         Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getIoReader(pid);
+        Reader r = source.getIoReader(1234);
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/1234/io");
     }
 
     @Test
     public void testStatReader() throws Exception {
         Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getStatReader(pid);
+        Reader r = source.getStatReader(1234);
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/1234/stat");
     }
 
     @Test
     public void testStatusReader() throws Exception {
         Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getStatusReader(pid);
+        Reader r = source.getStatusReader(1234);
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/1234/status");
     }
 
     @Test
     public void testNumaMapsReader() throws Exception {
         Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getNumaMapsReader(pid);
+        Reader r = source.getNumaMapsReader(1234);
         assertNotNull(r);
+        verify(readerCreator).createFileReader("/proc/1234/numa_maps");
     }
 }
 
