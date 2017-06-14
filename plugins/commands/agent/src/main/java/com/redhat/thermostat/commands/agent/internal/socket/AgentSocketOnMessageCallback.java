@@ -37,6 +37,7 @@
 package com.redhat.thermostat.commands.agent.internal.socket;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,20 +83,26 @@ public class AgentSocketOnMessageCallback implements OnMessageCallBack {
         }
     }
 
-    private static class CmdChannelRequestHandler extends Thread {
+    static class CmdChannelRequestHandler extends Thread {
 
         private static final Logger logger = LoggingUtils.getLogger(CmdChannelRequestHandler.class);
         private final Session session;
         private final AgentRequest request;
         private final ReceiverRegistry receivers;
         private final Gson gson;
+        private final CountDownLatch sentLatch;
 
-        private CmdChannelRequestHandler(Session session, AgentRequest request, ReceiverRegistry receivers, Gson gson) {
+        CmdChannelRequestHandler(Session session, AgentRequest request, ReceiverRegistry receivers, Gson gson) {
+            this(session, request, receivers, gson, null);
+        }
+        
+        CmdChannelRequestHandler(Session session, AgentRequest request, ReceiverRegistry receivers, Gson gson, CountDownLatch sentLatch) {
             super("Thermostat-WS-CMD-CH-Handler");
             this.session = session;
             this.request = request;
             this.receivers = receivers;
             this.gson = gson;
+            this.sentLatch = sentLatch;
         }
 
         @Override
@@ -136,6 +143,9 @@ public class AgentSocketOnMessageCallback implements OnMessageCallBack {
                 synchronized (session) {
                     RemoteEndpoint endpoint = session.getRemote();
                     endpoint.sendString(gson.toJson(response));
+                }
+                if (sentLatch != null) {
+                    sentLatch.countDown(); // synchronizes for tests
                 }
             } catch (IOException e) {
                 logger.warning(
