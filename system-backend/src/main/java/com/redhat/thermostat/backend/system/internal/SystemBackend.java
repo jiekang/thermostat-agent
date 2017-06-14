@@ -36,64 +36,37 @@
 
 package com.redhat.thermostat.backend.system.internal;
 
-import java.net.URISyntaxException;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.backend.BaseBackend;
-import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
-import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
-
-import sun.jvmstat.monitor.HostIdentifier;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredHost;
 
 public class SystemBackend extends BaseBackend {
 
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
     private NetworkInterfaceInfoDAO networkInterfaces;
-    private VmInfoDAO vmInfoDAO;
 
     private long procCheckInterval = 1000; // TODO make this configurable.
 
     private Timer timer = null;
 
-    private HostIdentifier hostId = null;
-    private MonitoredHost host = null;
-    private JvmStatHostListener hostListener = null;
-
     private final NetworkInfoBuilder networkInfoBuilder;
-    private final ProcessUserInfoBuilder userInfoBuilder;
-    private final VmStatusChangeNotifier notifier;
-    private final WriterID writerId;
-    private final VmBlacklist blacklist;
 
-    public SystemBackend(NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO,
-            Version version, VmStatusChangeNotifier notifier, UserNameUtil userNameUtil, WriterID writerId,
-            VmBlacklist blacklist) {
+    public SystemBackend(NetworkInterfaceInfoDAO netInfoDAO,
+            Version version, WriterID writerId) {
         super("System Backend",
                 "Gathers basic information from the system",
-                "Red Hat, Inc.",
+                "Red Hat, Inc.", "1.0",
                 true);
         this.networkInterfaces = netInfoDAO;
-        this.vmInfoDAO = vmInfoDAO;
-        this.notifier = notifier;
-        this.writerId = writerId;
-        this.blacklist = blacklist;
         setVersion(version.getVersionNumber());
-
-        userInfoBuilder = InfoBuilderFactory.INSTANCE.createProcessUserInfoBuilder(userNameUtil);
         networkInfoBuilder = new NetworkInfoBuilder(writerId);
     }
 
@@ -117,18 +90,6 @@ public class SystemBackend extends BaseBackend {
             }
         }, 0, procCheckInterval);
 
-        try {
-            hostId = new HostIdentifier((String) null);
-            hostListener = new JvmStatHostListener(vmInfoDAO, notifier, 
-                    userInfoBuilder, writerId, blacklist);
-            host = MonitoredHost.getMonitoredHost(hostId);
-            host.addHostListener(hostListener);
-        } catch (MonitorException me) {
-            logger.log(Level.WARNING, "problems with connecting jvmstat to local machine", me);
-        } catch (URISyntaxException use) {
-            logger.log(Level.WARNING, "problems with connecting jvmstat to local machine", use);
-        }
-
         return true;
     }
 
@@ -140,14 +101,6 @@ public class SystemBackend extends BaseBackend {
 
         timer.cancel();
         timer = null;
-
-        try {
-            host.removeHostListener(hostListener);
-        } catch (MonitorException me) {
-            logger.log(Level.INFO, "something went wrong in jvmstat's listening to this host");
-        }
-        host = null;
-        hostId = null;
 
         return true;
     }

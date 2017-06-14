@@ -48,7 +48,7 @@ public class VmGcStatTypeAdapter extends TypeAdapter<List<VmGcStat>> {
 
     private static final String TYPE_LONG = "$numberLong";
     private static final String AGENT_ID = "agentId";
-    private static final String VM_ID = "vmId";
+    private static final String VM_ID = "jvmId";
     private static final String TIMESTAMP = "timeStamp";
     private static final String COLLECTOR_NAME = "collectorName";
     private static final String RUN_COUNT = "runCount";
@@ -79,9 +79,9 @@ public class VmGcStatTypeAdapter extends TypeAdapter<List<VmGcStat>> {
         out.name(COLLECTOR_NAME);
         out.value(stat.getCollectorName());
         out.name(RUN_COUNT);
-        out.value(stat.getRunCount());
+        writeLong(out, stat.getRunCount());
         out.name(WALL_TIME_IN_MICROS);
-        out.value(stat.getWallTime());
+        writeLong(out, stat.getWallTime());
         out.endObject();
     }
 

@@ -41,11 +41,11 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.jvm.overview.agent.VmUpdate;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.backend.VmUpdate;
-import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 public class VmMemoryDataExtractorTest {

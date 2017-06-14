@@ -105,7 +105,9 @@ function __check_completion {
     __find_completion $input > "${TARGET}/completion.actual" 2> "${TARGET}/completion.output"
     actual=$(<"${TARGET}/completion.actual")
     actual_pretty=$(echo "$actual" | __prettify)
-    output=$(<"${TARGET}/completion.output")
+    # When JAVA_TOOL_OPTIONS variable is set, the JVM will unconditionally print a string
+    # containing the variable name and value
+    output=$(grep -v "JAVA_TOOL_OPTIONS" "${TARGET}/completion.output" || true)
     if [[ $actual == $expected && -z $output ]] ; then
         echo "[OK]   '$input' => '$actual_pretty'"
     elif [[ -z $output ]]; then

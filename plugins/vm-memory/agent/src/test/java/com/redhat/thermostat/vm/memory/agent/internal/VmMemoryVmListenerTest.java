@@ -46,12 +46,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.jvm.overview.agent.VmUpdate;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.backend.VmUpdate;
-import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;

@@ -46,9 +46,11 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 abstract public class PluginDAOBase<Tobj,Tdao> {
@@ -57,24 +59,25 @@ abstract public class PluginDAOBase<Tobj,Tdao> {
 
     private static final String CONTENT_TYPE = "application/json";
 
-    private final String gatewayURL;
     protected final HttpClient httpClient;
 
-    public PluginDAOBase(PluginConfiguration config, HttpClient client) throws IOException {
-        this.gatewayURL = config.getGatewayURL();
+    public PluginDAOBase(HttpClient client) {
         this.httpClient = client;
     }
 
     protected abstract String toJsonString(Tobj obj) throws IOException;
+    protected abstract PluginConfiguration getConfig();
 
     public void put(String systemid, final Tobj obj) {
         try {
+            final String gatewayURL = getConfig().getGatewayURL();
             final String json = toJsonString(obj);
             final StringContentProvider provider =  new StringContentProvider(json);
             final String url = gatewayURL + "/systems/" + systemid;
             final Request httpRequest = httpClient.newRequest(url);
             httpRequest.method(HttpMethod.POST);
-            httpRequest.content(provider, CONTENT_TYPE);
+            httpRequest.content(provider);
+            httpRequest.header(HttpHeader.CONTENT_TYPE, CONTENT_TYPE);
             sendRequest(httpRequest);
         } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
             logger.log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);

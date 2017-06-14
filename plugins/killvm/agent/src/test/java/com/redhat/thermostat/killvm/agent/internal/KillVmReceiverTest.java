@@ -39,60 +39,71 @@ package com.redhat.thermostat.killvm.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
-import com.redhat.thermostat.service.process.ProcessHandler;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.commands.model.AgentRequest;
+import com.redhat.thermostat.commands.model.WebSocketResponse;
+import com.redhat.thermostat.commands.model.WebSocketResponse.ResponseType;
+import com.redhat.thermostat.service.process.ProcessHandler;
 
 public class KillVmReceiverTest {
 
     @Test
     public void receiverReturnsOk() {
         ProcessHandler proc = mock(ProcessHandler.class);
-        KillVmReceiver receiver = new KillVmReceiver(proc);
-        Request req = mock(Request.class);
-        when(req.getParameter("vm-pid")).thenReturn("12345");
-        Response response = receiver.receive(req);
-        assertEquals(ResponseType.OK, response.getType());
+        KillVmReceiver receiver = new KillVmReceiver();
+        receiver.bindProcessService(proc);
+        SortedMap<String, String> params = new TreeMap<>();
+        params.put("vm-pid", "12345");
+        AgentRequest req = new AgentRequest(322, params);
+        WebSocketResponse response = receiver.receive(req);
+        assertEquals(ResponseType.OK, response.getResponseType());
+        assertEquals(322, response.getSequenceId());
     }
     
     @Test
     public void receiverReturnsErrorNoPid() {
         ProcessHandler proc = mock(ProcessHandler.class);
-        KillVmReceiver receiver = new KillVmReceiver(proc);
-        Request req = mock(Request.class);
-        Response response = receiver.receive(req);
-        assertEquals(ResponseType.ERROR, response.getType());
+        KillVmReceiver receiver = new KillVmReceiver();
+        receiver.bindProcessService(proc);
+        SortedMap<String, String> params = new TreeMap<>();
+        AgentRequest req = new AgentRequest(-1, params);
+        WebSocketResponse response = receiver.receive(req);
+        assertEquals(ResponseType.ERROR, response.getResponseType());
+        assertEquals(-1, response.getSequenceId());
     }
     
     @Test
     public void receiverReturnsErrorBadPid() {
         ProcessHandler proc = mock(ProcessHandler.class);
-        KillVmReceiver receiver = new KillVmReceiver(proc);
-        Request req = mock(Request.class);
-        when(req.getParameter("vm-pid")).thenReturn("hi");
-        Response response = receiver.receive(req);
-        assertEquals(ResponseType.ERROR, response.getType());
+        KillVmReceiver receiver = new KillVmReceiver();
+        receiver.bindProcessService(proc);
+        SortedMap<String, String> params = new TreeMap<>();
+        params.put("vm-pid", "hi");
+        AgentRequest req = new AgentRequest(211, params);
+        WebSocketResponse response = receiver.receive(req);
+        assertEquals(ResponseType.ERROR, response.getResponseType());
+        assertEquals(211, response.getSequenceId());
     }
 
     @Test
     public void receiverReturnsErrorNoProcessHandler() {
-        KillVmReceiver receiver = new KillVmReceiver(null);
-        Request req = mock(Request.class);
-        Response response = receiver.receive(req);
-        assertEquals(ResponseType.ERROR, response.getType());
+        KillVmReceiver receiver = new KillVmReceiver();
+        SortedMap<String, String> params = new TreeMap<>();
+        AgentRequest req = new AgentRequest(11, params);
+        WebSocketResponse response = receiver.receive(req);
+        assertEquals(ResponseType.ERROR, response.getResponseType());
+        assertEquals(11, response.getSequenceId());
     }
 
     /**
      * When a request is issued the fully qualified receiver class name is set
-     * via {@link Request#setReceiver(String)}. This test makes sure that this
+     * via the 'receiver' param name. This test makes sure that this
      * class is actually where it's supposed to be.
      * 
      * @throws Exception
@@ -109,11 +120,14 @@ public class KillVmReceiverTest {
             fail("com.redhat.thermostat.agent.killvm.internal.KillVmReceiver class not found, but used by some request!");
         }
         try {
-            Constructor<?> constructor = receiver.getConstructor(ProcessHandler.class);
             ProcessHandler service = mock(ProcessHandler.class);
-            Object instance = constructor.newInstance(service);
-            Method m = receiver.getMethod("receive", Request.class);
-            Request req = mock(Request.class);
+            Object instance = receiver.newInstance();
+            Method bind = receiver.getDeclaredMethod("bindProcessService", ProcessHandler.class);
+            bind.invoke(instance, service);
+            Method m = receiver.getMethod("receive", AgentRequest.class);
+            SortedMap<String, String> params = new TreeMap<>();
+            params.put("vm-pid", "12345");
+            AgentRequest req = new AgentRequest(322, params);
             m.invoke(instance, req);
         } catch (Exception e) {
             e.printStackTrace();

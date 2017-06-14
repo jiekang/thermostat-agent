@@ -43,13 +43,13 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
-import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;

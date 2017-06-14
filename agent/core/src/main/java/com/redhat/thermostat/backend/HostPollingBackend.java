@@ -67,7 +67,7 @@ public abstract class HostPollingBackend extends PollingBackend {
         badActions = new HashMap<>();
     }
 
-    final void doScheduledActions() {
+    final public void doScheduledActions() {
         for (HostPollingAction action : actions) {
             try {
                 action.run();
@@ -118,6 +118,6 @@ public abstract class HostPollingBackend extends PollingBackend {
     }
 
     // Intentionally final do-nothing.
-    final void preActivate() {};
-    final void postDeactivate() {};
+    final public void preActivate() {};
+    final public void postDeactivate() {};
 }

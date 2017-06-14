@@ -39,14 +39,12 @@ package com.redhat.thermostat.agent.cli.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -54,39 +52,37 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.cli.internal.AgentApplication.ConfigurationCreator;
-import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 
 @RunWith(PowerMockRunner.class)
 public class AgentApplicationTest {
 
-    private static final String COMMAND_CHANNLE_BIND_HOST = "test";
-    private static final int COMMAND_CHANNEL_BIND_PORT = 10101;
-
     private StubBundleContext context;
 
-    private ConfigurationServer configServer;
     private ConfigurationCreator configCreator;
     private ExitStatus exitStatus;
     private WriterID writerId;
@@ -98,8 +94,6 @@ public class AgentApplicationTest {
         
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
         when(config.getDBConnectionString()).thenReturn("test string; please ignore");
-        HostPortPair hostPort = new HostPortPair(COMMAND_CHANNLE_BIND_HOST, COMMAND_CHANNEL_BIND_PORT);
-        when(config.getConfigListenAddress()).thenReturn(hostPort);
 
         configCreator = mock(ConfigurationCreator.class);
         when(configCreator.create()).thenReturn(config);
@@ -108,8 +102,7 @@ public class AgentApplicationTest {
         context.registerService(AgentInfoDAO.class.getName(), agentInfoDAO, null);
         BackendInfoDAO backendInfoDAO = mock(BackendInfoDAO.class);
         context.registerService(BackendInfoDAO.class.getName(), backendInfoDAO, null);
-        configServer = mock(ConfigurationServer.class);
-        context.registerService(ConfigurationServer.class.getName(), configServer, null);
+        context.registerService(MXBeanConnectionPoolControl.class, mock(MXBeanConnectionPoolControl.class), null);
         writerId = mock(WriterID.class);
 
         exitStatus = mock(ExitStatus.class);
@@ -118,17 +111,22 @@ public class AgentApplicationTest {
     @After
     public void tearDown() {
         context = null;
-        configServer = null;
         configCreator = null;
         exitStatus = null;
     }
 
+    @PrepareForTest({ FrameworkUtil.class, Agent.class })
     @Test
-    public void testAgentStartup() throws CommandException, InterruptedException {
+    public void testAgentStartup() throws CommandException, InterruptedException, InvalidSyntaxException {
         final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, configCreator);
         final CountDownLatch latch = new CountDownLatch(1);
         final CommandException[] ce = new CommandException[1];
         final long timeoutMillis = 5000L;
+        
+        Bundle mockBundle = createBundle();
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        when(FrameworkUtil.getBundle(Agent.class)).thenReturn(mockBundle);
+        when(FrameworkUtil.createFilter(any(String.class))).thenReturn(mock(Filter.class));
         
         startAgentRunThread(timeoutMillis, agent, ce, latch);
         
@@ -139,6 +137,17 @@ public class AgentApplicationTest {
         if (!ret) {
             fail("Timeout expired!");
         }
+    }
+    
+    private Bundle createBundle() {
+        String qualifier = "201207241700";
+        Bundle sysBundle = mock(Bundle.class);
+        org.osgi.framework.Version ver = org.osgi.framework.Version
+                .parseVersion(String.format(Version.VERSION_NUMBER_FORMAT,
+                        1, 2, 3) + "." + qualifier);
+        when(sysBundle.getVersion()).thenReturn(ver);
+        when(sysBundle.getBundleContext()).thenReturn(context);
+        return sysBundle;
     }
     
     /*
@@ -195,7 +204,7 @@ public class AgentApplicationTest {
         verify(exitStatus).setExitStatus(ExitStatus.EXIT_ERROR);
     }
 
-    private void startAgentRunThread(final long timoutMillis, final AgentApplication agent, final CommandException[] ce, final CountDownLatch latch) {
+    private void startAgentRunThread(final long timoutMillis, final AgentApplication agent, final CommandException[] ce, final CountDownLatch latch) throws InterruptedException {
         Arguments args = mock(Arguments.class);
         final CommandContext commandContext = mock(CommandContext.class);
         when(commandContext.getArguments()).thenReturn(args);
@@ -205,21 +214,8 @@ public class AgentApplicationTest {
             
             @Override
             public void run() {
-                // Finish when config server starts listening
                 try {
-                    doAnswer(new Answer<Void>() {
-
-                        @Override
-                        public Void answer(InvocationOnMock invocation) throws Throwable {
-                            latch.countDown();
-                            return null;
-                        }
-                    }).when(configServer).startListening(COMMAND_CHANNLE_BIND_HOST, COMMAND_CHANNEL_BIND_PORT);
-                } catch (IOException e1) {
-                    fail("a mock should not throw an exception");
-                }
-                
-                try {
+                    latch.countDown();
                     agent.run(commandContext);
                 } catch (CommandException e) {
                     ce[0] = e;

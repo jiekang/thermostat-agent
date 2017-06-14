@@ -131,11 +131,6 @@
       <dependencies>
         <dependency>
           <groupId>com.redhat.thermostat</groupId>
-          <artifactId>thermostat-keyring</artifactId>
-          <version>${project.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>com.redhat.thermostat</groupId>
           <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
           <version>${project.version}</version>
         </dependency>
@@ -428,16 +423,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-command</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-command-server</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-proxy-server</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -468,11 +453,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-command</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-portability</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -494,6 +474,36 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-jvm-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-commands-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
@@ -560,12 +570,6 @@
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-gc-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-vm-heap-analysis-distribution</artifactId>-->
@@ -584,24 +588,12 @@
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-vm-profiler-distribution</artifactId>-->
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-killvm-distribution</artifactId>
-      <version>${project.version}</version>
-      <type>zip</type>
-    </dependency>
   </dependencies>
 
 </project>

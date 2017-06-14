@@ -49,7 +49,6 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -175,10 +174,6 @@ public class Agent {
         AgentInformation agentInfo = new AgentInformation(writerId);
         agentInfo.setStartTime(config.getStartTime());
         agentInfo.setAlive(true);
-        // Report the configured publish address if any. Otherwise,
-        // defaults to (agent-local) configured listen address.
-        HostPortPair publishAddress = config.getConfigPublishAddress();
-        agentInfo.setConfigListenAddress(publishAddress.toExternalForm());
         return agentInfo;
     }
 

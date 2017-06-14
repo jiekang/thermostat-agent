@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 import org.eclipse.jetty.client.HttpClient;
@@ -45,6 +46,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -72,7 +74,7 @@ public class VmTlabStatDAOTest {
     private StringContentProvider contentProvider;
     private Request request;
     private ContentResponse response;
-    private VmMemoryStatConfiguration config;
+    private PluginConfiguration config;
 
     @Before
     public void setUp() throws Exception {
@@ -89,12 +91,16 @@ public class VmTlabStatDAOTest {
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmTlabStat.class))).thenReturn(JSON);
         
-        config = mock(VmMemoryStatConfiguration.class);
+        config = mock(PluginConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
     }
 
     @Test
+    @Ignore
     public void verifyPutStat() throws Exception {
+//      TODO: Remove @Ignore when web-gateway service for TLAB stats is available
+//      See VmTlabStatDAOImpl.putStat()
+
         VmTlabStat stat = new VmTlabStat();
         stat.setAgentId(AGENT_ID);
         stat.setVmId(VM_ID);

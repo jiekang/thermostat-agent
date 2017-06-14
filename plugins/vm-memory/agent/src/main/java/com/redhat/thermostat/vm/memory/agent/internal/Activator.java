@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.vm.memory.agent.internal;
 
+import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
-import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;

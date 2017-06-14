@@ -44,6 +44,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
@@ -65,11 +66,11 @@ class VmTlabStatDAOImpl implements VmTlabStatDAO {
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
 
-    VmTlabStatDAOImpl(VmMemoryStatConfiguration config) throws Exception {
+    VmTlabStatDAOImpl(PluginConfiguration config) throws Exception {
         this(config, new HttpClient(), new HttpHelper(), new JsonHelper(new VmTlabStatTypeAdapter()));
     }
 
-    VmTlabStatDAOImpl(VmMemoryStatConfiguration config, HttpClient client, HttpHelper httpHelper, 
+    VmTlabStatDAOImpl(PluginConfiguration config, HttpClient client, HttpHelper httpHelper, 
             JsonHelper jsonHelper) throws Exception {
         this.gatewayURL = config.getGatewayURL();
         this.client = client;
@@ -82,17 +83,20 @@ class VmTlabStatDAOImpl implements VmTlabStatDAO {
 
     @Override
     public void putStat(final VmTlabStat stat) {
-        try {
-            String json = jsonHelper.toJson(Arrays.asList(stat));
-            StringContentProvider provider = httpHelper.createContentProvider(json);
-
-            Request httpRequest = client.newRequest(gatewayURL);
-            httpRequest.method(HttpMethod.POST);
-            httpRequest.content(provider, CONTENT_TYPE);
-            sendRequest(httpRequest);
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to send VmTlabStat to Web Gateway", e);
-        }
+//      TODO: Re-enable when web-gateway service for TLAB stats is available
+//      Also see VmTlabStatDAOTest for disabled tests
+        return;
+//        try {
+//            String json = jsonHelper.toJson(Arrays.asList(stat));
+//            StringContentProvider provider = httpHelper.createContentProvider(json);
+//
+//            Request httpRequest = client.newRequest(gatewayURL);
+//            httpRequest.method(HttpMethod.POST);
+//            httpRequest.content(provider, CONTENT_TYPE);
+//            sendRequest(httpRequest);
+//        } catch (Exception e) {
+//            logger.log(Level.WARNING, "Failed to send VmTlabStat to Web Gateway", e);
+//        }
     }
 
     private void sendRequest(Request httpRequest)

@@ -40,10 +40,10 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;

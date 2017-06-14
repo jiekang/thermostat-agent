@@ -46,7 +46,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
@@ -57,7 +56,7 @@ import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
+
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 
@@ -82,9 +81,9 @@ public class Activator implements BundleActivator {
                 CommonPaths paths = context.getService(ref);
                 try {
                     AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
-                    VmBlacklistImpl blacklist = new VmBlacklistImpl();
-                    blacklist.addVmFilter(new AgentProxyFilter());
-                    context.registerService(VmBlacklist.class, blacklist, null);
+//                    VmBlacklistImpl blacklist = new VmBlacklistImpl();
+//                    blacklist.addVmFilter(new AgentProxyFilter());
+//                    context.registerService(VmBlacklist.class, blacklist, null);
                 } catch (InvalidConfigurationException e) {
                     logger.log(Level.SEVERE, "Failed to start agent services", e);
                 }

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.portability.linux;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -61,72 +62,89 @@ public class ProcDataSource {
     private static final String PID_STAT_FILE = "/proc/${pid}/stat";
     private static final String PID_STATUS_FILE = "/proc/${pid}/status";
     private static final String PID_NUMA_MAPS_FILE = "/proc/${pid}/numa_maps";
+    
+    private final ReaderCreator readerCreator;
+    
+    public ProcDataSource() {
+        this(new ReaderCreator());
+    }
+
+    ProcDataSource(ReaderCreator readerCreator) {
+        this.readerCreator = readerCreator;
+    }
 
     /**
      * Returns a reader for /proc/cpuinfo
      */
     public Reader getCpuInfoReader() throws IOException {
-        return new FileReader(CPUINFO_FILE);
+        return readerCreator.createFileReader(CPUINFO_FILE);
     }
 
     /**
      * Returns a reader for /proc/loadavg
      */
     public Reader getCpuLoadReader() throws IOException {
-        return new FileReader(LOAD_FILE);
+        return readerCreator.createFileReader(LOAD_FILE);
     }
 
     /**
      * Returns a reader for /proc/stat. Kernel/System statistics.
      */
     public Reader getStatReader() throws IOException {
-        return new FileReader(STAT_FILE);
+        return readerCreator.createFileReader(STAT_FILE);
     }
 
     /**
      * Returns a reader for /proc/meminfo
      */
     public Reader getMemInfoReader() throws IOException {
-        return new FileReader(MEMINFO_FILE);
+        return readerCreator.createFileReader(MEMINFO_FILE);
     }
 
     /**
      * Returns a reader for /proc/$PID/environ
      */
     public Reader getEnvironReader(int pid) throws IOException {
-        return new FileReader(getPidFile(PID_ENVIRON_FILE, pid));
+        return readerCreator.createFileReader(getPidFile(PID_ENVIRON_FILE, pid));
     }
 
     /**
      * Returns a reader for /proc/$PID/io
      */
     public Reader getIoReader(int pid) throws IOException {
-        return new FileReader(getPidFile(PID_IO_FILE, pid));
+        return readerCreator.createFileReader(getPidFile(PID_IO_FILE, pid));
     }
 
     /**
      * Returns a reader for /proc/$PID/stat
      */
     public Reader getStatReader(int pid) throws IOException {
-        return new FileReader(getPidFile(PID_STAT_FILE, pid));
+        return readerCreator.createFileReader(getPidFile(PID_STAT_FILE, pid));
     }
 
     /**
      * Returns a reader for /proc/$PID/status
      */
     public Reader getStatusReader(int pid) throws IOException {
-        return new FileReader(getPidFile(PID_STATUS_FILE, pid));
+        return readerCreator.createFileReader(getPidFile(PID_STATUS_FILE, pid));
     }
 
     /**
      * Returns a reader for /proc/$PID/numa_maps
      */
     public Reader getNumaMapsReader(int pid) throws IOException {
-        return new FileReader(getPidFile(PID_NUMA_MAPS_FILE, pid));
+        return readerCreator.createFileReader(getPidFile(PID_NUMA_MAPS_FILE, pid));
     }
 
     private String getPidFile(String fileName, int pid) {
         return fileName.replace("${pid}", Integer.toString(pid));
+    }
+    
+    // For testing purposes
+    static class ReaderCreator {
+        FileReader createFileReader(String fileName) throws FileNotFoundException {
+            return new FileReader(fileName);
+        }
     }
 
 }

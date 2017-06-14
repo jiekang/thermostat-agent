@@ -303,7 +303,6 @@
     <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
     <kxml2.version>2.3.0</kxml2.version>
 
-    <netty.version>4.0.42.Final</netty.version>
     <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
     <httpcomponents.client.version>4.3.4</httpcomponents.client.version>
     <gson.version>2.2.2</gson.version>
@@ -620,16 +619,6 @@
         <groupId>net.sourceforge.expectj</groupId>
         <artifactId>expectj</artifactId>
         <version>${expectj.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-handler</artifactId>
-        <version>${netty.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-buffer</artifactId>
-        <version>${netty.version}</version>
       </dependency>
 
       <!-- Note that jfreechart pulls in jcommon as a dep.

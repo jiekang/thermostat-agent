@@ -39,10 +39,10 @@ package com.redhat.thermostat.vm.gc.agent.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.backend.VmUpdate;
-import com.redhat.thermostat.backend.VmUpdateException;
-import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdate;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 

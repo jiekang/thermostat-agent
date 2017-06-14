@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  * extend child classes {@link HostPollingBackend}
  * or {@link VmPollingBackend} as appropriate.
  */
-abstract class PollingBackend extends BaseBackend {
+public abstract class PollingBackend extends BaseBackend {
 
     private static final Logger logger = LoggingUtils.getLogger(PollingBackend.class);
     static final long DEFAULT_INTERVAL = 1000; // TODO make this configurable.
@@ -58,10 +58,10 @@ abstract class PollingBackend extends BaseBackend {
     private ScheduledExecutorService executor;
     private boolean isActive;
 
-    PollingBackend(String name, String description, String vendor,
+    public PollingBackend(String name, String description, String vendor,
             Version version,
             ScheduledExecutorService executor) {
-        super(name, description, vendor, true);
+        super(name, description, vendor, version.getVersionNumber(), true);
         this.executor = executor;
         setVersion(version.getVersionNumber());
     }
@@ -107,14 +107,14 @@ abstract class PollingBackend extends BaseBackend {
     }
 
     // Give child classes a chance to specify what should happen at each polling interval.
-    abstract void doScheduledActions();
+    protected abstract void doScheduledActions();
 
     // An opportunity for child classes to do some setup upon activation.
     // Will execute before any actions are scheduled.
-    void preActivate() {}
+    protected void preActivate() {}
 
     // An opportunity for child classes to do some cleanup upon deactivation.
     // Will execute after all actions are unscheduled.
-    void postDeactivate() {}
+    protected void postDeactivate() {}
 
 }

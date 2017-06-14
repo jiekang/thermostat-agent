@@ -44,6 +44,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
@@ -64,11 +65,11 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
 
-    VmMemoryStatDAOImpl(VmMemoryStatConfiguration config) throws Exception {
+    VmMemoryStatDAOImpl(PluginConfiguration config) throws Exception {
         this(config, new HttpClient(), new HttpHelper(), new JsonHelper(new VmMemoryStatTypeAdapter()));
     }
 
-    VmMemoryStatDAOImpl(VmMemoryStatConfiguration config, HttpClient client, HttpHelper httpHelper, 
+    VmMemoryStatDAOImpl(PluginConfiguration config, HttpClient client, HttpHelper httpHelper, 
             JsonHelper jsonHelper) throws Exception {
         this.gatewayURL = config.getGatewayURL();
         this.client = client;

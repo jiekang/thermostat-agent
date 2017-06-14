@@ -59,7 +59,6 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.host.overview.agent</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.host.overview.internal.Activator</Bundle-Activator>
             <Export-Package>com.redhat.thermostat.host.overview.model</Export-Package>
             <Private-Package>
               com.redhat.thermostat.host.overview.internal,

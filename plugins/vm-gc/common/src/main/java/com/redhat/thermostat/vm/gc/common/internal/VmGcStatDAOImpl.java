@@ -45,6 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
@@ -65,6 +66,7 @@ import org.eclipse.jetty.http.HttpStatus;
 public class VmGcStatDAOImpl implements VmGcStatDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(VmGcStatDAOImpl.class);
+    private static final String PLUGIN_ID = "vm-gc";
     static final String CONTENT_TYPE = "application/json";
     
     private final JsonHelper jsonHelper;
@@ -92,7 +94,7 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
 
     @Activate
     void activate() throws Exception {
-        VmGcStatConfiguration config = configCreator.create(configInfoSource);
+        PluginConfiguration config = configCreator.create(configInfoSource);
         this.gatewayURL = config.getGatewayURL();
         
         httpHelper.startClient(httpClient);
@@ -152,8 +154,8 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     // For Testing purposes
     static class ConfigurationCreator {
         
-        VmGcStatConfiguration create(ConfigurationInfoSource source) {
-            return new VmGcStatConfiguration(source);
+        PluginConfiguration create(ConfigurationInfoSource source) {
+            return new PluginConfiguration(source, PLUGIN_ID);
         }
         
     }

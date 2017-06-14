@@ -48,11 +48,9 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
-import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
 
 public class Activator implements BundleActivator {
     
@@ -83,10 +81,6 @@ public class Activator implements BundleActivator {
 
         NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();
         reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
-        regs.add(reg);
-
-        VmInfoDAO vmInfoDao = new VmInfoDAOImpl();
-        reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
         regs.add(reg);
     }
 

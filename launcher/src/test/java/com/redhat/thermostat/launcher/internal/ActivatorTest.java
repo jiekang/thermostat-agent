@@ -46,7 +46,6 @@ import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -174,7 +173,6 @@ public class ActivatorTest {
 
         MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
         Class<?>[] vmIdCompleterDeps = new Class[] {
-                VmInfoDAO.class,
                 AgentInfoDAO.class
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),

@@ -46,6 +46,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
@@ -53,6 +54,7 @@ import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 public class Activator implements BundleActivator {
     
     private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+    private static final String PLUGIN_ID = "vm-memory";
     
     private final DAOCreator creator;
     private ServiceTracker tracker;
@@ -73,7 +75,7 @@ public class Activator implements BundleActivator {
             @Override
             public Object addingService(ServiceReference reference) {
                 ConfigurationInfoSource source = (ConfigurationInfoSource) super.addingService(reference);
-                VmMemoryStatConfiguration config = new VmMemoryStatConfiguration(source);
+                PluginConfiguration config = new PluginConfiguration(source, PLUGIN_ID);
                 try {
                     VmMemoryStatDAO vmMemoryStatDao = creator.createMemoryStatDAO(config);
                     memoryReg = context.registerService(VmMemoryStatDAO.class.getName(), vmMemoryStatDao, null);
@@ -104,10 +106,10 @@ public class Activator implements BundleActivator {
     }
     
     static class DAOCreator {
-        VmMemoryStatDAO createMemoryStatDAO(VmMemoryStatConfiguration config) throws Exception {
+        VmMemoryStatDAO createMemoryStatDAO(PluginConfiguration config) throws Exception {
             return new VmMemoryStatDAOImpl(config);
         }
-        VmTlabStatDAO createTlabStatDAO(VmMemoryStatConfiguration config) throws Exception {
+        VmTlabStatDAO createTlabStatDAO(PluginConfiguration config) throws Exception {
             return new VmTlabStatDAOImpl(config);
         }
     }

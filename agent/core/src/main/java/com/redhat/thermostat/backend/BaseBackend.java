@@ -45,13 +45,18 @@ public abstract class BaseBackend implements Backend {
     private String name, description, vendor, version;
 
     public BaseBackend(String name, String description, String vendor) {
-        this(name, description, vendor, false);
+        this(name, description, vendor, "0.1", false);
     }
 
-    public BaseBackend(String name, String description, String vendor, boolean observeNewJvm) {
+    public BaseBackend(String name, String description, String vendor, String version) {
+        this(name, description, vendor, version, false);
+    }
+
+    public BaseBackend(String name, String description, String vendor, String version, boolean observeNewJvm) {
         this.name = Objects.requireNonNull(name);
         this.description = Objects.requireNonNull(description);
         this.vendor = Objects.requireNonNull(vendor);
+        this.version = Objects.requireNonNull(version);
         this.observeNewJvm = observeNewJvm;
     }
 

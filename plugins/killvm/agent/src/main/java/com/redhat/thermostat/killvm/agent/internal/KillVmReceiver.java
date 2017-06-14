@@ -39,40 +39,50 @@ package com.redhat.thermostat.killvm.agent.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+
+import com.redhat.thermostat.commands.agent.receiver.RequestReceiver;
+import com.redhat.thermostat.commands.model.AgentRequest;
+import com.redhat.thermostat.commands.model.WebSocketResponse;
+import com.redhat.thermostat.commands.model.WebSocketResponse.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.service.process.UNIXSignal;
 
+@Component
+@Service(value = RequestReceiver.class)
+@Property(name = "servicename", value = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver")
 public class KillVmReceiver implements RequestReceiver {
 
-    private final ProcessHandler processService;
     private static final Logger log = LoggingUtils.getLogger(KillVmReceiver.class);
     
-    public KillVmReceiver(ProcessHandler theService) {
-        this.processService = theService;
-    }
+    @Reference
+    private ProcessHandler processService;
     
     @Override
-    public Response receive(Request request) {
+    public WebSocketResponse receive(AgentRequest request) {
         if (processService == null) {
             // no dice, should have service by now
             log.severe("Process service is null!");
-            return new Response(ResponseType.ERROR);
+            return new WebSocketResponse(request.getSequenceId(), ResponseType.ERROR);
         }
-        String strPid = request.getParameter("vm-pid");
+        String strPid = request.getParam("vm-pid");
         try {
             Integer pid = Integer.parseInt(strPid);
             processService.sendSignal(pid, UNIXSignal.TERM);
             log.fine("Killed VM with PID " + pid);
-            return new Response(ResponseType.OK);
+            return new WebSocketResponse(request.getSequenceId(), ResponseType.OK);
         } catch (NumberFormatException e) {
             log.log(Level.WARNING, "Invalid PID argument", e);
-            return new Response(ResponseType.ERROR);
+            return new WebSocketResponse(request.getSequenceId(), ResponseType.ERROR);
         }
+    }
+    
+    protected void bindProcessService(ProcessHandler handler) {
+        this.processService = handler;
     }
 
 }

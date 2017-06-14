@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.memory.common.internal.Activator.DAOCreator;
 
@@ -54,8 +55,8 @@ public class ActivatorTest {
         DAOCreator creator = mock(DAOCreator.class);
         VmMemoryStatDAOImpl memoryDao = mock(VmMemoryStatDAOImpl.class);
         VmTlabStatDAOImpl tlabDao = mock(VmTlabStatDAOImpl.class);
-        when(creator.createMemoryStatDAO(any(VmMemoryStatConfiguration.class))).thenReturn(memoryDao);
-        when(creator.createTlabStatDAO(any(VmMemoryStatConfiguration.class))).thenReturn(tlabDao);
+        when(creator.createMemoryStatDAO(any(PluginConfiguration.class))).thenReturn(memoryDao);
+        when(creator.createTlabStatDAO(any(PluginConfiguration.class))).thenReturn(tlabDao);
         
         ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
         StubBundleContext context = new StubBundleContext();

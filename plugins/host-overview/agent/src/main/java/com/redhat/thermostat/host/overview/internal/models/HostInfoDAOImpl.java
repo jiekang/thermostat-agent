@@ -37,47 +37,61 @@
 package com.redhat.thermostat.host.overview.internal.models;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.host.overview.internal.HostInfoTypeAdapter;
-import com.redhat.thermostat.host.overview.internal.common.PluginConfiguration;
-import com.redhat.thermostat.host.overview.internal.common.PluginDAOBase;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpContentResponse;
-import org.eclipse.jetty.client.HttpRequest;
-import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpStatus;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.host.overview.internal.HostInfoTypeAdapter;
+import com.redhat.thermostat.host.overview.internal.common.PluginDAOBase;
 import com.redhat.thermostat.host.overview.model.HostInfo;
 
+@Component
+@Service(value = HostInfoDAO.class)
 public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> implements HostInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(HostInfoDAOImpl.class);
-
+    
     public static final String PLUGIN_ID = "host-overview";
 
     private final JsonHelper jsonHelper;
     private final HttpHelper httpHelper;
 
-    public HostInfoDAOImpl(PluginConfiguration config) throws Exception {
-        this(config, new HttpClient());
+    private final ConfigurationCreator configCreator;
+    
+    @Reference
+    private ConfigurationInfoSource configInfoSource;
+    private PluginConfiguration config;
+
+    public HostInfoDAOImpl() {
+        this(new HttpClient(), new JsonHelper(new HostInfoTypeAdapter()), new HttpHelper(), 
+                new ConfigurationCreator(), null);
     }
 
-    public HostInfoDAOImpl(PluginConfiguration config, HttpClient client) throws Exception {
-        this(config, client, new JsonHelper(new HostInfoTypeAdapter()), new HttpHelper(client));
+    HostInfoDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh, ConfigurationCreator creator, 
+            ConfigurationInfoSource source) {
+        super(client);
+        this.jsonHelper = jh;
+        this.httpHelper = hh;
+        this.configCreator = creator;
+        this.configInfoSource = source;
     }
 
-    HostInfoDAOImpl(PluginConfiguration config, HttpClient client, JsonHelper jsonHelper, HttpHelper httpHelper) throws Exception {
-        super(config, client);
-        this.jsonHelper = jsonHelper;
-        this.httpHelper = httpHelper;
-        this.httpHelper.startClient(this.httpClient);
+    @Activate
+    void activate() throws Exception {
+        this.config = configCreator.create(configInfoSource);
+        httpHelper.startClient(httpClient);
     }
+
 
     public String getPluginId() {
         return PLUGIN_ID;
@@ -90,6 +104,11 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
     @Override
     protected String toJsonString(HostInfo obj) throws IOException {
         return jsonHelper.toJson(Arrays.asList(obj));
+    }
+    
+    @Override
+    protected PluginConfiguration getConfig() {
+    	return config;
     }
 
     // For testing purposes
@@ -110,12 +129,6 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
     // For testing purposes
     static class HttpHelper {
         
-        private final HttpClient httpClient;
-
-        HttpHelper(HttpClient httpClient) {
-            this.httpClient = httpClient;
-        }
-        
         void startClient(HttpClient httpClient) throws Exception {
             httpClient.start();
         }
@@ -124,30 +137,13 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
             return new StringContentProvider(content);
         }
         
-        Request newRequest(String url) {
-            return new MockRequest(httpClient, URI.create(url));
-        }
-        
     }
     
-    // FIXME This class should be removed when the web gateway has a microservice for this DAO
-    private static class MockRequest extends HttpRequest {
-
-        MockRequest(HttpClient client, URI uri) {
-            super(client, uri);
-        }
-    }
-    
-    // FIXME This class should be removed when the web gateway has a microservice for this DAO
-    private static class MockResponse extends HttpContentResponse {
-
-        MockResponse() {
-            super(null, null, null);
-        }
+    // For Testing purposes
+    static class ConfigurationCreator {
         
-        @Override
-        public int getStatus() {
-            return HttpStatus.OK_200;
+        PluginConfiguration create(ConfigurationInfoSource source) {
+            return new PluginConfiguration(source, PLUGIN_ID);
         }
         
     }

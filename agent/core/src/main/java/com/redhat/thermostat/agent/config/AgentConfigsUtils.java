@@ -92,19 +92,6 @@ public class AgentConfigsUtils {
             configuration.setPurge(true);
         }
 
-        String configListenAddress = properties.getProperty(AgentProperties.CONFIG_LISTEN_ADDRESS.name());
-        if (configListenAddress != null) {
-            configuration.setConfigListenAddress(configListenAddress);
-        } else {
-            // TODO: we could avoid this, which means the agent doesn't want to
-            // accept any connection
-            configuration.setConfigListenAddress("127.0.0.1:12000");
-        }
-        
-        String configPublishAddress = properties.getProperty(AgentProperties.CONFIG_PUBLISH_ADDRESS.name());
-        if (configPublishAddress != null) {
-            configuration.setConfigPublishAddress(configPublishAddress);
-        }
     }
 }
 
