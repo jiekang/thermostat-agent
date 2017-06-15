@@ -39,27 +39,23 @@ package com.redhat.thermostat.vm.gc.common.internal;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
-import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
+
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 @Component
 @Service(value = VmGcStatDAO.class)
@@ -70,24 +66,21 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     static final String CONTENT_TYPE = "application/json";
     
     private final JsonHelper jsonHelper;
-    private final HttpHelper httpHelper;
-    private final HttpClient httpClient;
     private final ConfigurationCreator configCreator;
     
     @Reference
     private ConfigurationInfoSource configInfoSource;
     private String gatewayURL;
 
+    @Reference
+    private HttpRequestService httpRequestService;
+
     public VmGcStatDAOImpl() {
-        this(new HttpClient(), new JsonHelper(new VmGcStatTypeAdapter()), new HttpHelper(), 
-                new ConfigurationCreator(), null);
+        this(new JsonHelper(new VmGcStatTypeAdapter()), new ConfigurationCreator(), null);
     }
 
-    VmGcStatDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh, ConfigurationCreator creator, 
-            ConfigurationInfoSource source) {
-        this.httpClient = client;
+    VmGcStatDAOImpl(JsonHelper jh, ConfigurationCreator creator, ConfigurationInfoSource source) {
         this.jsonHelper = jh;
-        this.httpHelper = hh;
         this.configCreator = creator;
         this.configInfoSource = source;
     }
@@ -96,34 +89,37 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     void activate() throws Exception {
         PluginConfiguration config = configCreator.create(configInfoSource);
         this.gatewayURL = config.getGatewayURL();
-        
-        httpHelper.startClient(httpClient);
+    }
+
+    protected void bindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = httpRequestService;
+    }
+
+    protected void unbindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = null;
     }
 
     @Override
     public void putVmGcStat(final VmGcStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-            StringContentProvider provider = httpHelper.createContentProvider(json);
 
-            Request httpRequest = httpClient.newRequest(gatewayURL);
-            httpRequest.method(HttpMethod.POST);
-            httpRequest.content(provider, CONTENT_TYPE);
-            sendRequest(httpRequest);
+            if (null != httpRequestService) {
+                ContentResponse response = httpRequestService.sendHttpRequest(json, gatewayURL, HttpMethod.POST);
+
+                int status = response.getStatus();
+                if (status != HttpStatus.OK_200) {
+                    throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + response.getReason());
+                }
+
+            } else {
+                logger.log(Level.WARNING, "Failed to send VmGcStat information to web gateway. Http service unavailable.");
+            }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to send VmGcStat information to web gateway", e);
         }
     }
 
-    private void sendRequest(Request httpRequest)
-            throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        ContentResponse resp = httpRequest.send();
-        int status = resp.getStatus();
-        if (status != HttpStatus.OK_200) {
-            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
-        }
-    }
-    
     // For Testing purposes
     static class JsonHelper {
 
@@ -139,18 +135,6 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
 
     }
 
-    // For Testing purposes
-    static class HttpHelper {
-
-        void startClient(HttpClient httpClient) throws Exception {
-            httpClient.start();
-        }
-
-        StringContentProvider createContentProvider(String content) {
-            return new StringContentProvider(content);
-        }
-    }
-    
     // For Testing purposes
     static class ConfigurationCreator {
         

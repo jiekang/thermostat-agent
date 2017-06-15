@@ -34,18 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.config;
+package com.redhat.thermostat.agent.http.internal.keycloak;
 
-public enum AgentProperties {
+import com.google.gson.annotations.SerializedName;
 
-    DB_URL,
-    SAVE_ON_EXIT,
+public class KeycloakAccessToken {
+    @SerializedName("access_token")
+    private String accessToken;
 
-    KEYCLOAK_ENABLED,
-    KEYCLOAK_URL,
-    KEYCLOAK_REALM,
-    KEYCLOAK_CLIENT,
-    KEYCLOAK_USERNAME,
-    KEYCLOAK_PASSWORD
+    // In seconds
+    @SerializedName("expires_in")
+    private long expiresIn;
+
+    // In seconds
+    @SerializedName("refresh_expires_in")
+    private long refreshExpiresIn;
+
+    @SerializedName("refresh_token")
+    private String refreshToken;
+
+    // In nanoseconds
+    private transient long acquireTime;
+
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public Long getExpiresIn() {
+        return expiresIn;
+    }
+
+    public Long getRefreshExpiresIn() {
+        return refreshExpiresIn;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public long getAcquireTime() {
+        return acquireTime;
+    }
+
+    public void setAcquireTime(long acquireTime) {
+        this.acquireTime = acquireTime;
+    }
 }
-
