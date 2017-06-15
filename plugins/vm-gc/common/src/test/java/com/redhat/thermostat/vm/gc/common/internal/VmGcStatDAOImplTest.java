@@ -36,28 +36,27 @@
 
 package com.redhat.thermostat.vm.gc.common.internal;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.ConfigurationCreator;
-import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.HttpHelper;
 import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl.JsonHelper;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
@@ -68,13 +67,10 @@ public class VmGcStatDAOImplTest {
     private static final String GATEWAY_URL = "http://example.com/jvm-gc";
     
     private VmGcStat stat;
-    private HttpClient httpClient;
-    private HttpHelper httpHelper;
     private JsonHelper jsonHelper;
-    private StringContentProvider contentProvider;
-    private Request request;
-    private ContentResponse response;
     private VmGcStatDAOImpl dao;
+
+    private HttpRequestService httpRequestService;
 
     @Before
     public void setup() throws Exception {
@@ -86,25 +82,22 @@ public class VmGcStatDAOImplTest {
         stat.setVmId("Vm-1");
         stat.setCollectorName("Collector");
 
-        httpClient = mock(HttpClient.class);
-        request = mock(Request.class);
-        when(httpClient.newRequest(anyString())).thenReturn(request);
-        response = mock(ContentResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
-        when(request.send()).thenReturn(response);
-
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmGcStat.class))).thenReturn(JSON);
-        httpHelper = mock(HttpHelper.class);
-        contentProvider = mock(StringContentProvider.class);
-        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
-        
+
         ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
         PluginConfiguration config = mock(PluginConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
         ConfigurationCreator creator = mock(ConfigurationCreator.class);
         when(creator.create(source)).thenReturn(config);
-        dao = new VmGcStatDAOImpl(httpClient, jsonHelper, httpHelper, creator, source);
+
+        httpRequestService = mock(HttpRequestService.class);
+        ContentResponse contentResponse = mock(ContentResponse.class);
+        when(httpRequestService.sendHttpRequest(anyString(), anyString(), any(HttpMethod.class))).thenReturn(contentResponse);
+        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
+
+        dao = new VmGcStatDAOImpl(jsonHelper, creator, source);
+        dao.bindHttpRequestService(httpRequestService);
     }
 
     @Test
@@ -112,13 +105,9 @@ public class VmGcStatDAOImplTest {
         dao.activate();
         dao.putVmGcStat(stat);
 
-        verify(httpClient).newRequest(GATEWAY_URL);
-        verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
-        verify(httpHelper).createContentProvider(JSON);
-        verify(request).content(contentProvider, VmGcStatDAOImpl.CONTENT_TYPE);
-        verify(request).send();
-        verify(response).getStatus();
+
+        verify(httpRequestService.sendHttpRequest(JSON, GATEWAY_URL, HttpMethod.POST), times(1));
     }
 
 }
