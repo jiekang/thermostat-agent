@@ -54,31 +54,5 @@ public interface SSLConfiguration {
      */
     public String getKeyStorePassword();
 
-    /**
-     * 
-     * @return true if and only if SSL should be enabled for command channel
-     *         communication between agent and client. I.e. if
-     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
-     *         been added. false otherwise.
-     */
-    public boolean enableForCmdChannel();
-
-    /**
-     * 
-     * @return true if and only if SSL should be used for backing storage
-     *         connections. I.e. if $THERMOSTAT_HOME/etc/ssl.properties exists
-     *         and proper config has been added. false otherwise.
-     */
-    public boolean enableForBackingStorage();
-
-    /**
-     * 
-     * @return true if and only if host name verification should not be
-     *         performed during SSL handshake. In other words if
-     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
-     *         been added. false otherwise.
-     */
-    public boolean disableHostnameVerification();
-
 }
 

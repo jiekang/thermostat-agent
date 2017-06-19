@@ -54,9 +54,6 @@ public class SSLConfigurationImpl implements SSLConfiguration {
     private static final String SSL_PROPS_FILENAME = "ssl.properties";
     private static final String KEYSTORE_FILE_KEY = "KEYSTORE_FILE";
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
-    private static final String CMD_CHANNEL_SSL_KEY = "COMMAND_CHANNEL_USE_SSL";
-    private static final String BACKING_STORAGE_USE_SSL_KEY = "BACKING_STORAGE_CONNECTION_USE_SSL";
-    private static final String DISABLE_HOSTNAME_VERIFICATION = "DISABLE_HOSTNAME_VERIFICATION";
     private static final Logger logger = Logger.getLogger(SSLConfigurationImpl.class.getName());
 
     public SSLConfigurationImpl(CommonPaths paths) {
@@ -91,21 +88,6 @@ public class SSLConfigurationImpl implements SSLConfiguration {
         String pwd = configProps.getProperty(KEYSTORE_FILE_PWD_KEY);
         return pwd;
     }
-    
-    @Override
-    public boolean enableForCmdChannel() {
-        return readBooleanProperty(CMD_CHANNEL_SSL_KEY);
-    }
-
-    @Override
-    public boolean enableForBackingStorage() {
-        return readBooleanProperty(BACKING_STORAGE_USE_SSL_KEY);
-    }
-    
-    @Override
-    public boolean disableHostnameVerification() {
-        return readBooleanProperty(DISABLE_HOSTNAME_VERIFICATION);
-    }
 
     // testing hook
     void initProperties(File clientPropertiesFile) {
@@ -117,23 +99,6 @@ public class SSLConfigurationImpl implements SSLConfiguration {
             // an optional config.
             logger.log(Level.FINEST, "Caught exception loading properties. Diagnostics follow.", e);
         }
-    }
-
-    private boolean readBooleanProperty(final String property) {
-        boolean result = false;
-        try {
-            loadProperties();
-        } catch (InvalidConfigurationException e) {
-            logger.log(Level.WARNING,
-                    "THERMOSTAT_HOME not set and config file attempted to be " +
-                    		"read from there! Returning false.");
-            return result;
-        }
-        String token = configProps.getProperty(property);
-        if (token != null) {
-            result = Boolean.parseBoolean(token);
-        }
-        return result;
     }
 
     // package-private for testing.
