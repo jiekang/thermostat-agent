@@ -609,19 +609,6 @@ public class PluginConfigurationParserTest {
 
         Options opts = command.getOptions();
         assertTrue(opts.getRequiredOptions().isEmpty());
-
-        Option dbUrlOption = opts.getOption("d");
-        assertNotNull(dbUrlOption);
-
-        Option otherDbUrlOption = opts.getOption("dbUrl");
-        assertSame(dbUrlOption, otherDbUrlOption);
-
-        Translate<LocaleResources> t = LocaleResources.createLocalizer();
-
-        assertEquals("dbUrl", dbUrlOption.getArgName());
-        assertEquals(1, dbUrlOption.getArgs());
-        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC).getContents(), dbUrlOption.getDescription());
-        assertFalse(dbUrlOption.isRequired());
     }
 
     @Test

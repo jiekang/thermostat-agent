@@ -50,6 +50,5 @@ echo "Testing bash completions..."
 __check_completion "thermostat --v" "--version"
 __check_completion "thermostat --p" "--print-osgi-info"
 
-__check_completion "thermostat ag" "agent"
 
 exit $errors

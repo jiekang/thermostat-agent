@@ -163,42 +163,6 @@ public class BuiltInCommandInfoTest {
     }
 
     @Test
-    public void canAddCommonDBOptions() {
-        Properties props = new Properties();
-        String name = "name";
-        props.put("options", "AUTO_DB_OPTIONS");
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
-
-        Options options = info.getOptions();
-        assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
-        assertFalse(options.getOption(CommonOptions.DB_URL_ARG).isRequired());
-        Option dbUrlOption = options.getOption(CommonOptions.DB_URL_ARG);
-        Translate<LocaleResources> t = LocaleResources.createLocalizer();
-        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC).getContents(), dbUrlOption.getDescription());
-        assertEquals("d", dbUrlOption.getOpt());
-        assertEquals("dbUrl", dbUrlOption.getLongOpt());
-    }
-
-    @Test
-    public void requiredCommandPropertyOverridesCommonDbOptions() {
-        Properties props = new Properties();
-        String name = "name";
-        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
-        props.put("dbUrl.required", "true");
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
-
-        Options options = info.getOptions();
-        assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
-        assertTrue(options.hasOption("d"));
-        Option dbUrlOption1 = options.getOption(CommonOptions.DB_URL_ARG);
-        Option dbUrlOption2 = options.getOption("d");
-        assertSame(dbUrlOption1, dbUrlOption2);
-        assertTrue(dbUrlOption1.isRequired());
-        assertEquals("dbUrl", dbUrlOption1.getLongOpt());
-        assertEquals("d", dbUrlOption1.getOpt());
-    }
-
-    @Test
     public void canAddLogOption() {
         Properties props = new Properties();
         String name = "name";
@@ -272,41 +236,6 @@ public class BuiltInCommandInfoTest {
         props.put("foo.short", "f");
         props.put("bar.short", "b");
         props.put("baz.short", "b");
-        @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
-    }
-
-    @Test(expected=RuntimeException.class)
-    public void verifyConflictsWithCommonShortOption() {
-        Properties props = new Properties();
-        String name = "name";
-        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
-        props.put("dbUrl.short", "x");
-        props.put("dbUrl.long", "dbUrl");
-        props.put("dbUrl.required", "true");
-        @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
-    }
-
-    @Test(expected=RuntimeException.class)
-    public void verifyConflictsWithCommonLongOption() {
-        Properties props = new Properties();
-        String name = "name";
-        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
-        props.put("dbUrl.short", "d");
-        props.put("dbUrl.long", "notDbUrl");
-        props.put("dbUrl.required", "true");
-        @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
-    }
-
-    @Test(expected=RuntimeException.class)
-    public void verifyDescriptionConflictsWithCommonOption() {
-        Properties props = new Properties();
-        String name = "name";
-        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
-        props.put("dbUrl.description", "An attempt to cause confusion.");
-        props.put("dbUrl.required", "true");
         @SuppressWarnings("unused")
         BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }

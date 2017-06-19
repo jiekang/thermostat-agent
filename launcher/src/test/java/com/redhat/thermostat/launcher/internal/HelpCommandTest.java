@@ -115,10 +115,7 @@ public class HelpCommandTest {
         cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         Arguments args = mock(Arguments.class);
         cmd.run(ctxFactory.createContext(args));
-        String expected = "list of global options:\n\n"
-                + GLOBAL_OPTIONS
-                + "\n"
-                + "list of commands:\n\n";
+        String expected = GLOBAL_OPTIONS + "\n";
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
     }
@@ -146,12 +143,7 @@ public class HelpCommandTest {
 
         Arguments args = mock(Arguments.class);
         cmd.run(ctxFactory.createContext(args));
-        String expected = "list of global options:\n\n"
-                + GLOBAL_OPTIONS
-                + "\n"
-                + "list of commands:\n\n"
-                + " test1         test command 1\n"
-                + " test2longname test command 2\n";
+        String expected = GLOBAL_OPTIONS + "\n";
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
     }
@@ -184,8 +176,7 @@ public class HelpCommandTest {
 
         String actual = ctxFactory.getOutput();
         assertEquals("usage: thermostat usage of test command\n" +
-                     "                  description of test command\n\n" +
-                     "thermostat test1\n" +
+                     "                  description of test command\n" +
                      "     --help    show usage of command\n\n" +
                      "Subcommands:\n" +
                      "\n" +
@@ -226,15 +217,7 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
-        String expected = "list of global options:\n\n"
-                + GLOBAL_OPTIONS
-                + "\n"
-                + "list of commands:\n\n"
-                + " help          show help\n"
-                + " test1         test command 1\n"
-                + " test2         test command 2\n"
-                + " test3         test command 3\n"
-                + " test4         test command 4\n";
+        String expected = GLOBAL_OPTIONS + "\n";
         assertEquals(expected, actual);
     }
 
@@ -249,8 +232,7 @@ public class HelpCommandTest {
         args.addNonOptionArgument("test1");
         cmd.run(ctxFactory.createContext(args));
 
-        String expected = "unknown command 'test1'\n"
-                        + "list of commands:\n\n";
+        String expected = "unknown command 'test1'\n";
 
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
@@ -294,8 +276,6 @@ public class HelpCommandTest {
         String actual = ctxFactory.getOutput();
         assertEquals("usage: thermostat usage of test1 command\n" +
                 "                  description of test1 command\n" +
-                "\n" +
-                "thermostat test1\n" +
                 "     --help    show usage of command\n" +
                 "\n" +
                 "See also:\n" +
@@ -326,21 +306,11 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String output = ctxFactory.getOutput();
-        assertEquals("list of global options:\n" +
-                "\n" +
-                " --version                display the version of the current thermostat installation\n" +
+        assertEquals(" --version                display the version of the current thermostat installation\n" +
                 " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n" +
                 " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n" +
                 " --boot-delegation        boot delegation string passed on to the OSGi framework\n" +
-                "\n" +
-                "list of commands:\n" +
-                "\n" +
-                "Group Name:    \n" +
-                " test1         summary of test1 command\n" +
-                "               \n" +
-                "group2:        \n" +
-                " test1         summary of test1 command\n" +
-                "               \n", output);
+                "\n", output);
     }
 
 }

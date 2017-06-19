@@ -36,11 +36,8 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -58,20 +55,6 @@ public class CommonOptionsTest {
         assertTrue(options.hasOption("l"));
         assertFalse(logOption.isRequired());
         assertTrue(logOption.hasArg());
-    }
-    
-    @Test
-    public void canGetDbOptions() {
-        List<Option> opts = CommonOptions.getDbOptions();
-        Options options = new Options();
-        for (Option opt: opts) {
-            options.addOption(opt);
-        }
-        assertTrue(options.hasOption("dbUrl"));
-        assertFalse(options.getOption("dbUrl").isRequired());
-        assertTrue(options.getOption("dbUrl").hasArg());
-        Option dbUrlOption = options.getOption("dbUrl");
-        assertEquals(CommonOptions.DB_URL_ARG, dbUrlOption.getArgName());
     }
 
     @Test

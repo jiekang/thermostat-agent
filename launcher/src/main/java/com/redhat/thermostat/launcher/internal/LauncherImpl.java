@@ -132,19 +132,54 @@ public class LauncherImpl implements Launcher {
         run(args, null);
     }
 
+    private void help(String[] args, Collection<ActionListener<ApplicationState>> listeners) {
+        showVersion();
+        runHelpCommandFor("agent");
+        runCommandFromArguments(args, listeners);
+    }
+
     @Override
     public void run(String[] args, Collection<ActionListener<ApplicationState>> listeners) {
         usageCount.incrementAndGet();
 
         try {
-            if (hasNoArguments(args)) {
-                runHelpCommand();
-            } else if (isVersionQuery(args)) {
+
+            boolean noArgs = hasNoArguments(args);
+            if (noArgs) {
+                runCommandFromArguments(new String [] {"agent"}, listeners);
+                return;
+            }
+
+            if (isVersionQuery(args)) {
                 showVersion();
+
             } else if (isInfoQuery(args)) {
                 showInfo();
+
             } else {
-                runCommandFromArguments(args, listeners);
+
+                if (args[0].equalsIgnoreCase("help")) {
+                    help(args, listeners);
+
+                } else {
+
+                    List<String> realArgs = new ArrayList<>();
+                    if (!args[0].equalsIgnoreCase("agent")) {
+                        // prepend agent to the command line argument
+                        // and execute
+                        realArgs.add("agent");
+                    }
+
+                    for (String arg : args) {
+                        realArgs.add(arg);
+                        if (arg.equalsIgnoreCase("--help")) {
+                            help(new String[] { "help" }, listeners);
+                            return;
+                        }
+                    }
+
+                    runCommandFromArguments(realArgs.toArray(new String[0]), listeners);
+                }
             }
         } catch (NoClassDefFoundError e) {
             // This could mean pom is missing <Private-Package> or <Export-Package> lines.
@@ -386,6 +421,8 @@ public class LauncherImpl implements Launcher {
     }
 
     private void showInfo() {
+        showVersion();
+
         PrintStream stdOut = cmdCtxFactory.getConsole().getOutput();
         stdOut.println(CommonPaths.THERMOSTAT_HOME + "=" + paths.getSystemThermostatHome().getAbsolutePath());
         stdOut.println(CommonPaths.USER_THERMOSTAT_HOME + "=" + paths.getUserThermostatHome().getAbsolutePath());

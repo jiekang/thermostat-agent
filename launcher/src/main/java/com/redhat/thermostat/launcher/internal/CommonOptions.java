@@ -53,34 +53,21 @@ final class CommonOptions {
     // The launcher uses username, password and dbUrl options for establishing a
     // DB connection before the command is run. These options can be added via
     // this special option in the options section of command.properties.
-    static final String OPTIONS_COMMON_DB_OPTIONS = "AUTO_DB_OPTIONS";
     // The launcher will auto-add a logLevel option if this special option is
     // specified in the command.properties option section. 
     static final String OPTIONS_COMMON_LOG_OPTION = "AUTO_LOG_OPTION";
 
     static final String LOG_LEVEL_ARG = "logLevel";
-    static final String DB_URL_ARG = "dbUrl";
     static final String HELP_ARG = "help";
 
     static final Set<String> ALL_COMMON_OPTIONS = new HashSet<>(4);
     
     static {
         ALL_COMMON_OPTIONS.add(LOG_LEVEL_ARG);
-        ALL_COMMON_OPTIONS.add(DB_URL_ARG);
     }
     
     static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    
-    static List<Option> getDbOptions() {
-        String dbUrlDesc = t.localize(LocaleResources.OPTION_DB_URL_DESC).getContents();
-        Option dbUrlOption = new Option("d", DB_URL_ARG, true, dbUrlDesc);
-        dbUrlOption.setRequired(false);
-        dbUrlOption.setArgName(DB_URL_ARG);
-        List<Option> options = new ArrayList<>(1);
-        options.add(dbUrlOption);
-        return options;
-    }
-    
+
     static Option getLogOption() {
         String desc = t.localize(LocaleResources.OPTION_LOG_LEVEL_DESC).getContents();
         Option logOption = new Option("l", LOG_LEVEL_ARG, true, desc);

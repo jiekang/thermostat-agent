@@ -146,14 +146,6 @@ public class BuiltInCommandInfo implements CommandInfo {
         Options propertiesOptions = new Options(); // For checking for conflicts only, will contain OptionGroup members
         Options propertiesOptionsToAdd = new Options(); // For adding to this.options later, will not contain OptionGroup members
 
-        if (optionNames.contains(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
-            for (Option opt: CommonOptions.getDbOptions()) {
-                commonOptionsToAdd.addOption(opt);
-            }
-            while (optionNames.contains(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
-                optionNames.remove(CommonOptions.OPTIONS_COMMON_DB_OPTIONS);
-            }
-        }
         if (optionNames.contains(CommonOptions.OPTIONS_COMMON_LOG_OPTION)) {
             Option opt = CommonOptions.getLogOption();
             commonOptionsToAdd.addOption(opt);

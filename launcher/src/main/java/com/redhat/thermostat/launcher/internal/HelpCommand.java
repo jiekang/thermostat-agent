@@ -113,7 +113,6 @@ public class HelpCommand extends AbstractCommand  {
 
         if (nonParsed.isEmpty()) {
             printOptionSummaries(ctx);
-            printCommandSummaries(ctx);
         } else {
             printCommandUsage(ctx, nonParsed.get(0));
         }
@@ -137,7 +136,6 @@ public class HelpCommand extends AbstractCommand  {
             String groupName = entry.getKey();
             CommandGroupMetadata metadata = commandGroupMetadataMap.get(groupName);
             if (metadata == null) {
-                logger.warning("No metadata provided for command group \"" + groupName + "\"");
                 metadata = new CommandGroupMetadata(groupName, groupName, Integer.MAX_VALUE);
                 commandGroupMetadataMap.put(groupName, metadata);
             }
@@ -153,8 +151,6 @@ public class HelpCommand extends AbstractCommand  {
     }
 
     private void printCommandSummaries(CommandContext ctx) {
-        ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_LIST_HEADER).getContents());
-
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
         for (Map.Entry<CommandGroupMetadata, SortedSet<CommandInfo>> group : commandGroupMap.entrySet()) {
@@ -177,8 +173,6 @@ public class HelpCommand extends AbstractCommand  {
     }
 
     private void printOptionSummaries(CommandContext ctx) {
-        ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_OPTION_HEADER).getContents());
-
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
         renderer.printLine(" " + Version.VERSION_OPTION, "display the version of the current thermostat installation");
@@ -213,11 +207,10 @@ public class HelpCommand extends AbstractCommand  {
 
         Options options = info.getOptions();
         String usage = APP_NAME + " " + info.getUsage() + "\n" + info.getDescription();
-        String header = "";
-        header = header + "\n" + APP_NAME + " " + info.getName();
+
         Option help = CommonOptions.getHelpOption();
         options.addOption(help);
-        helpFormatter.printHelp(pw, MAX_COLUMN_WIDTH, usage, header, options, 2, 4, null);
+        helpFormatter.printHelp(pw, MAX_COLUMN_WIDTH, usage, "", options, 2, 4, null);
 
         if (!info.getSubcommands().isEmpty()) {
             pw.println();

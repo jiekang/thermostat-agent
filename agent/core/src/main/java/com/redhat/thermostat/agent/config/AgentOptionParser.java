@@ -59,18 +59,6 @@ public class AgentOptionParser implements ThermostatOptionParser {
         if (args.hasArgument("saveOnExit")) {
             configuration.setPurge(false);
         }
-
-        if (args.hasArgument("dbUrl")) {
-            String url = args.getArgument("dbUrl");
-            configuration.setDatabaseURL(url);
-        } else {
-            if (configuration.getDBConnectionString() == null) {
-                System.err.println("database url not specified... must be " +
-                                   "either set in config or passed on " +
-                                   "the command line");
-                isHelp = true;
-            }
-        }
     }
     
     public boolean isHelp() {
