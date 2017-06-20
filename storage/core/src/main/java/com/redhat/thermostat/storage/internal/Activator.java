@@ -45,11 +45,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
-import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 
 public class Activator implements BundleActivator {
@@ -69,14 +65,6 @@ public class Activator implements BundleActivator {
         // storage is connected).
         final WriterID writerID = new WriterIDImpl(WRITER_UUID);
         ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-        
-        AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl();
-        reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
-        regs.add(reg);
-
-        BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl();
-        reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
         regs.add(reg);
 
         NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();

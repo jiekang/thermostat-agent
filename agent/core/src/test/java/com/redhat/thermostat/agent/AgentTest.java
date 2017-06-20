@@ -48,6 +48,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -59,8 +61,6 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;

@@ -48,11 +48,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
-import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
@@ -67,8 +63,6 @@ public class ActivatorTest {
 
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
 
         activator.stop(context);
 
@@ -87,8 +81,6 @@ public class ActivatorTest {
         activator.stop(context);
         
         assertFalse(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
-        assertFalse(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
-        assertFalse(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
         assertFalse(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
         
         assertEquals(0, context.getServiceListeners().size());
@@ -110,8 +102,6 @@ public class ActivatorTest {
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
 
         activator.stop(context);
@@ -122,8 +112,6 @@ public class ActivatorTest {
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
 
         activator.stop(context);

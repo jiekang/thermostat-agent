@@ -34,10 +34,8 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.agent.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -47,6 +45,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
+import com.redhat.thermostat.agent.internal.BackendInfoDAOImpl.JsonHelper;
+import com.redhat.thermostat.agent.internal.BackendInfoDAOImpl.HttpHelper;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -54,22 +55,17 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.AgentInformationUpdate;
-import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.HttpHelper;
-import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.JsonHelper;
-import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.BackendInformation;
 
-public class AgentInfoDAOTest {
-
-    private static final String URL = "http://localhost:26000/api/v100/agent-config/systems/*/agents/1234";
+public class BackendInfoDAOTest {
+    
+    private static final String URL = "http://localhost:26000/api/v100/backend-info/systems/*/agents/foo-agent1";
+    private static final String REMOVE_URL = URL + "?q=name%3D%3DTest+Backend";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
-    private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
     private static final String CONTENT_TYPE = "application/json";
 
-    private AgentInformation info;
+    private BackendInformation backendInfo1;
     private JsonHelper jsonHelper;
     private HttpHelper httpHelper;
     private StringContentProvider contentProvider;
@@ -78,12 +74,15 @@ public class AgentInfoDAOTest {
 
     @Before
     public void setUp() throws Exception {
-        info = new AgentInformation("1234");
-        info.setAlive(true);
-        info.setConfigListenAddress("foobar:666");
-        info.setStartTime(100);
-        info.setStopTime(10);
-        
+        backendInfo1 = new BackendInformation("foo-agent1");
+
+        backendInfo1.setName("Test Backend");
+        backendInfo1.setDescription("description");
+        backendInfo1.setActive(true);
+        backendInfo1.setObserveNewJvm(true);
+        backendInfo1.setPids(new int[] { -1, 0, 1});
+        backendInfo1.setOrderValue(100);
+
         httpHelper = mock(HttpHelper.class);
         contentProvider = mock(StringContentProvider.class);
         when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
@@ -94,19 +93,18 @@ public class AgentInfoDAOTest {
         when(request.send()).thenReturn(response);
         
         jsonHelper = mock(JsonHelper.class);
-        when(jsonHelper.toJson(anyListOf(AgentInformation.class))).thenReturn(SOME_JSON);
-        when(jsonHelper.toJson(any(AgentInformationUpdate.class))).thenReturn(SOME_OTHER_JSON);
+        when(jsonHelper.toJson(anyListOf(BackendInformation.class))).thenReturn(SOME_JSON);
     }
 
     @Test
-    public void verifyAddAgentInformation() throws Exception {
-        AgentInfoDAO dao = new AgentInfoDAOImpl(httpHelper, jsonHelper);
+    public void verifyAddBackendInformation() throws Exception {
+        BackendInfoDAO dao = new BackendInfoDAOImpl(httpHelper, jsonHelper);
 
-        dao.addAgentInformation(info);
-
+        dao.addBackendInformation(backendInfo1);
+        
         verify(httpHelper).newRequest(URL);
         verify(request).method(HttpMethod.POST);
-        verify(jsonHelper).toJson(eq(Arrays.asList(info)));
+        verify(jsonHelper).toJson(eq(Arrays.asList(backendInfo1)));
         verify(httpHelper).createContentProvider(SOME_JSON);
         verify(request).content(contentProvider, CONTENT_TYPE);
         verify(request).send();
@@ -114,32 +112,12 @@ public class AgentInfoDAOTest {
     }
 
     @Test
-    public void verifyUpdateAgentInformation() throws Exception {
-        AgentInfoDAO dao = new AgentInfoDAOImpl(httpHelper, jsonHelper);
-
-        dao.updateAgentInformation(info);
-
-        verify(httpHelper).newRequest(URL);
-        verify(request).method(HttpMethod.PUT);
+    public void verifyRemoveBackendInformation() throws Exception {
+        BackendInfoDAO dao = new BackendInfoDAOImpl(httpHelper, jsonHelper);
         
-        ArgumentCaptor<AgentInformationUpdate> updateCaptor = ArgumentCaptor.forClass(AgentInformationUpdate.class);
-        verify(jsonHelper).toJson(updateCaptor.capture());
-        AgentInformationUpdate update = updateCaptor.getValue();
-        assertEquals(info, update.getInfo());
-                
-        verify(httpHelper).createContentProvider(SOME_OTHER_JSON);
-        verify(request).content(contentProvider, CONTENT_TYPE);
-        verify(request).send();
-        verify(response).getStatus();
-    }
-
-    @Test
-    public void verifyRemoveAgentInformation() throws Exception {
-        AgentInfoDAO dao = new AgentInfoDAOImpl(httpHelper, jsonHelper);
-
-        dao.removeAgentInformation(info);
-
-        verify(httpHelper).newRequest(URL);
+        dao.removeBackendInformation(backendInfo1);
+        
+        verify(httpHelper).newRequest(REMOVE_URL);
         verify(request).method(HttpMethod.DELETE);
         verify(request).send();
         verify(response).getStatus();

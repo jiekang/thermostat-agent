@@ -34,17 +34,61 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.dao;
+package com.redhat.thermostat.agent.dao;
+
+import java.util.List;
+import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.model.BackendInformation;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.model.AgentInformation;
 
+/**
+ * Access information about agents that agents publish to storage.
+ */
 @Service
-public interface BackendInfoDAO {
+public interface AgentInfoDAO {
+    
+    /**
+     * Get information about all known agents.
+     *
+     * @return a {@link List} of {@link AgentInformation} for all agents
+     * who have published their information. Will be empty if there is no
+     * information.
+     */
+    List<AgentInformation> getAllAgentInformation();
 
-    void addBackendInformation(BackendInformation info);
+    /**
+     * Get information about a specific agent.
+     *
+     * @return a {@link AgentInformation} describing information about the agent
+     * indicated by {@code agentId}. {@code null} if no information about the
+     * agent could be located.
+     */
 
-    void removeBackendInformation(BackendInformation info);
+    AgentInformation getAgentInformation(AgentId agentId);
+
+    /**
+     *
+     * @return A set of AgentIds, which may be empty.
+     */
+    Set<AgentId> getAgentIds();
+
+    /**
+     * Publish information about agent into the storage.
+     */
+    void addAgentInformation(AgentInformation agentInfo);
+
+    /**
+     * Update information about an existing agent. No changes will be performed
+     * if there is no matching agent.
+     */
+    void updateAgentInformation(AgentInformation agentInfo);
+
+    /**
+     * Remove information about an agent that was published to storage.
+     */
+    void removeAgentInformation(AgentInformation agentInfo);
 
 }
 
