@@ -40,6 +40,8 @@ import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.ExitStatus;
@@ -58,6 +60,8 @@ public class ActivatorTest {
         bundleContext.registerService(WriterID.class, writerID, null);
         bundleContext.registerService(ExitStatus.class, exitStatus, null);
         bundleContext.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
+        bundleContext.registerService(AgentInfoDAO.class, mock(AgentInfoDAO.class), null);
+        bundleContext.registerService(BackendInfoDAO.class, mock(BackendInfoDAO.class), null);
         
         Activator activator = new Activator();
 
@@ -65,14 +69,14 @@ public class ActivatorTest {
         
         activator.start(bundleContext);
         
-        assertEquals(3, bundleContext.getServiceListeners().size());
+        assertEquals(5, bundleContext.getServiceListeners().size());
         
         assertCommandIsRegistered(bundleContext, "agent", AgentApplication.class);
 
         activator.stop(bundleContext);
 
         assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(3, bundleContext.getAllServices().size());
+        assertEquals(5, bundleContext.getAllServices().size());
     }
 }
 
