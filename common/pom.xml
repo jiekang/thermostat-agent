@@ -66,6 +66,7 @@
 
   <modules>
     <module>core</module>
+    <module>plugin</module>
     <module>portability</module>
     <module>test</module>
   </modules>
