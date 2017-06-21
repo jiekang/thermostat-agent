@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.overview.internal.common;
+package com.redhat.thermostat.common.plugin;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -50,12 +50,7 @@ import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-
 abstract public class PluginDAOBase<Tobj,Tdao> {
-
-    private static final Logger logger = LoggingUtils.getLogger(PluginDAOBase.class);
 
     private static final String CONTENT_TYPE = "application/json";
 
@@ -67,20 +62,22 @@ abstract public class PluginDAOBase<Tobj,Tdao> {
 
     protected abstract String toJsonString(Tobj obj) throws IOException;
     protected abstract PluginConfiguration getConfig();
+    protected abstract String getURL(final String basepath);
+    protected abstract Logger getLogger();
 
-    public void put(String systemid, final Tobj obj) {
+    public void put(final Tobj obj) {
         try {
             final String gatewayURL = getConfig().getGatewayURL();
             final String json = toJsonString(obj);
             final StringContentProvider provider =  new StringContentProvider(json);
-            final String url = gatewayURL + "/systems/" + systemid;
+            final String url = getURL(gatewayURL);
             final Request httpRequest = httpClient.newRequest(url);
             httpRequest.method(HttpMethod.POST);
             httpRequest.content(provider);
             httpRequest.header(HttpHeader.CONTENT_TYPE, CONTENT_TYPE);
             sendRequest(httpRequest);
         } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
-            logger.log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
+            getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
         }
     }
 

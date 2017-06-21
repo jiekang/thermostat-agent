@@ -93,8 +93,7 @@
               com.redhat.thermostat.common.config.experimental,
               com.redhat.thermostat.common.utils,
               com.redhat.thermostat.common.ssl,
-              com.redhat.thermostat.common.model,
-              com.redhat.thermostat.common.plugins,
+              com.redhat.thermostat.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.common.internal.test,

@@ -43,7 +43,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;

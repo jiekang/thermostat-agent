@@ -56,7 +56,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.HttpHelper;
 import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.JsonHelper;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;

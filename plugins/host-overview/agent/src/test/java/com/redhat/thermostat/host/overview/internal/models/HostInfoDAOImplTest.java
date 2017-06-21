@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.redhat.thermostat.common.plugin.SystemID;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -60,11 +61,11 @@ import org.junit.Test;
 import org.mockito.Matchers;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.host.overview.internal.models.HostInfoDAOImpl.ConfigurationCreator;
 import com.redhat.thermostat.host.overview.model.HostInfo;
 
-public class HostInfoDAOTest {
+public class HostInfoDAOImplTest {
 
     private static final String URL = "http://localhost:26000/api/systems/v0.0.3";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
@@ -117,11 +118,14 @@ public class HostInfoDAOTest {
     public void testPutHostInfo() throws Exception {
 
         HostInfoDAOImpl dao = new HostInfoDAOImpl(httpClient, jsonHelper, httpHelper, configCreator, cfiSource);
+        SystemID idservice = mock(SystemID.class);
+        when(idservice.getSystemID()).thenReturn(HOST_NAME);
+        dao.bindSystemID(idservice);
         dao.activate();
         
-        dao.put(info.getAgentId(), info);
+        dao.put(info);
         
-        verify(httpClient).newRequest(URL + "/systems/" + info.getAgentId());
+        verify(httpClient).newRequest(URL + "/systems/" + HOST_NAME);
         verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(eq(Arrays.asList(info)));
         verify(request).content(Matchers.any(ContentProvider.class));

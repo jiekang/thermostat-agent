@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.overview.internal;
+package com.redhat.thermostat.host.overview.model;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,7 +42,6 @@ import java.util.List;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.redhat.thermostat.host.overview.model.HostInfo;
 
 public class HostInfoTypeAdapter extends TypeAdapter<List<HostInfo>> {
     

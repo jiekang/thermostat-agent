@@ -34,41 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.plugins;
+package com.redhat.thermostat.host.overview.model;
 
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
-public class PluginConfiguration {
+import org.junit.Before;
+import org.junit.Test;
 
-    private static final String CONFIG_FILE = "gateway.properties";
-    private static final String URL_PROP = "gatewayURL";
-
-    private final ConfigurationInfoSource source;
-    private final String pluginId;
-
-    public PluginConfiguration(ConfigurationInfoSource source, final String pluginId) {
-        this.source = source;
-        this.pluginId = pluginId;
+public class HostInfoTypeAdapterTest {
+    
+    private HostInfoTypeAdapter adapter;
+    
+    @Before
+    public void setup() {
+        adapter = new HostInfoTypeAdapter();
     }
 
-    public String getGatewayURL() throws IOException {
-        Map<String, String> props = source.getConfiguration(pluginId, CONFIG_FILE);
-        String url = props.get(URL_PROP);
-        if (url == null) {
-            throw new IOException("No gateway URL found for " + pluginId + " in " + getConfigFilePath());
-        }
-        return url;
+    @Test
+    public void testWrite() throws Exception {
+        final String expected = "[{\"agentId\":\"myAgent1\",\"hostname\":\"myHost1\"," 
+                + "\"osName\":\"myOS1\",\"osKernel\":\"myKernel1\",\"cpuModel\":\"myCPU1\"," 
+                + "\"cpuCount\":4,\"totalMemory\":{\"$numberLong\":\"400000000\"}}," 
+                + "{\"agentId\":\"myAgent2\",\"hostname\":\"myHost2\",\"osName\":\"myOS2\"," 
+                + "\"osKernel\":\"myKernel2\",\"cpuModel\":\"myCPU2\",\"cpuCount\":2," 
+                + "\"totalMemory\":{\"$numberLong\":\"800000000\"}}]";
+        
+        HostInfo first = new HostInfo("myAgent1", "myHost1", "myOS1", "myKernel1", "myCPU1", 4, 400000000L);
+        HostInfo second = new HostInfo("myAgent2", "myHost2", "myOS2", "myKernel2", "myCPU2", 2, 800000000L);
+        List<HostInfo> infos = Arrays.asList(first, second);
+        
+        String json = adapter.toJson(infos);
+        assertEquals(expected, json);
     }
 
-    private String getConfigFilePath() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("$THERMOSTAT_HOME").append(File.separator).append("etc").append(File.separator)
-                .append("plugins.d").append(File.separator).append(pluginId).append(File.separator)
-                .append(CONFIG_FILE);
-        return builder.toString();
-    }
 }

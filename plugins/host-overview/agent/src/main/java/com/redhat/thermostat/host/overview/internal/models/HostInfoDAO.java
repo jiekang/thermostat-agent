@@ -42,7 +42,7 @@ import com.redhat.thermostat.host.overview.model.HostInfo;
 @Service
 public interface HostInfoDAO {
 
-    void put(String systemid, HostInfo info);
+    void put(HostInfo info);
 
 }
 

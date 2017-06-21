@@ -63,7 +63,7 @@ import com.redhat.thermostat.commands.agent.internal.CommandsBackend.Credentials
 import com.redhat.thermostat.commands.agent.internal.CommandsBackend.WsClientCreator;
 import com.redhat.thermostat.commands.agent.internal.socket.CmdChannelAgentSocket;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 

@@ -61,7 +61,7 @@ import com.redhat.thermostat.commands.agent.receiver.ReceiverRegistry;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.config.FileStorageCredentials;

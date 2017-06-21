@@ -62,7 +62,6 @@
             <Export-Package>com.redhat.thermostat.host.overview.model</Export-Package>
             <Private-Package>
               com.redhat.thermostat.host.overview.internal,
-              com.redhat.thermostat.host.overview.internal.common,
               com.redhat.thermostat.host.overview.internal.models
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
@@ -147,6 +146,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

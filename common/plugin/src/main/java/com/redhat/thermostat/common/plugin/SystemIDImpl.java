@@ -60,7 +60,8 @@ public class SystemIDImpl implements SystemID {
             return System.getenv("COMPUTERNAME");
         }
         else {
-            return System.getenv("HOSTNAME");
+            final String env = System.getenv("HOSTNAME");
+            return env != null ? env : "localhost";
         }
     }
 

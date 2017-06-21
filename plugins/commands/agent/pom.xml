@@ -118,6 +118,11 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-plugin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-core</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -139,6 +144,6 @@
       <artifactId>websocket-client</artifactId>
       <version>${jetty.version}</version>
     </dependency>
-    
+
   </dependencies>
 </project>

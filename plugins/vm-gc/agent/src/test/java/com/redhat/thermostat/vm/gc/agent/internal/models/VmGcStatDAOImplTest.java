@@ -55,7 +55,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAOImpl.ConfigurationCreator;
 import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAOImpl.JsonHelper;
 import com.redhat.thermostat.vm.gc.agent.model.VmGcStat;
@@ -65,7 +65,7 @@ public class VmGcStatDAOImplTest {
     private static final String AGENT_ID = "some-agent";
     private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
     private static final String GATEWAY_URL = "http://example.com/jvm-gc";
-    
+
     private VmGcStat stat;
     private JsonHelper jsonHelper;
     private VmGcStatDAOImpl dao;

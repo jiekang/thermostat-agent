@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugins.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 import org.eclipse.jetty.client.HttpClient;
