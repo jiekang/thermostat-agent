@@ -61,16 +61,19 @@
         <include>com.redhat.thermostat:thermostat-agent-ipc-winpipes-server</include>
         <include>com.redhat.thermostat:thermostat-agent-ipc-winpipes-client</include>
         <include>com.redhat.thermostat:thermostat-common-core</include>
-        <include>com.redhat.thermostat:thermostat-common-command</include>
         <include>com.redhat.thermostat:thermostat-common-portability</include>
         <include>com.redhat.thermostat:thermostat-process-handler</include>
         <include>com.redhat.thermostat:thermostat-storage-core</include>
         <include>com.redhat.thermostat:thermostat-system-backend</include>
         <include>org.osgi:org.osgi.compendium</include>
         <include>org.apache:org.apache.felix.scr</include>
-        <include>io.netty:netty-handler</include>
         <include>commons-codec:commons-codec</include>
         <include>org.apache.httpcomponents:httpclient-osgi</include>
+        <include>org.eclipse.jetty:jetty-client</include>
+        <include>org.eclipse.jetty:jetty-http</include>
+        <include>org.eclipse.jetty:jetty-io</include>
+        <include>org.eclipse.jetty:jetty-util</include>
+        <include>javax.servlet:javax.servlet-api</include>
       </includes>
       <excludes>
         <exclude>org.osgi:org.osgi.core</exclude>
