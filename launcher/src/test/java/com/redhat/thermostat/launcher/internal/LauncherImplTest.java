@@ -76,10 +76,8 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 import com.redhat.thermostat.common.internal.test.TestTimerFactory;
@@ -88,15 +86,12 @@ import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class LauncherImplTest {
 
-    private static final String name1 = "test1";
-    private static final String name2 = "test2";
-    private static final String name3 = "test3";
-    private static final String name4 = "test4";
+    private static final String name1 = "agent";
+
     private static SecurityManager secMan;
     private CommandInfo info1;
     private File systemPluginRoot;
@@ -143,7 +138,6 @@ public class LauncherImplTest {
     private Version version;
     private CommandInfoSource infos;
     private CommandGroupMetadataSource commandGroupMetadataSource;
-    private ActionNotifier<ApplicationState> notifier;
 
     private LauncherImpl launcher;
 
@@ -157,7 +151,7 @@ public class LauncherImplTest {
         TestCommand cmd1 = new TestCommand(new TestCmd1());
         info1 = mock(CommandInfo.class);
         when(info1.getName()).thenReturn(name1);
-        when(info1.getUsage()).thenReturn(name1 + " <--arg1 <arg>> [--arg2 <arg>]");
+        when(info1.getUsage()).thenReturn(" <--arg1 <arg>> [--arg2 <arg>]");
         Options options1 = new Options();
         Option opt1 = new Option(null, "arg1", true, null);
         opt1.setRequired(true);
@@ -172,43 +166,6 @@ public class LauncherImplTest {
         when(info1.getDescription()).thenReturn("description 1");
         when(info1.getOptions()).thenReturn(options1);
 
-        TestCommand cmd2 = new TestCommand(new TestCmd2());
-        CommandInfo info2 = mock(CommandInfo.class);
-        when(info2.getName()).thenReturn(name2);
-        Options options2 = new Options();
-        Option opt3 = new Option(null, "arg3", true, null);
-        options2.addOption(opt3);
-        Option opt4 = new Option(null, "arg4", true, null);
-        options2.addOption(opt4);
-        when(info2.getSummary()).thenReturn("description 2");
-        when(info2.getOptions()).thenReturn(options2);
-
-        TestCommand cmd3 = new TestCommand();
-        CommandInfo info3 = mock(CommandInfo.class);
-        when(info3.getName()).thenReturn(name3);
-        cmd3.setStorageRequired(true);
-        when(info3.getSummary()).thenReturn("description 3");
-        when(info3.getOptions()).thenReturn(new Options());
-
-        // This TestCommand object doesn't need to connect to storage,
-        // and it is used to test commands without any required option
-        TestCommand cmd4 = new TestCommand();
-        CommandInfo info4 = mock(CommandInfo.class);
-        when(info4.getName()).thenReturn(name4);
-        cmd4.setStorageRequired(false);
-        when(info4.getSummary()).thenReturn("description 4");
-        when(info4.getOptions()).thenReturn(new Options());
-        
-        AbstractStateNotifyingCommand basicCmd = mock(AbstractStateNotifyingCommand.class);
-        CommandInfo basicInfo = mock(CommandInfo.class);
-        when(basicInfo.getName()).thenReturn("basic");
-        when(basicInfo.getSummary()).thenReturn("nothing that means anything");
-        when(basicCmd.isStorageRequired()).thenReturn(false);
-        Options options = new Options();
-        when(basicInfo.getOptions()).thenReturn(options);
-        notifier = mock(ActionNotifier.class);
-        when(basicCmd.getNotifier()).thenReturn(notifier);
-
         CommandInfo helpCommandInfo = mock(CommandInfo.class);
         when(helpCommandInfo.getName()).thenReturn("help");
         when(helpCommandInfo.getSummary()).thenReturn("print help information");
@@ -221,28 +178,15 @@ public class LauncherImplTest {
         CommandRegistry reg = ctxFactory.getCommandRegistry();
         reg.registerCommand("help", helpCommand);
         reg.registerCommand(name1, cmd1);
-        reg.registerCommand(name2, cmd2);
-        reg.registerCommand(name3, cmd3);
-        reg.registerCommand(name4, cmd4);
-        reg.registerCommand("basic", basicCmd);
 
         infos = mock(CommandInfoSource.class);
         bundleContext.registerService(CommandInfoSource.class, infos, null);
         when(infos.getCommandInfo(name1)).thenReturn(info1);
-        when(infos.getCommandInfo(name2)).thenReturn(info2);
-        when(infos.getCommandInfo(name3)).thenReturn(info3);
-        when(infos.getCommandInfo(name4)).thenReturn(info4);
-        when(infos.getCommandInfo("basic")).thenReturn(basicInfo);
         when(infos.getCommandInfo("help")).thenReturn(helpCommandInfo);
-        when(infos.getCommandInfo("setup")).thenReturn(mock(CommandInfo.class));
 
         Collection<CommandInfo> infoList = new ArrayList<CommandInfo>();
         infoList.add(helpCommandInfo);
-        infoList.add(basicInfo);
         infoList.add(info1);
-        infoList.add(info2);
-        infoList.add(info3);
-        infoList.add(info4);
         
         when(infos.getCommandInfos()).thenReturn(infoList);
 
@@ -305,24 +249,17 @@ public class LauncherImplTest {
     @Test
     public void testMain() {
         runAndVerifyCommand(new String[] {name1, "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
-
-        ctxFactory.reset();
-
-        runAndVerifyCommand(new String[] {"test2", "--arg3", "Hello", "--arg4", "World"}, "World: Hello");
     }
 
     @Test
     public void testMainNoArgs() {
-        String expected = "list of global options:\n\n"
-                + HelpCommandTest.GLOBAL_OPTIONS
-                + "\n"
-                + "list of commands:\n\n"
-                + " help          print help information\n"
-                + " basic         nothing that means anything\n"
-                + " test1         description 1\n"
-                + " test2         description 2\n"
-                + " test3         description 3\n"
-                + " test4         description 4\n";
+        String expected = "Missing required option: --arg1\n" +
+                          "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n" +
+                          "                  description 1\n" +
+                          "     --arg1 <arg>\n" +
+                          "     --arg2 <arg>\n" +
+                          "     --help              show usage of command\n" +
+                          "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[0], expected);
     }
 
@@ -337,14 +274,17 @@ public class LauncherImplTest {
     public void testMainBadCommand1() {
         when(infos.getCommandInfo("--help")).thenThrow(new CommandInfoNotFoundException("--help"));
 
-        String expected = "unknown command '--help'\n"
-            + "list of commands:\n\n"
-            + " help          print help information\n"
-            + " basic         nothing that means anything\n"
-            + " test1         description 1\n"
-            + " test2         description 2\n"
-            + " test3         description 3\n"
-            + " test4         description 4\n";
+        String expected = "null\n" +
+                "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n" +
+                "                  description 1\n" +
+                "     --arg1 <arg>\n" +
+                "     --arg2 <arg>\n" +
+                "     --help              show usage of command\n" +
+                "  -l,--logLevel <arg>\n" +
+                " --version                display the version of the current thermostat installation\n" +
+                " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n" +
+                " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n" +
+                " --boot-delegation        boot delegation string passed on to the OSGi framework\n\n";
         runAndVerifyCommand(new String[] {"--help"}, expected);
     }
 
@@ -352,14 +292,13 @@ public class LauncherImplTest {
     public void testMainBadCommand2() {
         when(infos.getCommandInfo("-help")).thenThrow(new CommandInfoNotFoundException("-help"));
 
-        String expected = "unknown command '-help'\n"
-            + "list of commands:\n\n"
-            + " help          print help information\n"
-            + " basic         nothing that means anything\n"
-            + " test1         description 1\n"
-            + " test2         description 2\n"
-            + " test3         description 3\n"
-            + " test4         description 4\n";
+        String expected = "Could not parse options: Unrecognized option: -help\n" +
+                "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n" +
+                "                  description 1\n" +
+                "     --arg1 <arg>\n" +
+                "     --arg2 <arg>\n" +
+                "     --help              show usage of command\n" +
+                "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"-help"}, expected);
     }
 
@@ -367,14 +306,13 @@ public class LauncherImplTest {
     public void testMainBadCommand3() {
         when(infos.getCommandInfo("foobarbaz")).thenThrow(new CommandInfoNotFoundException("foobarbaz"));
 
-        String expected = "unknown command 'foobarbaz'\n"
-            + "list of commands:\n\n"
-            + " help          print help information\n"
-            + " basic         nothing that means anything\n"
-            + " test1         description 1\n"
-            + " test2         description 2\n"
-            + " test3         description 3\n"
-            + " test4         description 4\n";
+        String expected = "Missing required option: --arg1\n" +
+                "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n" +
+                "                  description 1\n" +
+                "     --arg1 <arg>\n" +
+                "     --arg2 <arg>\n" +
+                "     --help              show usage of command\n" +
+                "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"foobarbaz"}, expected);
     }
 
@@ -382,14 +320,13 @@ public class LauncherImplTest {
     public void testMainBadCommand4() {
         when(infos.getCommandInfo("foo")).thenThrow(new CommandInfoNotFoundException("foo"));
 
-        String expected = "unknown command 'foo'\n"
-            + "list of commands:\n\n"
-            + " help          print help information\n"
-            + " basic         nothing that means anything\n"
-            + " test1         description 1\n"
-            + " test2         description 2\n"
-            + " test3         description 3\n"
-            + " test4         description 4\n";
+        String expected = "Could not parse options: Unrecognized option: --bar\n" +
+                "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n" +
+                "                  description 1\n" +
+                "     --arg1 <arg>\n" +
+                "     --arg2 <arg>\n" +
+                "     --help              show usage of command\n" +
+                "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected);
     }
 
@@ -424,10 +361,8 @@ public class LauncherImplTest {
 
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "Missing required option: -o\n" +
-                "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n" +
+                "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n" +
                 "                  description 1\n" +
-                "\n" +
-                "thermostat test1\n" +
                 "     --arg1 <arg>\n" +
                 "     --arg2 <arg>\n" +
                 "     --help              show usage of command\n" +
@@ -554,85 +489,37 @@ public class LauncherImplTest {
     @Test
     public void testBadOption() {
         String expected = "Could not parse options: Unrecognized option: --argNotAccepted\n"
-                + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
-                + "                  description 1\n"
-                + "\n"
-                + "thermostat test1\n"
-                + "     --arg1 <arg>\n"
-                + "     --arg2 <arg>\n"
-                + "     --help              show usage of command\n"
-                + "  -l,--logLevel <arg>\n";
-        runAndVerifyCommand(new String[] {"test1", "--arg1", "arg1value", "--argNotAccepted"}, expected);
+                        + "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n"
+                        + "                  description 1\n"
+                        + "     --arg1 <arg>\n"
+                        + "     --arg2 <arg>\n"
+                        + "     --help              show usage of command\n"
+                        + "  -l,--logLevel <arg>\n";
+        runAndVerifyCommand(new String[] {"agent", "--arg1", "arg1value", "--argNotAccepted"}, expected);
     }
 
     @Test
     public void testMissingRequiredOption() {
         String expected = "Missing required option: --arg1\n"
-                + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
+                + "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n"
                 + "                  description 1\n"
-                + "\n"
-                + "thermostat test1\n"
                 + "     --arg1 <arg>\n"
                 + "     --arg2 <arg>\n"
                 + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"test1"}, expected);
     }
-    
-    @Test
-    public void testMissingNotRequiredOption() {
-        String expected = "";
-        runAndVerifyCommand(new String[] {"test4"}, expected);
-    }
 
     @Test
     public void testOptionMissingRequiredArgument() {
         String expected = "Could not parse options: Missing argument for option: arg1\n"
-                + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
+                + "usage: thermostat  <--arg1 <arg>> [--arg2 <arg>]\n"
                 + "                  description 1\n"
-                + "\n"
-                + "thermostat test1\n"
                 + "     --arg1 <arg>\n"
                 + "     --arg2 <arg>\n"
                 + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"test1", "--arg1"}, expected);
-    }
-
-    @Test
-    public void testCommandInfoNotFound() throws CommandInfoNotFoundException, BundleException, IOException {
-        when(infos.getCommandInfo("foo")).thenThrow(new CommandInfoNotFoundException("foo"));
-
-        String expected = "unknown command 'foo'\n"
-                + "list of commands:\n\n"
-                + " help          print help information\n"
-                + " basic         nothing that means anything\n"
-                + " test1         description 1\n"
-                + " test2         description 2\n"
-                + " test3         description 3\n"
-                + " test4         description 4\n";
-            runAndVerifyCommand(new String[] {"foo"}, expected);
-    }
-
-    @Test
-    public void testMainExceptionInCommand() {
-        TestCommand errorCmd = new TestCommand(new TestCommand.Handle() {
-
-            @Override
-            public void run(CommandContext ctx) throws CommandException {
-                throw new CommandException(new LocalizedString("test error"));
-            }
-
-        });
-        ctxFactory.getCommandRegistry().registerCommand("error", errorCmd);
-        CommandInfo cmdInfo = mock(CommandInfo.class);
-        when(cmdInfo.getName()).thenReturn("error");
-        when(cmdInfo.getOptions()).thenReturn(new Options());
-        when(infos.getCommandInfo("error")).thenReturn(cmdInfo);
-
-        wrappedRun(launcher, new String[] { "error" });
-        assertEquals("test error\n", ctxFactory.getError());
-
     }
 
     private void runAndVerifyCommand(String[] args, String expected) {
@@ -702,18 +589,6 @@ public class LauncherImplTest {
             handler = null;
             logger.setLevel(Level.INFO);
         }
-    }
-
-    @Test
-    public void verifyListenersAdded() {
-        @SuppressWarnings("unchecked")
-        ActionListener<ApplicationState> listener = mock(ActionListener.class);
-        Collection<ActionListener<ApplicationState>> listeners = new ArrayList<>();
-        listeners.add(listener);
-        String[] args = new String[] {"basic"};
-
-        wrappedRun(launcher, args, listeners);
-        verify(notifier).addActionListener(listener);
     }
 
     @Test

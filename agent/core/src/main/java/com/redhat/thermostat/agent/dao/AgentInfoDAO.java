@@ -34,54 +34,61 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.agent.dao;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.model.AgentInformation;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
-
-public class Activator implements BundleActivator {
+/**
+ * Access information about agents that agents publish to storage.
+ */
+@Service
+public interface AgentInfoDAO {
     
-    private static final String WRITER_UUID = UUID.randomUUID().toString();
-    
-    List<ServiceRegistration<?>> regs;
-    
-    public Activator() {
-        regs = new ArrayList<>();
-    }
+    /**
+     * Get information about all known agents.
+     *
+     * @return a {@link List} of {@link AgentInformation} for all agents
+     * who have published their information. Will be empty if there is no
+     * information.
+     */
+    List<AgentInformation> getAllAgentInformation();
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        // WriterID has to be registered unconditionally (at least not as part
-        // of the Storage.class tracker, since that is only registered once
-        // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
+    /**
+     * Get information about a specific agent.
+     *
+     * @return a {@link AgentInformation} describing information about the agent
+     * indicated by {@code agentId}. {@code null} if no information about the
+     * agent could be located.
+     */
 
-        NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();
-        reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
-        regs.add(reg);
-    }
+    AgentInformation getAgentInformation(AgentId agentId);
 
-    private void unregisterServices() {
-        for (ServiceRegistration<?> reg : regs) {
-            reg.unregister();
-        }
-        regs.clear();
-    }
+    /**
+     *
+     * @return A set of AgentIds, which may be empty.
+     */
+    Set<AgentId> getAgentIds();
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        unregisterServices();
-    }
+    /**
+     * Publish information about agent into the storage.
+     */
+    void addAgentInformation(AgentInformation agentInfo);
+
+    /**
+     * Update information about an existing agent. No changes will be performed
+     * if there is no matching agent.
+     */
+    void updateAgentInformation(AgentInformation agentInfo);
+
+    /**
+     * Remove information about an agent that was published to storage.
+     */
+    void removeAgentInformation(AgentInformation agentInfo);
+
 }
 

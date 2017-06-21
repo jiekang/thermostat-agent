@@ -34,17 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
 
+import com.redhat.thermostat.agent.internal.AgentInfoDAOImpl.AgentInformationUpdate;
+import com.redhat.thermostat.agent.internal.AgentInformationTypeAdapter.AgentInformationUpdateTypeAdapter;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.AgentInformationUpdate;
-import com.redhat.thermostat.storage.internal.dao.AgentInformationTypeAdapter.AgentInformationUpdateTypeAdapter;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
 public class AgentInformationTypeAdapterTest {

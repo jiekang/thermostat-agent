@@ -600,7 +600,6 @@ public class PluginConfigurationParser {
         }
 
         List<Option> allKnownOptions = new ArrayList<Option>();
-        allKnownOptions.addAll(CommonOptions.getDbOptions());
         allKnownOptions.add(CommonOptions.getLogOption());
 
         for (Option knownOption : allKnownOptions) {

@@ -40,6 +40,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -70,7 +72,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        
+
         // Track common paths separately and register storage credentials quickly
         // We need to do this since otherwise no storage credentials will be
         // available by the time they're used in DbService
@@ -81,9 +83,7 @@ public class Activator implements BundleActivator {
                 CommonPaths paths = context.getService(ref);
                 try {
                     AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
-//                    VmBlacklistImpl blacklist = new VmBlacklistImpl();
-//                    blacklist.addVmFilter(new AgentProxyFilter());
-//                    context.registerService(VmBlacklist.class, blacklist, null);
+
                 } catch (InvalidConfigurationException e) {
                     logger.log(Level.SEVERE, "Failed to start agent services", e);
                 }
@@ -107,6 +107,18 @@ public class Activator implements BundleActivator {
             
             @Override
             public void dependenciesAvailable(DependencyProvider services) {
+
+                try {
+                    AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl();
+                    context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
+
+                    BackendInfoDAO backendInfoDAO = new BackendInfoDAOImpl();
+                    context.registerService(BackendInfoDAO.class, backendInfoDAO, null);
+
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
                 AgentIPCService ipcService = services.get(AgentIPCService.class);
                 CommonPaths paths = services.get(CommonPaths.class);
                 UserNameUtil util = services.get(UserNameUtil.class);

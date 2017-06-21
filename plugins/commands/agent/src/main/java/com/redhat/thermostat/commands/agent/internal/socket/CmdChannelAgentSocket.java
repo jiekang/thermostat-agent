@@ -67,20 +67,26 @@ public class CmdChannelAgentSocket {
 
     private static final Logger logger = LoggingUtils
             .getLogger(CmdChannelAgentSocket.class);
-    private final Gson gson;
+    private final GsonFacade gson;
     private final CountDownLatch connectLatch;
     private final OnMessageCallBack onMessage;
     private final String agentId;
     private Session session;
 
     public CmdChannelAgentSocket(OnMessageCallBack onMessage, CountDownLatch connect, String agentId) {
+        this(onMessage, connect, agentId,
+                new GsonFacadeImpl(new GsonBuilder()
+                .registerTypeAdapterFactory(new MessageTypeAdapterFactory())
+                .serializeNulls()
+                .create()));
+    }
+    
+    // for testing purposes
+    CmdChannelAgentSocket(OnMessageCallBack onMessage, CountDownLatch connect, String agentId, GsonFacade gson) {
         this.onMessage = onMessage;
         this.connectLatch = connect;
         this.agentId = agentId;
-        this.gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new MessageTypeAdapterFactory())
-                .serializeNulls()
-                .create();
+        this.gson = gson;
     }
 
     @OnWebSocketFrame
@@ -144,7 +150,7 @@ public class CmdChannelAgentSocket {
     @OnWebSocketMessage
     public void onMessage(final Session session, final String msg) {
         final Message message = gson.fromJson(msg, Message.class);
-        onMessage.run(session, message, gson);
+        onMessage.run(session, message, gson.toGson());
     }
 
     public void closeSession() {

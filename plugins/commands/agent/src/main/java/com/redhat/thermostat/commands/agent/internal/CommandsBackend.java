@@ -51,7 +51,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.backend.Backend;
@@ -81,8 +80,11 @@ public class CommandsBackend extends BaseBackend {
     private static final String ENDPOINT_FORMAT = "%s/systems/%s/agents/%s";
     private static final String UNKNOWN_CREDS = "UNKNOWN:UNKNOWN";
 
-    private CmdChannelAgentSocket socket;
-    private WebSocketClient wsClient;
+    private final WsClientCreator wsClientCreator;
+    private final CredentialsCreator credsCreator;
+    private final ConfigCreator configCreator;
+    private final CountDownLatch socketConnectLatch;
+    private WebSocketClientFacade wsClient;
     private boolean isActive;
     private StorageCredentials creds;
     private PluginConfiguration config;
@@ -98,7 +100,19 @@ public class CommandsBackend extends BaseBackend {
     private ConfigurationInfoSource commandInfo;
 
     public CommandsBackend() {
+        this(new WsClientCreator(), new CredentialsCreator(), new ConfigCreator(), new CountDownLatch(1));
+    }
+    
+    // For testing purposes
+    CommandsBackend(WsClientCreator creator,
+                    CredentialsCreator credsCreator,
+                    ConfigCreator configCreator,
+                    CountDownLatch socketConnectLatch) {
         super(NAME, DESCRIPTION, VENDOR);
+        this.wsClientCreator = creator;
+        this.credsCreator = credsCreator;
+        this.configCreator = configCreator;
+        this.socketConnectLatch = socketConnectLatch;
     }
 
     @Override
@@ -116,11 +130,8 @@ public class CommandsBackend extends BaseBackend {
             // nothing to do
             return true;
         }
-        if (socket != null) {
-            socket.closeSession();
-        }
         if (wsClient != null) {
-            wsClient.destroy();
+            wsClient.stop();
         }
         isActive = false;
         return true;
@@ -128,7 +139,7 @@ public class CommandsBackend extends BaseBackend {
 
     @Override
     public boolean isActive() {
-        return true;
+        return isActive;
     }
 
     @Override
@@ -140,10 +151,10 @@ public class CommandsBackend extends BaseBackend {
     protected void componentActivated(BundleContext ctx) {
         Version version = new Version(ctx.getBundle());
         super.setVersion(version.getVersionInfo());
-        creds = new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
-        config = new PluginConfiguration(commandInfo, PLUGIN_ID);
+        creds = credsCreator.create(paths);
+        config = configCreator.createConfig(commandInfo);
         try {
-            wsClient = new WebSocketClient();
+            wsClient = wsClientCreator.createClient();
             wsClient.start();
         } catch (Exception e) {
             logger.log(Level.WARNING,
@@ -178,15 +189,14 @@ public class CommandsBackend extends BaseBackend {
             String agent = "testAgent";
             URI agentUri = new URI(String.format(ENDPOINT_FORMAT, microserviceURL, "ignoreMe", agent));
             AgentSocketOnMessageCallback onMsgCallback = new AgentSocketOnMessageCallback(receiverReg);
-            CountDownLatch connected = new CountDownLatch(1);
             CmdChannelAgentSocket agentSocket = new CmdChannelAgentSocket(
-                    onMsgCallback, connected, agent);
+                    onMsgCallback, socketConnectLatch, agent);
             ClientUpgradeRequest agentRequest = new ClientUpgradeRequest();
             agentRequest.setHeader(HttpHeader.AUTHORIZATION.asString(),
                     getBasicAuthHeaderValue());
             wsClient.connect(agentSocket, agentUri, agentRequest);
             logger.fine("WebSocket connect initiated.");
-            expired = !connected.await(10, TimeUnit.SECONDS);
+            expired = !socketConnectLatch.await(10, TimeUnit.SECONDS);
         } catch (IOException | URISyntaxException | InterruptedException e) {
             logger.warning("Failed to connect to endpoint. Reason: " + e.getMessage());
             logger.log(Level.FINE, "Failed to connect to endpoint", e);
@@ -201,7 +211,7 @@ public class CommandsBackend extends BaseBackend {
         }
     }
 
-    private String getBasicAuthHeaderValue() {
+    String getBasicAuthHeaderValue() {
         String username = creds.getUsername();
         char[] pwdChar = creds.getPassword();
         String userpassword;
@@ -217,5 +227,27 @@ public class CommandsBackend extends BaseBackend {
         String encodedAuthorization = new sun.misc.BASE64Encoder()
                 .encode(userpassword.getBytes());
         return "Basic " + encodedAuthorization;
+    }
+    
+    protected void bindPaths(CommonPaths paths) {
+        this.paths = paths;
+    }
+    
+    static class WsClientCreator {
+        WebSocketClientFacade createClient() {
+            return new WebSocketClientFacadeImpl();
+        }
+    }
+    
+    static class CredentialsCreator {
+        StorageCredentials create(CommonPaths paths) {
+            return new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
+        }
+    }
+    
+    static class ConfigCreator {
+        PluginConfiguration createConfig(ConfigurationInfoSource source) {
+            return new PluginConfiguration(source, PLUGIN_ID);
+        }
     }
 }

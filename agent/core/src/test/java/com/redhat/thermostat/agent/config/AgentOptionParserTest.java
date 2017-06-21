@@ -59,7 +59,6 @@ public class AgentOptionParserTest {
 
         Properties agentProperties = new Properties();
         agentProperties.setProperty("SAVE_ON_EXIT", "true");
-        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
 
         tmpFile = new File(TestUtils.setupAgentConfigs(agentProperties));
     }
@@ -69,34 +68,17 @@ public class AgentOptionParserTest {
         tmpFile.delete();
     }
     
-    @Test
-    public void testConfigs1() throws IOException, InvalidConfigurationException {
-        
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("dbUrl", "testURL");
-        
-        AgentStartupConfiguration configs = new AgentStartupConfiguration();
-        configs.setDatabaseURL("Not the right URL");
-        configs.setPurge(true);
-        AgentOptionParser parser = new AgentOptionParser(configs, args);
-        parser.parse();
-        
-        Assert.assertEquals("testURL", configs.getDBConnectionString());
-        Assert.assertTrue(configs.purge());
-    }
-    
+
     @Test
     public void testConfigs2() throws IOException, InvalidConfigurationException {
         
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("dbUrl", "testURL2");
         args.addArgument("saveOnExit", "--saveOnExit");
         
         AgentStartupConfiguration configs = new AgentStartupConfiguration();
         AgentOptionParser parser = new AgentOptionParser(configs, args);
         parser.parse();
         
-        Assert.assertEquals("testURL2", configs.getDBConnectionString());
         Assert.assertFalse(configs.purge());
     }
 }

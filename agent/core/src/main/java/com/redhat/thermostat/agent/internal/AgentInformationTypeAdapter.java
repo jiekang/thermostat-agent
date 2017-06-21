@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.agent.internal;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,7 +42,7 @@ import java.util.List;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl.AgentInformationUpdate;
+import com.redhat.thermostat.agent.internal.AgentInfoDAOImpl.AgentInformationUpdate;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
 public class AgentInformationTypeAdapter extends TypeAdapter<List<AgentInformation>> {

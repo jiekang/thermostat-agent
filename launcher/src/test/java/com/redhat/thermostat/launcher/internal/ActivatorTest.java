@@ -45,7 +45,6 @@ import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -172,16 +171,7 @@ public class ActivatorTest {
                 eq(launcherDeps), actionCaptor.capture()).thenReturn(launcherDepsTracker);
 
         MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
-        Class<?>[] vmIdCompleterDeps = new Class[] {
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(vmIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] agentIdCompleterDeps = new Class[] {
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(agentIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
+
         Class<?>[] helpCommandDeps = new Class[] {
                 CommandInfoSource.class,
                 CommandGroupMetadataSource.class

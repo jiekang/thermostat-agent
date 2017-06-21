@@ -34,54 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.commands.agent.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.io.IOException;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
+import com.redhat.thermostat.commands.agent.internal.socket.CmdChannelAgentSocket;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class Activator implements BundleActivator {
+class WebSocketClientFacadeImpl implements WebSocketClientFacade {
     
-    private static final String WRITER_UUID = UUID.randomUUID().toString();
+    private static final Logger logger = LoggingUtils.getLogger(WebSocketClientFacadeImpl.class);
+    private final WebSocketClient client;
+    private CmdChannelAgentSocket socket;
     
-    List<ServiceRegistration<?>> regs;
-    
-    public Activator() {
-        regs = new ArrayList<>();
+    WebSocketClientFacadeImpl() {
+        this.client = new WebSocketClient();
     }
 
     @Override
-    public void start(final BundleContext context) throws Exception {
-        // WriterID has to be registered unconditionally (at least not as part
-        // of the Storage.class tracker, since that is only registered once
-        // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-
-        NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();
-        reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
-        regs.add(reg);
-    }
-
-    private void unregisterServices() {
-        for (ServiceRegistration<?> reg : regs) {
-            reg.unregister();
+    public void start() {
+        try {
+            client.start();
+        } catch (Exception e) {
+            logger.log(Level.WARNING,
+                    "Failed to start websocket client. Reason: "
+                            + e.getMessage());
         }
-        regs.clear();
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        unregisterServices();
+    public void connect(CmdChannelAgentSocket socket, URI connectURI, ClientUpgradeRequest request) throws IOException {
+        this.socket = socket;
+        client.connect(socket, connectURI, request);
     }
-}
 
+    @Override
+    public void stop() {
+        if (socket != null) {
+            socket.closeSession();
+        }
+        client.destroy();
+    }
+
+}

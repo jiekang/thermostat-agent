@@ -34,49 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.internal;
+package com.redhat.thermostat.commands.agent.receiver;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 
-import com.redhat.thermostat.agent.dao.AgentInfoDAO;
-import com.redhat.thermostat.agent.dao.BackendInfoDAO;
-import org.junit.Test;
+import java.util.Collection;
 
-import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.core.WriterID;
+import org.junit.Test;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.testutils.StubBundleContext;
 
-public class ActivatorTest {
+public class ReceiverRegistryTest {
+    
+    private static final String FILTER_FORMAT = "(&(objectclass=*)(servicename=%s))";
 
     @Test
-    public void verifyActivatorRegistersCommands() throws Exception {        
-        StubBundleContext bundleContext = new StubBundleContext();
-
-        ExitStatus exitStatus = mock(ExitStatus.class);
-        WriterID writerID = mock(WriterID.class);
-        bundleContext.registerService(WriterID.class, writerID, null);
-        bundleContext.registerService(ExitStatus.class, exitStatus, null);
-        bundleContext.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
-        bundleContext.registerService(AgentInfoDAO.class, mock(AgentInfoDAO.class), null);
-        bundleContext.registerService(BackendInfoDAO.class, mock(BackendInfoDAO.class), null);
+    public void testRegister() throws InvalidSyntaxException {
+        StubBundleContext context = new StubBundleContext();
+        ReceiverRegistry reg = new ReceiverRegistry(context);
+        RequestReceiver receiver = mock(RequestReceiver.class);
         
-        Activator activator = new Activator();
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
+        reg.registerReceiver(receiver);
         
-        activator.start(bundleContext);
+        context.isServiceRegistered(RequestReceiver.class.getName(), receiver.getClass());
+        Collection<?> services = context.getServiceReferences(RequestReceiver.class, String.format(FILTER_FORMAT, receiver.getClass().getName()));
+        assertEquals(1, services.size());
+        @SuppressWarnings("unchecked")
+        ServiceReference<RequestReceiver> sr = (ServiceReference<RequestReceiver>)services.iterator().next();
+        String serviceName = (String)sr.getProperty("servicename");
+        assertEquals(receiver.getClass().getName(), serviceName);
+    }
+    
+    @Test
+    public void testGetReceiver() {
+        StubBundleContext context = new StubBundleContext();
+        ReceiverRegistry reg = new ReceiverRegistry(context);
+        assertNull(reg.getReceiver(String.class.getName()));
         
-        assertEquals(5, bundleContext.getServiceListeners().size());
-        
-        assertCommandIsRegistered(bundleContext, "agent", AgentApplication.class);
-
-        activator.stop(bundleContext);
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(5, bundleContext.getAllServices().size());
+        RequestReceiver receiver = mock(RequestReceiver.class);
+        reg.registerReceiver(receiver);
+        RequestReceiver actual = reg.getReceiver(receiver.getClass().getName());
+        assertSame(receiver, actual);
     }
 }
-

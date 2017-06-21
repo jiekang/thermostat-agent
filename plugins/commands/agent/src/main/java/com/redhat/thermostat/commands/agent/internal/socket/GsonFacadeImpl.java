@@ -34,54 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.commands.agent.internal.socket;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import com.google.gson.Gson;
+import com.redhat.thermostat.commands.model.Message;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+class GsonFacadeImpl implements GsonFacade {
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
-
-public class Activator implements BundleActivator {
+    private final Gson gson;
     
-    private static final String WRITER_UUID = UUID.randomUUID().toString();
+    GsonFacadeImpl(Gson gson) {
+        this.gson = gson;
+    }
     
-    List<ServiceRegistration<?>> regs;
-    
-    public Activator() {
-        regs = new ArrayList<>();
+    @Override
+    public Message fromJson(String json, Class<Message> clazz) {
+        return gson.fromJson(json, clazz);
     }
 
     @Override
-    public void start(final BundleContext context) throws Exception {
-        // WriterID has to be registered unconditionally (at least not as part
-        // of the Storage.class tracker, since that is only registered once
-        // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-
-        NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl();
-        reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
-        regs.add(reg);
+    public Gson toGson() {
+        return gson;
     }
 
-    private void unregisterServices() {
-        for (ServiceRegistration<?> reg : regs) {
-            reg.unregister();
-        }
-        regs.clear();
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        unregisterServices();
-    }
 }
-

@@ -34,19 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.agent.internal;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpContentResponse;
 import org.eclipse.jetty.client.HttpRequest;
@@ -57,28 +58,27 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.AgentInformationTypeAdapter.AgentInformationUpdateTypeAdapter;
-import com.redhat.thermostat.storage.model.AgentInformation;
 
-public class AgentInfoDAOImpl implements AgentInfoDAO {
+import com.redhat.thermostat.storage.model.BackendInformation;
 
-    private static final Logger logger = LoggingUtils.getLogger(AgentInfoDAOImpl.class);
+public class BackendInfoDAOImpl implements BackendInfoDAO {
+    
+    private static final Logger logger = LoggingUtils.getLogger(BackendInfoDAOImpl.class);
     
     private static final String GATEWAY_URL = "http://localhost:26000/api/v100"; // TODO configurable
-    private static final String GATEWAY_PATH = "/agent-config/systems/*/agents/";
+    private static final String GATEWAY_PATH = "/backend-info/systems/*/agents/";
     private static final String CONTENT_TYPE = "application/json";
-    
+    private static final String GATEWAY_QUERY = "?q=";
+    private static final String DELETE_QUERY_PARAM = "name==";
+
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
-
-    public AgentInfoDAOImpl() throws Exception {
-        this(new HttpHelper(new HttpClient()), new JsonHelper(new AgentInformationTypeAdapter(), 
-                new AgentInformationUpdateTypeAdapter()));
+    
+    public BackendInfoDAOImpl() throws Exception {
+        this(new HttpHelper(new HttpClient()), new JsonHelper(new BackendInformationTypeAdapter()));
     }
 
-    AgentInfoDAOImpl(HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+    BackendInfoDAOImpl(HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
         this.httpHelper = httpHelper;
         this.jsonHelper = jsonHelper;
         
@@ -86,65 +86,32 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     }
 
     @Override
-    public List<AgentInformation> getAllAgentInformation() {
-        return Collections.emptyList(); // TODO Remove once Agent Id completer is removed
-    }
-
-    @Override
-    public AgentInformation getAgentInformation(final AgentId agentId) {
-        return null; // TODO Remove once VM Id completer is removed
-    }
-
-    @Override
-    public Set<AgentId> getAgentIds() {
-        return Collections.emptySet(); // TODO Remove once VM Id completer is removed
-    }
-
-    @Override
-    public void addAgentInformation(final AgentInformation agentInfo) {
+    public void addBackendInformation(final BackendInformation info) {
         try {
             // Encode as JSON and send as POST request
-            String json = jsonHelper.toJson(Arrays.asList(agentInfo));
+            String json = jsonHelper.toJson(Arrays.asList(info));
             StringContentProvider provider = httpHelper.createContentProvider(json);
             
-            String url = getURL(agentInfo.getAgentId());
+            String url = getAddURL(info.getAgentId());
             Request httpRequest = httpHelper.newRequest(url);
             httpRequest.method(HttpMethod.POST);
             httpRequest.content(provider, CONTENT_TYPE);
             sendRequest(httpRequest);
         } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
-           logger.log(Level.WARNING, "Failed to send agent information to web gateway", e);
+           logger.log(Level.WARNING, "Failed to send backend information to web gateway", e);
         }
     }
 
     @Override
-    public void removeAgentInformation(final AgentInformation agentInfo) {
+    public void removeBackendInformation(final BackendInformation info) {
         try {
-            // Delete AgentInformation with matching Agent ID
-            String url = getURL(agentInfo.getAgentId());
+            // Delete BackendInformation with matching name
+            String url = getRemoveURL(info.getAgentId(), info.getName());
             Request httpRequest = httpHelper.newRequest(url);
             httpRequest.method(HttpMethod.DELETE);
             sendRequest(httpRequest);
         } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
-           logger.log(Level.WARNING, "Failed to delete agent information from web gateway", e);
-        }
-    }
-
-    @Override
-    public void updateAgentInformation(final AgentInformation agentInfo) {
-        try {
-            // Encode as JSON and send as PUT request
-            AgentInformationUpdate update = new AgentInformationUpdate(agentInfo);
-            String json = jsonHelper.toJson(update);
-            StringContentProvider provider = httpHelper.createContentProvider(json);
-            
-            String url = getURL(agentInfo.getAgentId());
-            Request httpRequest = httpHelper.newRequest(url);
-            httpRequest.method(HttpMethod.PUT);
-            httpRequest.content(provider, CONTENT_TYPE);
-            sendRequest(httpRequest);
-        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
-           logger.log(Level.WARNING, "Failed to send agent information update to web gateway", e);
+           logger.log(Level.WARNING, "Failed to delete backend information from web gateway", e);
         }
     }
 
@@ -156,46 +123,39 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
             throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
         }
     }
+
+    private String getAddURL(String agentId) {
+        return buildURL(agentId).toString();
+    }
     
-    private String getURL(String agentId) {
+    private String getRemoveURL(String agentId, String backendName) throws UnsupportedEncodingException {
+        StringBuilder builder = buildURL(agentId);
+        builder.append(GATEWAY_QUERY);
+        String query = DELETE_QUERY_PARAM.concat(backendName);
+        String encodedQuery = URLEncoder.encode(query, "UTF-8");
+        builder.append(encodedQuery);
+        return builder.toString();
+    }
+    
+    private StringBuilder buildURL(String agentId) {
         StringBuilder builder = new StringBuilder();
         builder.append(GATEWAY_URL);
         builder.append(GATEWAY_PATH);
         builder.append(agentId);
-        return builder.toString();
-    }
-    
-    static class AgentInformationUpdate {
-        
-        private final AgentInformation info;
-        
-        AgentInformationUpdate(AgentInformation info) {
-            this.info = info;
-        }
-        
-        AgentInformation getInfo() {
-            return info;
-        }
-        
+        return builder;
     }
     
     // For testing purposes
     static class JsonHelper {
         
-        private final AgentInformationTypeAdapter typeAdapter;
-        private final AgentInformationUpdateTypeAdapter updateTypeAdapter;
+        private final BackendInformationTypeAdapter typeAdapter;
         
-        public JsonHelper(AgentInformationTypeAdapter typeAdapter, AgentInformationUpdateTypeAdapter updateTypeAdapter) {
+        public JsonHelper(BackendInformationTypeAdapter typeAdapter) {
             this.typeAdapter = typeAdapter;
-            this.updateTypeAdapter = updateTypeAdapter;
         }
         
-        String toJson(List<AgentInformation> infos) throws IOException {
+        String toJson(List<BackendInformation> infos) throws IOException {
             return typeAdapter.toJson(infos);
-        }
-        
-        String toJson(AgentInformationUpdate update) throws IOException {
-            return updateTypeAdapter.toJson(update);
         }
         
     }
@@ -250,6 +210,5 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
         }
         
     }
-    
 }
 

@@ -34,17 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.dao;
+package com.redhat.thermostat.commands.agent.internal.receiver;
 
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.model.BackendInformation;
+import static org.junit.Assert.assertEquals;
 
-@Service
-public interface BackendInfoDAO {
+import java.util.TreeMap;
 
-    void addBackendInformation(BackendInformation info);
+import org.junit.Test;
 
-    void removeBackendInformation(BackendInformation info);
+import com.redhat.thermostat.commands.model.AgentRequest;
+import com.redhat.thermostat.commands.model.WebSocketResponse;
+import com.redhat.thermostat.commands.model.WebSocketResponse.ResponseType;
 
+public class PingReceiverTest {
+
+    @Test
+    public void canReceiveWithProperSequence() {
+        PingReceiver receiver = new PingReceiver();
+        AgentRequest req = new AgentRequest(123L, new TreeMap<String, String>());
+        WebSocketResponse resp = receiver.receive(req);
+        assertEquals(ResponseType.OK, resp.getResponseType());
+        assertEquals(123L, resp.getSequenceId());
+    }
 }
-

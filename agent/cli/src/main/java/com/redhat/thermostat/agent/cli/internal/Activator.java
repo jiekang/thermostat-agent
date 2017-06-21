@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.cli.internal;
 
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -61,7 +63,9 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
                 ExitStatus.class,
                 WriterID.class,
-                SSLConfiguration.class
+                SSLConfiguration.class,
+                AgentInfoDAO.class,
+                BackendInfoDAO.class,
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
