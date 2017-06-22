@@ -37,56 +37,40 @@
 package com.redhat.thermostat.common.plugin;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.eclipse.jetty.client.HttpClient;
+import com.redhat.thermostat.agent.http.HttpRequestService;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
 abstract public class PluginDAOBase<Tobj,Tdao> {
 
-    private static final String CONTENT_TYPE = "application/json";
-
-    protected final HttpClient httpClient;
-
-    public PluginDAOBase(HttpClient client) {
-        this.httpClient = client;
-    }
-
     protected abstract String toJsonString(Tobj obj) throws IOException;
+    protected abstract HttpRequestService getHttpRequestService();
     protected abstract PluginConfiguration getConfig();
     protected abstract String getURL(final String basepath);
     protected abstract Logger getLogger();
 
     public void put(final Tobj obj) {
         try {
-            final String gatewayURL = getConfig().getGatewayURL();
-            final String json = toJsonString(obj);
-            final StringContentProvider provider =  new StringContentProvider(json);
-            final String url = getURL(gatewayURL);
-            final Request httpRequest = httpClient.newRequest(url);
-            httpRequest.method(HttpMethod.POST);
-            httpRequest.content(provider);
-            httpRequest.header(HttpHeader.CONTENT_TYPE, CONTENT_TYPE);
-            sendRequest(httpRequest);
-        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
-            getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
-        }
-    }
+            if (null != getHttpRequestService()) {
+                String json = toJsonString(obj);
 
-    private void sendRequest(Request httpRequest)
-            throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        final ContentResponse resp = httpRequest.send();
-        final int status = resp.getStatus();
-        if (status != HttpStatus.OK_200) {
-            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
+                final String gatewayURL = getConfig().getGatewayURL();
+                final String url = getURL(gatewayURL);
+                final ContentResponse response = getHttpRequestService().sendHttpRequest(json, url, HttpMethod.POST);
+                final int status = response.getStatus();
+                if (status != HttpStatus.OK_200) {
+                    throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + response.getReason());
+                }
+
+            } else {
+                getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " information to web gateway. Http service unavailable.");
+            }
+        } catch (Exception e) {
+            getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
         }
     }
 }

@@ -36,10 +36,12 @@
 
 package com.redhat.thermostat.host.overview.internal.models;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +49,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.plugin.SystemID;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentProvider;
@@ -79,30 +82,29 @@ public class HostInfoDAOImplTest {
     private static final String URL_PROP = "gatewayURL";
 
     private HostInfo info;
-    private HttpClient httpClient;
     private HostInfoDAOImpl.JsonHelper jsonHelper;
-    private HostInfoDAOImpl.HttpHelper httpHelper;
-    private StringContentProvider contentProvider;
-    private Request request;
-    private ContentResponse response;
     private ConfigurationInfoSource cfiSource;
     private ConfigurationCreator configCreator;
+    private SystemID idservice;
+    private HttpRequestService httpRequestService;
     
     @Before
     public void setup() throws Exception {
         info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        
-        httpHelper = mock(HostInfoDAOImpl.HttpHelper.class);
-        contentProvider = mock(StringContentProvider.class);
-        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
-        request = mock(Request.class);
-        httpClient = mock(HttpClient.class);
+
+        Request request = mock(Request.class);
+        HttpClient httpClient = mock(HttpClient.class);
         request = mock(Request.class);
         when(httpClient.newRequest(anyString())).thenReturn(request);
-        response = mock(ContentResponse.class);
+        ContentResponse response = mock(ContentResponse.class);
         when(response.getStatus()).thenReturn(HttpStatus.OK_200);
         when(request.send()).thenReturn(response);
-        
+
+        httpRequestService = mock(HttpRequestService.class);
+        ContentResponse contentResponse = mock(ContentResponse.class);
+        when(httpRequestService.sendHttpRequest(anyString(), anyString(), any(HttpMethod.class))).thenReturn(contentResponse);
+        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
+
         jsonHelper = mock(HostInfoDAOImpl.JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(HostInfo.class))).thenReturn(SOME_JSON);
 
@@ -112,26 +114,22 @@ public class HostInfoDAOImplTest {
         when(cfiSource.getConfiguration(anyString(),anyString())).thenReturn(map);
         configCreator = mock(ConfigurationCreator.class);
         when(configCreator.create(eq(cfiSource))).thenReturn(new PluginConfiguration(cfiSource, HostInfoDAOImpl.PLUGIN_ID));
+
+        idservice = mock(SystemID.class);
+        when(idservice.getSystemID()).thenReturn(HOST_NAME);
     }
 
     @Test
     public void testPutHostInfo() throws Exception {
 
-        HostInfoDAOImpl dao = new HostInfoDAOImpl(httpClient, jsonHelper, httpHelper, configCreator, cfiSource);
-        SystemID idservice = mock(SystemID.class);
-        when(idservice.getSystemID()).thenReturn(HOST_NAME);
+        HostInfoDAOImpl dao = new HostInfoDAOImpl(jsonHelper, configCreator);
         dao.bindSystemID(idservice);
+        dao.bindConfigurationInfoSource(cfiSource);
+        dao.bindHttpRequestService(httpRequestService);
         dao.activate();
         
         dao.put(info);
-        
-        verify(httpClient).newRequest(URL + "/systems/" + HOST_NAME);
-        verify(request).method(HttpMethod.POST);
-        verify(jsonHelper).toJson(eq(Arrays.asList(info)));
-        verify(request).content(Matchers.any(ContentProvider.class));
-        verify(request).header(HttpHeader.CONTENT_TYPE, "application/json");
-        verify(request).send();
-        verify(response).getStatus();
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpMethod.POST);
     }
 
 }

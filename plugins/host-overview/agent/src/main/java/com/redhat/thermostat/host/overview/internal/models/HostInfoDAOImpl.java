@@ -41,13 +41,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.plugin.SystemID;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.util.StringContentProvider;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
@@ -66,36 +65,32 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
     public static final String PLUGIN_ID = "host-overview";
 
     private final JsonHelper jsonHelper;
-    private final HttpHelper httpHelper;
 
     private final ConfigurationCreator configCreator;
-    
-    @Reference
-    private ConfigurationInfoSource configInfoSource;
 
     private PluginConfiguration config;
+
+    @Reference
+    private ConfigurationInfoSource configurationInfoSource;
+
+    @Reference
+    private HttpRequestService httpRequestService;
 
     @Reference
     private SystemID systemID;
 
     public HostInfoDAOImpl() {
-        this(new HttpClient(), new JsonHelper(new HostInfoTypeAdapter()), new HttpHelper(), 
-                new ConfigurationCreator(), null);
+        this(new JsonHelper(new HostInfoTypeAdapter()), new ConfigurationCreator());
     }
 
-    HostInfoDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh, ConfigurationCreator creator, 
-            ConfigurationInfoSource source) {
-        super(client);
+    HostInfoDAOImpl(JsonHelper jh, ConfigurationCreator creator) {
         this.jsonHelper = jh;
-        this.httpHelper = hh;
         this.configCreator = creator;
-        this.configInfoSource = source;
     }
 
     @Activate
     void activate() throws Exception {
-        this.config = configCreator.create(configInfoSource);
-        httpHelper.startClient(httpClient);
+        this.config = configCreator.create(configurationInfoSource);
     }
 
     public String getURL(final String base) {
@@ -108,6 +103,11 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
 
     public Logger getLogger() {
         return logger;
+    }
+
+    @Override
+    protected HttpRequestService getHttpRequestService() {
+        return httpRequestService;
     }
 
     @Override
@@ -125,6 +125,18 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
         this.systemID = systemid;
     }
 
+    protected void bindConfigurationInfoSource(ConfigurationInfoSource cfg) {
+        this.configurationInfoSource = cfg;
+    }
+
+    protected void bindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = httpRequestService;
+    }
+
+    protected void unbindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = null;
+    }
+
     static class JsonHelper {
         
         private final HostInfoTypeAdapter typeAdapter;
@@ -135,18 +147,6 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
         
         String toJson(List<HostInfo> infos) throws IOException {
             return typeAdapter.toJson(infos);
-        }
-    }
-    
-    // For testing purposes
-    static class HttpHelper {
-        
-        void startClient(HttpClient httpClient) throws Exception {
-            httpClient.start();
-        }
-        
-        StringContentProvider createContentProvider(String content) {
-            return new StringContentProvider(content);
         }
     }
     
