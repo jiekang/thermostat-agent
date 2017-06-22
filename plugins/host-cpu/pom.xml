@@ -52,7 +52,6 @@
 
   <modules>
     <module>agent</module>
-    <module>common</module>
     <module>distribution</module>
   </modules>
 

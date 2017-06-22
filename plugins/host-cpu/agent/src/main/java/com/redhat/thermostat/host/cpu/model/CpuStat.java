@@ -34,27 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.cpu.common.internal;
+package com.redhat.thermostat.host.cpu.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
+@Entity
+public class CpuStat extends BasePojo implements TimeStampedPojo {
 
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
- */
-public class CpuStatCategoryRegistration implements CategoryRegistration {
+    public static final double INVALID_LOAD = Double.MIN_VALUE;
 
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(1);
-        categories.add(CpuStatDAOImpl.cpuStatCategory.getName());
-        return categories;
+    private long timeStamp;
+    private double[] perProcessorUsage;
+
+    public CpuStat() {
+        this(null, -1, null);
     }
 
+    public CpuStat(String writerId, long timestamp, double[] perProcessorUsage) {
+        super(writerId);
+        this.timeStamp = timestamp;
+        this.perProcessorUsage = perProcessorUsage;
+    }
+
+    @Persist
+    public double[] getPerProcessorUsage() {
+        return perProcessorUsage;
+    }
+
+    @Persist
+    public void setPerProcessorUsage(double[] perProcessorUsage) {
+        this.perProcessorUsage = perProcessorUsage;
+    }
+
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 }
 

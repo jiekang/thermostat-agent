@@ -39,6 +39,8 @@ package com.redhat.thermostat.host.cpu.agent.internal;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,42 +54,56 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
-import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.host.cpu.model.CpuStat;
 import com.redhat.thermostat.storage.core.WriterID;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 public class HostCpuBackendTest {
-    
+
     private HostCpuBackend backend;
     private ScheduledExecutorService executor;
-    private CpuStatDAO cpuStatDao;
+    private CpuStatDAO cpuStatDAO;
+    private WriterID writerID;
+    private Version version;
 
     @Before
     public void setup() {
         executor = mock(ScheduledExecutorService.class);
-        cpuStatDao = mock(CpuStatDAO.class);
-        Version version = mock(Version.class);
+
+        version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn("0.0.0");
-        WriterID id = mock(WriterID.class);
-        
-        backend = new HostCpuBackend(executor, cpuStatDao, version, id);
+
+        // these two are created via OSGI wiring
+        cpuStatDAO = mock(CpuStatDAO.class);
+        writerID = mock(WriterID.class);
+
+        backend = new HostCpuBackend("Host CPU Backend", "Gathers CPU statistics about a host", "Red Hat, Inc.", version, executor);
+        backend.bindCpuStatDAO(cpuStatDAO);
+        backend.bindWriterID(writerID);
     }
 
     @Test
     public void testActivate() {
+        org.osgi.framework.Version osgiVersion = mock(org.osgi.framework.Version.class);
+        Bundle bundle = mock(Bundle.class);
+        when(bundle.getVersion()).thenReturn(osgiVersion);
+        BundleContext ctx = mock(BundleContext.class);
+        when(ctx.getBundle()).thenReturn(bundle);
+        backend.componentActivated(ctx);
         backend.activate();
         ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
         verify(executor).scheduleAtFixedRate(captor.capture(), any(Long.class), any(Long.class), any(TimeUnit.class));
         assertTrue(backend.isActive());
-        
+
         // Run to ensure working
         Runnable runnable = captor.getValue();
         runnable.run();
-        verify(cpuStatDao, never()).putCpuStat(any(CpuStat.class));
+        verify(cpuStatDAO, never()).put(any(CpuStat.class));
         runnable.run();
-        verify(cpuStatDao).putCpuStat(any(CpuStat.class));
+        verify(cpuStatDAO).put(any(CpuStat.class));
     }
-    
+
     @Test
     public void testDeactivate() {
         backend.activate();
@@ -96,4 +112,3 @@ public class HostCpuBackendTest {
         assertFalse(backend.isActive());
     }
 }
-

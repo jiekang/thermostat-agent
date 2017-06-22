@@ -36,23 +36,57 @@
 
 package com.redhat.thermostat.host.cpu.agent.internal;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.HostPollingAction;
 import com.redhat.thermostat.backend.HostPollingBackend;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.cpu.model.CpuStat;
 import com.redhat.thermostat.storage.core.WriterID;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.osgi.framework.BundleContext;
+
+@Component
+@Service(value = Backend.class)
 public class HostCpuBackend extends HostPollingBackend {
 
-    public HostCpuBackend(ScheduledExecutorService executor,
-            CpuStatDAO cpuStatDAO, Version version, final WriterID writerId) {
-        super("Host CPU Backend",
-                "Gathers CPU statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
-        registerAction(new CpuProcBackendAction(writerId, cpuStatDAO));
+    @Reference
+    private CpuStatDAO cpuStatDAO;
+
+    @Reference
+    private WriterID writerID;
+
+    public HostCpuBackend() {
+        this(Executors.newSingleThreadScheduledExecutor());
+    }
+
+    public HostCpuBackend(ScheduledExecutorService executor) {
+        this("Host CPU Backend", "Gathers CPU statistics about a host", "Red Hat, Inc.", new Version(), executor);
+    }
+
+    public HostCpuBackend(String name, String descr, String vendor, Version version, ScheduledExecutorService executor) {
+        super(name, descr, vendor, version, executor);
+    }
+
+    @Activate
+    protected void componentActivated(BundleContext context) {
+        Version version = new Version(context.getBundle());
+        setVersion(version.getVersionNumber());
+        registerAction(new CpuProcBackendAction(writerID, cpuStatDAO));
+    }
+
+    @Deactivate
+    protected void componentDeactivated() {
+        if (isActive()) {
+            deactivate();
+        }
     }
 
     private static class CpuProcBackendAction implements HostPollingAction {
@@ -70,9 +104,18 @@ public class HostCpuBackend extends HostPollingBackend {
             if (!builder.isInitialized()) {
                 builder.initialize();
             } else {
-                dao.putCpuStat(builder.build());
+                final CpuStat info = builder.build();
+                dao.put(info);
             }
         }
+    }
+
+    void bindCpuStatDAO(CpuStatDAO dao) {
+        this.cpuStatDAO = dao;
+    }
+
+    void bindWriterID(WriterID id) {
+        this.writerID = id;
     }
 
     @Override

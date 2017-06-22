@@ -34,52 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.cpu.common.internal;
+package com.redhat.thermostat.host.cpu.agent.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.host.cpu.model.CpuStat;
 
-import org.junit.Test;
-
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.testutils.StubBundleContext;
-
-public class ActivatorTest {
-    
-    @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertEquals(0, context.getAllServices().size());
-        assertEquals(1, context.getServiceListeners().size());
-
-        activator.stop(context);
-    }
-
-    @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        Storage storage = mock(Storage.class);
-
-        context.registerService(Storage.class, storage, null);
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(CpuStatDAO.class.getName(), CpuStatDAOImpl.class));
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
-    }
-
+@Service
+public interface CpuStatDAO {
+    void put(CpuStat stat);
 }
 

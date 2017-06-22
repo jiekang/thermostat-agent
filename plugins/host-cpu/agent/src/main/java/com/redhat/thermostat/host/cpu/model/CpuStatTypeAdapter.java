@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.cpu.common.internal;
+package com.redhat.thermostat.host.cpu.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +46,6 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.google.gson.TypeAdapter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 
 public class CpuStatTypeAdapter extends TypeAdapter<List<CpuStat>> {
 
