@@ -34,9 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.memory.common.internal;
-
-import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+package com.redhat.thermostat.host.memory.model;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;

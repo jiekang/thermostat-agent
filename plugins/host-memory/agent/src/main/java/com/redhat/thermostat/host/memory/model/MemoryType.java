@@ -34,47 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.memory.common.internal;
+package com.redhat.thermostat.host.memory.model;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
-import com.redhat.thermostat.storage.core.Storage;
-
-public class Activator implements BundleActivator {
-    
-    private ServiceTracker tracker;
-    private ServiceRegistration reg;
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                Storage storage = (Storage) context.getService(reference);
-                MemoryStatDAO memoryStatDao = new MemoryStatDAOImpl(storage);
-                reg = context.registerService(MemoryStatDAO.class.getName(), memoryStatDao, null);
-                return super.addingService(reference);
-            }
-            
-            @Override
-            public void removedService(ServiceReference reference,
-                    Object service) {
-                reg.unregister();
-                super.removedService(reference, service);
-            }
-        };
-        tracker.open();
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
-    }
-
+public enum MemoryType {
+    MEMORY_TOTAL,
+    MEMORY_FREE,
+    MEMORY_USED,
+    SWAP_TOTAL,
+    SWAP_FREE,
+    BUFFERS;
 }
 

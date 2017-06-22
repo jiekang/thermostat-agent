@@ -60,8 +60,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.host.memory.agent</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.host.memory.agent.internal.Activator</Bundle-Activator>
-            <Export-Package />
+            <Export-Package>com.redhat.thermostat.host.memory.model</Export-Package>
             <Private-Package>
               com.redhat.thermostat.host.memory.agent.internal
             </Private-Package>
@@ -69,6 +68,19 @@
             <_nouses>true</_nouses>
           </instructions>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
@@ -138,12 +150,12 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-portability</artifactId>
+      <artifactId>thermostat-common-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-memory-common</artifactId>
+      <artifactId>thermostat-common-portability</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

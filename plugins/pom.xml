@@ -55,7 +55,7 @@
     <module>killvm</module>
     <module>host-overview</module>
     <module>host-cpu</module>
-    <!--module>host-memory</module-->
+    <module>host-memory</module>
     <module>jvm-overview</module>
     <module>vm-gc</module>
     <module>vm-memory</module>
