@@ -36,6 +36,18 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
+import static com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImpl.HttpHelper;
+import static com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImpl.JsonHelper;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
@@ -48,17 +60,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.Arrays;
-
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import static com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImpl.HttpHelper;
-import static com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImpl.JsonHelper;
 
 public class VmTlabStatDAOTest {
 
@@ -96,6 +97,21 @@ public class VmTlabStatDAOTest {
     }
 
     @Test
+    public void testActivation() throws Exception {
+        PluginConfiguration pluginConfig = mock(PluginConfiguration.class);
+        when(pluginConfig.getGatewayURL()).thenReturn("someGatewayURL");
+        VmTlabStatDAOImpl.ConfigurationCreator configCreator = mock(VmTlabStatDAOImpl.ConfigurationCreator.class);
+        ConfigurationInfoSource configInfoSource = mock(ConfigurationInfoSource.class);
+        when(configCreator.create(configInfoSource)).thenReturn(pluginConfig);
+
+        VmTlabStatDAOImpl dao = new VmTlabStatDAOImpl(httpClient, httpHelper, jsonHelper, configCreator, configInfoSource);
+        dao.activate();
+
+        verify(pluginConfig, times(1)).getGatewayURL();
+        verify(httpHelper, times(1)).startClient(httpClient);
+    }
+
+    @Test
     @Ignore
     public void verifyPutStat() throws Exception {
 //      TODO: Remove @Ignore when web-gateway service for TLAB stats is available
@@ -118,7 +134,9 @@ public class VmTlabStatDAOTest {
         stat.setTotalFastWaste(678l);
         stat.setMaxFastWaste(333l);
 
-        VmTlabStatDAO dao = new VmTlabStatDAOImpl(config, httpClient, httpHelper, jsonHelper);
+        VmTlabStatDAOImpl.ConfigurationCreator configurationCreator = new VmTlabStatDAOImpl.ConfigurationCreator();
+        ConfigurationInfoSource configInfoSource = mock(ConfigurationInfoSource.class);
+        VmTlabStatDAO dao = new VmTlabStatDAOImpl(httpClient, httpHelper, jsonHelper, configurationCreator, configInfoSource);
         dao.putStat(stat);
 
         verify(httpClient).newRequest(GATEWAY_URL);

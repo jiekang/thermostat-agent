@@ -37,49 +37,65 @@
 package com.redhat.thermostat.vm.memory.common.internal;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
-class VmTlabStatDAOImpl implements VmTlabStatDAO {
+@Component
+@Service(value = VmTlabStatDAO.class)
+public class VmTlabStatDAOImpl implements VmTlabStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmTlabStatDAOImpl.class);
+    private static final String PLUGIN_ID = "vm-memory";
     private static final String CONTENT_TYPE = "application/json";
 
-    private final String gatewayURL;
     private final HttpClient client;
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
+    private final ConfigurationCreator configurationCreator;
 
-    VmTlabStatDAOImpl(PluginConfiguration config) throws Exception {
-        this(config, new HttpClient(), new HttpHelper(), new JsonHelper(new VmTlabStatTypeAdapter()));
+    private String gatewayURL;
+
+    @Reference
+    private ConfigurationInfoSource configInfoSource;
+
+    public VmTlabStatDAOImpl() throws Exception {
+        this(new HttpClient(), new HttpHelper(), new JsonHelper(new VmTlabStatTypeAdapter()), new ConfigurationCreator(), null);
     }
 
-    VmTlabStatDAOImpl(PluginConfiguration config, HttpClient client, HttpHelper httpHelper, 
-            JsonHelper jsonHelper) throws Exception {
-        this.gatewayURL = config.getGatewayURL();
+    VmTlabStatDAOImpl(HttpClient client, HttpHelper httpHelper, JsonHelper jsonHelper,
+            ConfigurationCreator configurationCreator, ConfigurationInfoSource configInfoSource) throws Exception {
         this.client = client;
         this.httpHelper = httpHelper;
         this.jsonHelper = jsonHelper;
+        this.configurationCreator = configurationCreator;
+        this.configInfoSource = configInfoSource;
+    }
+
+    @Activate
+    void activate() throws Exception {
+        PluginConfiguration config = configurationCreator.create(configInfoSource);
+        this.gatewayURL = config.getGatewayURL();
 
         this.httpHelper.startClient(this.client);
     }
-
 
     @Override
     public void putStat(final VmTlabStat stat) {
@@ -136,6 +152,14 @@ class VmTlabStatDAOImpl implements VmTlabStatDAO {
             return new StringContentProvider(content);
         }
 
+    }
+
+    // For testing purposes
+    static class ConfigurationCreator {
+
+        PluginConfiguration create(ConfigurationInfoSource source) {
+            return new PluginConfiguration(source, PLUGIN_ID);
+        }
     }
 }
 

@@ -44,10 +44,16 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugins.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
@@ -55,28 +61,44 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
-class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
+@Component
+@Service(value = VmMemoryStatDAO.class)
+public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
+    private static final String PLUGIN_ID = "vm-memory";
     private static final String CONTENT_TYPE = "application/json";
 
-    private final String gatewayURL;
     private final HttpClient client;
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
+    private final ConfigurationCreator configCreator;
 
-    VmMemoryStatDAOImpl(PluginConfiguration config) throws Exception {
-        this(config, new HttpClient(), new HttpHelper(), new JsonHelper(new VmMemoryStatTypeAdapter()));
+    private String gatewayURL;
+
+    @Reference
+    private ConfigurationInfoSource configInfoSource;
+
+    public VmMemoryStatDAOImpl() {
+        this(new HttpClient(), new JsonHelper(new VmMemoryStatTypeAdapter()), new HttpHelper(),
+                new ConfigurationCreator(), null);
     }
 
-    VmMemoryStatDAOImpl(PluginConfiguration config, HttpClient client, HttpHelper httpHelper, 
-            JsonHelper jsonHelper) throws Exception {
-        this.gatewayURL = config.getGatewayURL();
+    VmMemoryStatDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh, ConfigurationCreator creator,
+            ConfigurationInfoSource source) {
         this.client = client;
-        this.httpHelper = httpHelper;
-        this.jsonHelper = jsonHelper;
+        this.httpHelper = hh;
+        this.jsonHelper = jh;
+        this.configCreator = creator;
+        this.configInfoSource = source;
+    }
 
-        this.httpHelper.startClient(this.client);
+    @Activate
+    void activate() throws Exception {
+        PluginConfiguration config = configCreator.create(configInfoSource);
+        this.gatewayURL = config.getGatewayURL();
+
+        httpHelper.startClient(client);
     }
 
     @Override
@@ -130,6 +152,15 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
         StringContentProvider createContentProvider(String content) {
             return new StringContentProvider(content);
+        }
+
+    }
+
+    // For Testing purposes
+    static class ConfigurationCreator {
+
+        PluginConfiguration create(ConfigurationInfoSource source) {
+            return new PluginConfiguration(source, PLUGIN_ID);
         }
 
     }

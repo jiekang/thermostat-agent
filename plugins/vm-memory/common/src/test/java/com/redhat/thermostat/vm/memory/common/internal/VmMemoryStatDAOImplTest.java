@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -46,7 +44,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.jetty.client.HttpClient;
@@ -58,9 +55,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugins.PluginConfiguration;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.HttpHelper;
 import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.JsonHelper;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
@@ -80,6 +76,8 @@ public class VmMemoryStatDAOImplTest {
     private Request request;
     private ContentResponse response;
     private PluginConfiguration config;
+    VmMemoryStatDAOImpl.ConfigurationCreator creator;
+    ConfigurationInfoSource source;
 
     @Before
     public void setUp() throws Exception {
@@ -98,6 +96,11 @@ public class VmMemoryStatDAOImplTest {
         
         config = mock(PluginConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+
+        source = mock(ConfigurationInfoSource.class);
+
+        creator = mock(VmMemoryStatDAOImpl.ConfigurationCreator.class);
+        when(creator.create(source)).thenReturn(config);
     }
 
     @Test
@@ -132,8 +135,9 @@ public class VmMemoryStatDAOImplTest {
         }
         VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]),
                 2, 3, 4, 5);
-        
-        VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(config, httpClient, httpHelper, jsonHelper);
+
+        VmMemoryStatDAOImpl dao = new VmMemoryStatDAOImpl(httpClient, jsonHelper, httpHelper, creator, source);
+        dao.activate();
         dao.putVmMemoryStat(stat);
 
         verify(httpClient).newRequest(GATEWAY_URL);
