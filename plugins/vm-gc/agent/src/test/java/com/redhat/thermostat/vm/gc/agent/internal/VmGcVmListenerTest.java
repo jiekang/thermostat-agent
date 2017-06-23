@@ -52,8 +52,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
-import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
+import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.agent.model.VmGcStat;
 
 public class VmGcVmListenerTest {
 

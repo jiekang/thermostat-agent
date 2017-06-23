@@ -48,9 +48,7 @@
   <dependencySets>
     <dependencySet>
       <includes>
-        <include>com.redhat.thermostat:thermostat-vm-gc-common</include>
         <include>com.redhat.thermostat:thermostat-vm-gc-agent</include>
-        <include>com.redhat.thermostat:thermostat-gc-remote-collector-common</include>
         <include>com.redhat.thermostat:thermostat-gc-remote-collector-command</include>
       </includes>
       <useProjectArtifact>false</useProjectArtifact>

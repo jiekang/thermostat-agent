@@ -43,8 +43,8 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdate;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
-import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
+import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.agent.model.VmGcStat;
 
 public class VmGcVmListener implements VmUpdateListener {
     

@@ -48,8 +48,8 @@ import org.osgi.framework.BundleContext;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.gc.common.Constants;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.agent.Constants;
+import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAO;
 
 @Component
 @Service(value = Backend.class)

@@ -52,7 +52,6 @@ import com.redhat.thermostat.commands.model.WebSocketResponse.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.gc.remote.command.internal.GC;
 import com.redhat.thermostat.gc.remote.command.internal.GCException;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
 
 @Component
 @Service(value = RequestReceiver.class)
