@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.host.overview.internal.models;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -45,26 +44,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.redhat.thermostat.agent.http.HttpRequestService;
-import com.redhat.thermostat.common.plugin.SystemID;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentProvider;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 
+import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.host.overview.internal.models.HostInfoDAOImpl.ConfigurationCreator;
 import com.redhat.thermostat.host.overview.model.HostInfo;
 
@@ -92,19 +81,7 @@ public class HostInfoDAOImplTest {
     public void setup() throws Exception {
         info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
 
-        Request request = mock(Request.class);
-        HttpClient httpClient = mock(HttpClient.class);
-        request = mock(Request.class);
-        when(httpClient.newRequest(anyString())).thenReturn(request);
-        ContentResponse response = mock(ContentResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
-        when(request.send()).thenReturn(response);
-
         httpRequestService = mock(HttpRequestService.class);
-        ContentResponse contentResponse = mock(ContentResponse.class);
-        when(httpRequestService.sendHttpRequest(anyString(), anyString(), any(HttpMethod.class))).thenReturn(contentResponse);
-        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
-
         jsonHelper = mock(HostInfoDAOImpl.JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(HostInfo.class))).thenReturn(SOME_JSON);
 
@@ -129,7 +106,7 @@ public class HostInfoDAOImplTest {
         dao.activate();
         
         dao.put(info);
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpMethod.POST);
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpRequestService.POST);
     }
 
 }

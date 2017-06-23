@@ -46,11 +46,9 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -62,7 +60,6 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(VmGcStatDAOImpl.class);
     private static final String PLUGIN_ID = "vm-gc";
-    static final String CONTENT_TYPE = "application/json";
     
     private final JsonHelper jsonHelper;
     private final ConfigurationCreator configCreator;
@@ -96,25 +93,15 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
 
     protected void unbindHttpRequestService(HttpRequestService httpRequestService) {
         this.httpRequestService = null;
+        logger.log(Level.INFO, "Unbound HTTP service. Further attempts to store data will fail until bound again.");
     }
 
     @Override
     public void putVmGcStat(final VmGcStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-
-            if (null != httpRequestService) {
-                ContentResponse response = httpRequestService.sendHttpRequest(json, gatewayURL, HttpMethod.POST);
-
-                int status = response.getStatus();
-                if (status != HttpStatus.OK_200) {
-                    throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + response.getReason());
-                }
-
-            } else {
-                logger.log(Level.WARNING, "Failed to send VmGcStat information to web gateway. Http service unavailable.");
-            }
-        } catch (Exception e) {
+            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.POST);
+        } catch (RequestFailedException | IOException e) {
             logger.log(Level.WARNING, "Failed to send VmGcStat information to web gateway", e);
         }
     }

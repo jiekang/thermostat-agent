@@ -38,7 +38,6 @@ package com.redhat.thermostat.agent.http;
 
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -65,6 +64,24 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 @Component
 @Service(value = HttpRequestService.class)
 public class HttpRequestService {
+    
+    /**
+     * GET request type.
+     */
+    public static final String GET = HttpMethod.GET.asString();
+    /**
+     * PUT request type.
+     */
+    public static final String PUT = HttpMethod.PUT.asString();
+    /**
+     * POST request type.
+     */
+    public static final String POST = HttpMethod.POST.asString();
+    /**
+     * DELETE request type.
+     */
+    public static final String DELETE = HttpMethod.DELETE.asString();
+    
     private static final Logger logger = LoggingUtils.getLogger(HttpRequestService.class);
 
     private static final String KEYCLOAK_TOKEN_SERVICE = "/auth/realms/__REALM__/protocol/openid-connect/token";
@@ -101,24 +118,32 @@ public class HttpRequestService {
      * @param jsonPayload The payload to send, or null if no payload
      * @param url The complete url to send to
      * @param requestType The HTTP request type: GET, PUT, POST or DELETE
-     * @return
+     * @return The returned body for GET requests. {@code null} otherwise.
      */
-    public ContentResponse sendHttpRequest(String jsonPayload, String url, HttpMethod requestType) throws IOException {
+    public String sendHttpRequest(String jsonPayload, String url, String requestType) throws RequestFailedException {
+        HttpMethod requestMethod = HttpMethod.valueOf(requestType);
         Request request = client.newRequest(url);
         if (jsonPayload != null) {
             request.content(new StringContentProvider(jsonPayload), "application/json");
         }
-
-        request.method(requestType);
-
-        if (agentStartupConfiguration.isKeycloakEnabled()) {
-            request.header("Authorization", "Bearer " + getAccessToken());
-        }
+        request.method(requestMethod);
 
         try {
-            return request.send();
-        } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            return null;
+            if (agentStartupConfiguration.isKeycloakEnabled()) {
+                request.header("Authorization", "Bearer " + getAccessToken());
+            }
+            ContentResponse response =  request.send();
+            int status = response.getStatus();
+            if (status != HttpStatus.OK_200) {
+                throw new RequestFailedException(status, "Request to gateway failed. Reason: " + response.getReason());
+            }
+            if (requestMethod == HttpMethod.GET) {
+                return response.getContentAsString();
+            } else {
+                return null;
+            }
+        } catch (InterruptedException | TimeoutException | IOException | ExecutionException e) {
+            throw new RequestFailedException(e);
         }
     }
 
@@ -190,5 +215,35 @@ public class HttpRequestService {
     private String getKeycloakRefreshPayload() {
         return "grant_type=refresh_token&client_id=" + agentStartupConfiguration.getKeycloakClient() +
                 "&refresh_token=" + keycloakAccessToken.getRefreshToken();
+    }
+    
+    @SuppressWarnings("serial")
+    public static class RequestFailedException extends Exception {
+        
+        public static final int UNKNOWN_RESPONSE_CODE = -1;
+        private final int responseCode;
+        private final String reasonStr;
+        
+        private RequestFailedException(Throwable e) {
+            this(UNKNOWN_RESPONSE_CODE, e.getMessage(), e);
+        }
+        
+        private RequestFailedException(int responseCode, String reason) {
+            this(responseCode, reason, null);
+        }
+        
+        private RequestFailedException(int responseCode, String reason, Throwable cause) {
+            super(reason);
+            this.reasonStr = reason;
+            this.responseCode = responseCode;
+        }
+        
+        public int getResponseCode() {
+            return responseCode;
+        }
+        
+        public String getReason() {
+            return reasonStr;
+        }
     }
 }

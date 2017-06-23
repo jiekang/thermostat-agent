@@ -39,26 +39,20 @@ package com.redhat.thermostat.vm.memory.agent.internal.models;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugin.PluginConfiguration;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
+
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat;
 
 @Component
 @Service(value = VmMemoryStatDAO.class)
@@ -66,10 +60,7 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
     private static final String PLUGIN_ID = "vm-memory";
-    private static final String CONTENT_TYPE = "application/json";
 
-    private final HttpClient client;
-    private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
     private final ConfigurationCreator configCreator;
 
@@ -77,16 +68,15 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Reference
     private ConfigurationInfoSource configInfoSource;
+    
+    @Reference
+    private HttpRequestService httpRequestService;
 
     public VmMemoryStatDAOImpl() {
-        this(new HttpClient(), new JsonHelper(new VmMemoryStatTypeAdapter()), new HttpHelper(),
-                new ConfigurationCreator(), null);
+        this(new JsonHelper(new VmMemoryStatTypeAdapter()), new ConfigurationCreator(), null);
     }
 
-    VmMemoryStatDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh, ConfigurationCreator creator,
-            ConfigurationInfoSource source) {
-        this.client = client;
-        this.httpHelper = hh;
+    VmMemoryStatDAOImpl(JsonHelper jh, ConfigurationCreator creator, ConfigurationInfoSource source) {
         this.jsonHelper = jh;
         this.configCreator = creator;
         this.configInfoSource = source;
@@ -96,36 +86,29 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     void activate() throws Exception {
         PluginConfiguration config = configCreator.create(configInfoSource);
         this.gatewayURL = config.getGatewayURL();
-
-        httpHelper.startClient(client);
     }
 
     @Override
     public void putVmMemoryStat(final VmMemoryStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-            StringContentProvider provider = httpHelper.createContentProvider(json);
-
-            Request httpRequest = client.newRequest(gatewayURL);
-            httpRequest.method(HttpMethod.POST);
-            httpRequest.content(provider, CONTENT_TYPE);
-            sendRequest(httpRequest);
-        } catch (Exception e) {
+            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.POST);
+        } catch (RequestFailedException | IOException e) {
             logger.log(Level.WARNING, "Failed to send VmMemoryStat to Web Gateway", e);
-        }
-    }
-
-    private void sendRequest(Request httpRequest)
-            throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        ContentResponse resp = httpRequest.send();
-        int status = resp.getStatus();
-        if (status != HttpStatus.OK_200) {
-            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
         }
     }
 
     protected Logger getLogger() {
         return logger;
+    }
+    
+    protected void bindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = httpRequestService;
+    }
+
+    protected void unbindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = null;
+        logger.log(Level.INFO, "Unbound HTTP service. Further attempts to store data will fail until bound again.");
     }
 
     // For testing purposes
@@ -140,19 +123,6 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
         String toJson(List<VmMemoryStat> stats) throws IOException {
             return adapter.toJson(stats);
         }
-    }
-
-    // For testing purposes
-    static class HttpHelper {
-
-        void startClient(HttpClient httpClient) throws Exception {
-            httpClient.start();
-        }
-
-        StringContentProvider createContentProvider(String content) {
-            return new StringContentProvider(content);
-        }
-
     }
 
     // For Testing purposes

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common.model;
+package com.redhat.thermostat.vm.memory.agent.model;
 
 import com.redhat.thermostat.testutils.DataObjectTest;
 

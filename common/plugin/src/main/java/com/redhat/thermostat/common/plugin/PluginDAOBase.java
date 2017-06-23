@@ -41,9 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
+import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
 
 abstract public class PluginDAOBase<Tobj,Tdao> {
 
@@ -55,21 +53,13 @@ abstract public class PluginDAOBase<Tobj,Tdao> {
 
     public void put(final Tobj obj) {
         try {
-            if (null != getHttpRequestService()) {
-                String json = toJsonString(obj);
+            HttpRequestService httpRequestService = getHttpRequestService();
+            String json = toJsonString(obj);
 
-                final String gatewayURL = getConfig().getGatewayURL();
-                final String url = getURL(gatewayURL);
-                final ContentResponse response = getHttpRequestService().sendHttpRequest(json, url, HttpMethod.POST);
-                final int status = response.getStatus();
-                if (status != HttpStatus.OK_200) {
-                    throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + response.getReason());
-                }
-
-            } else {
-                getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " information to web gateway. Http service unavailable.");
-            }
-        } catch (Exception e) {
+            final String gatewayURL = getConfig().getGatewayURL();
+            final String url = getURL(gatewayURL);
+            httpRequestService.sendHttpRequest(json, url, HttpRequestService.POST);
+        } catch (IOException | RequestFailedException e) {
             getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
         }
     }

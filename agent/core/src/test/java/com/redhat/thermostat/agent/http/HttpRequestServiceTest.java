@@ -37,10 +37,12 @@
 package com.redhat.thermostat.agent.http;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,12 +64,14 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
 
 public class HttpRequestServiceTest {
-    private String payload = "{}";
-    private String url = "http://127.0.0.1:30000/test";
-    private HttpMethod method = HttpMethod.POST;
-    private String keycloakUrl = "http://127.0.0.1:31000/keycloak";
+    private static final String POST_METHOD = HttpRequestService.POST;
+    private static final String URL = "http://127.0.0.1:30000/test";
+    private static final String GET_URL = URL + "?q=foo&l=3";
+    private static final String payload = "{}";
+    private static final String keycloakUrl = "http://127.0.0.1:31000/keycloak";
 
     private HttpClient client;
     private Request httpRequest;
@@ -76,44 +80,26 @@ public class HttpRequestServiceTest {
     public void setup() throws InterruptedException, ExecutionException, TimeoutException {
         client = mock(HttpClient.class);
         httpRequest = mock(Request.class);
-        when(client.newRequest(eq(url))).thenReturn(httpRequest);
-        when(httpRequest.send()).thenReturn(mock(ContentResponse.class));
+        when(client.newRequest(eq(URL))).thenReturn(httpRequest);
+        ContentResponse response = mock(ContentResponse.class);
+        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(httpRequest.send()).thenReturn(response);
     }
 
     @Test
-    public void testRequestWithoutKeycloak() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
-        when(configuration.isKeycloakEnabled()).thenReturn(false);
+    public void testRequestWithoutKeycloak() throws Exception {
+        AgentStartupConfiguration configuration = createNoKeycloakConfig();
 
         HttpRequestService service = new HttpRequestService(client, configuration);
 
-        service.sendHttpRequest(payload, url, method);
+        service.sendHttpRequest(payload, URL, POST_METHOD);
 
         verify(configuration).isKeycloakEnabled();
-        verifyHttpRequest(httpRequest);
+        verifyHttpPostRequest(httpRequest);
     }
 
     @Test
-    public void testRequestWithKeycloak() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
-        setupKeycloakConfig(configuration);
-
-        HttpRequestService service = new HttpRequestService(client, configuration);
-
-        Request keycloakRequest = mock(Request.class);
-        setupKeycloakRequest(keycloakRequest);
-
-        service.sendHttpRequest(payload, url, method);
-
-        verify(configuration).isKeycloakEnabled();
-        verifyHttpRequest(httpRequest);
-
-        verify(httpRequest).header(eq("Authorization"), eq("Bearer access"));
-        verifyKeycloakAcquire(keycloakRequest);
-    }
-
-    @Test
-    public void testRequestWithKeycloakRefresh() throws InterruptedException, ExecutionException, TimeoutException, IOException {
+    public void testRequestWithKeycloak() throws Exception {
         AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
         setupKeycloakConfig(configuration);
 
@@ -122,21 +108,40 @@ public class HttpRequestServiceTest {
         Request keycloakRequest = mock(Request.class);
         setupKeycloakRequest(keycloakRequest);
 
-        service.sendHttpRequest(payload, url, method);
+        service.sendHttpRequest(payload, URL, POST_METHOD);
 
         verify(configuration).isKeycloakEnabled();
-        verifyHttpRequest(httpRequest);
+        verifyHttpPostRequest(httpRequest);
+
+        verify(httpRequest).header(eq("Authorization"), eq("Bearer access"));
+        verifyKeycloakAcquire(keycloakRequest);
+    }
+
+    @Test
+    public void testRequestWithKeycloakRefresh() throws Exception {
+        AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
+        setupKeycloakConfig(configuration);
+
+        HttpRequestService service = new HttpRequestService(client, configuration);
+
+        Request keycloakRequest = mock(Request.class);
+        setupKeycloakRequest(keycloakRequest);
+
+        service.sendHttpRequest(payload, URL, POST_METHOD);
+
+        verify(configuration).isKeycloakEnabled();
+        verifyHttpPostRequest(httpRequest);
 
         verify(httpRequest).header(eq("Authorization"), eq("Bearer access"));
 
         verifyKeycloakAcquire(keycloakRequest);
 
-        service.sendHttpRequest(payload, url, method);
+        service.sendHttpRequest(payload, URL, POST_METHOD);
 
 
         ArgumentCaptor<StringContentProvider> payloadCaptor = ArgumentCaptor.forClass(StringContentProvider.class);
         verify(keycloakRequest, times(2)).content(payloadCaptor.capture(), eq("application/x-www-form-urlencoded"));
-        verify(keycloakRequest, times(2)).method(eq(method));
+        verify(keycloakRequest, times(2)).method(eq(HttpMethod.valueOf(POST_METHOD)));
         verify(keycloakRequest, times(2)).send();
 
         String expected = "grant_type=refresh_token&client_id=client&refresh_token=refresh";
@@ -150,26 +155,59 @@ public class HttpRequestServiceTest {
     }
 
     @Test
-    public void testRequestWithNullPayload() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
-        when(configuration.isKeycloakEnabled()).thenReturn(false);
+    public void testRequestWithNullPayload() throws Exception {
+        AgentStartupConfiguration configuration = createNoKeycloakConfig();
 
         HttpRequestService service = new HttpRequestService(client, configuration);
 
-        service.sendHttpRequest(null, url, method);
+        String response = service.sendHttpRequest(null, URL, POST_METHOD);
+        assertNull(response);
 
-        verify(client).newRequest(url);
+        verify(client).newRequest(URL);
         verify(configuration).isKeycloakEnabled();
 
         verify(httpRequest, times(0)).content(any(StringContentProvider.class), anyString());
-        verify(httpRequest).method(eq(method));
+        verify(httpRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
         verify(httpRequest).send();
     }
 
-    private void verifyHttpRequest(Request httpRequest) throws InterruptedException, ExecutionException, TimeoutException {
-        verify(client).newRequest(url);
+    @Test
+    public void testGetRequestWithResponse() throws Exception {
+        String getContent = "foo bar";
+        Request request = mock(Request.class);
+        ContentResponse contentResponse = mock(ContentResponse.class);
+        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
+        when(contentResponse.getContentAsString()).thenReturn(getContent);
+        when(request.send()).thenReturn(contentResponse);
+        HttpClient getClient = mock(HttpClient.class);
+        when(getClient.newRequest(eq(GET_URL))).thenReturn(request);
+        
+        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        HttpRequestService service = new HttpRequestService(getClient, configuration);
+        String content = service.sendHttpRequest(null, GET_URL, HttpRequestService.GET);
+        assertEquals(getContent, content);
+    }
+    
+    @Test(expected = RequestFailedException.class)
+    public void failureThrowsRequestFailedException() throws Exception {
+        Request request = mock(Request.class);
+        when(client.newRequest(any(String.class))).thenReturn(request);
+        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        doThrow(IOException.class).when(request).send();
+        HttpRequestService service = new HttpRequestService(client, configuration);
+        service.sendHttpRequest("foo", "bar", HttpRequestService.DELETE /*any valid method*/);
+    }
+
+    private AgentStartupConfiguration createNoKeycloakConfig() {
+        AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
+        when(configuration.isKeycloakEnabled()).thenReturn(false);
+        return configuration;
+    }
+
+    private void verifyHttpPostRequest(Request httpRequest) throws InterruptedException, ExecutionException, TimeoutException {
+        verify(client).newRequest(URL);
         verify(httpRequest).content(any(StringContentProvider.class), eq("application/json"));
-        verify(httpRequest).method(eq(method));
+        verify(httpRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
         verify(httpRequest).send();
     }
 
@@ -206,7 +244,7 @@ public class HttpRequestServiceTest {
     private void verifyKeycloakAcquire(Request keycloakRequest) throws InterruptedException, ExecutionException, TimeoutException {
         ArgumentCaptor<StringContentProvider> payloadCaptor = ArgumentCaptor.forClass(StringContentProvider.class);
         verify(keycloakRequest).content(payloadCaptor.capture(), eq("application/x-www-form-urlencoded"));
-        verify(keycloakRequest).method(eq(method));
+        verify(keycloakRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
         verify(keycloakRequest).send();
 
         String expected = "grant_type=password&client_id=client&username=username&password=password";

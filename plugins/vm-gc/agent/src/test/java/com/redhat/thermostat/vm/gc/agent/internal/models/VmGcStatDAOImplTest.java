@@ -36,20 +36,14 @@
 
 package com.redhat.thermostat.vm.gc.agent.internal.models;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -92,10 +86,6 @@ public class VmGcStatDAOImplTest {
         when(creator.create(source)).thenReturn(config);
 
         httpRequestService = mock(HttpRequestService.class);
-        ContentResponse contentResponse = mock(ContentResponse.class);
-        when(httpRequestService.sendHttpRequest(anyString(), anyString(), any(HttpMethod.class))).thenReturn(contentResponse);
-        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
-
         dao = new VmGcStatDAOImpl(jsonHelper, creator, source);
         dao.bindHttpRequestService(httpRequestService);
     }
@@ -107,7 +97,7 @@ public class VmGcStatDAOImplTest {
 
         verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
 
-        verify(httpRequestService, times(1)).sendHttpRequest(JSON, GATEWAY_URL, HttpMethod.POST);
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URL, HttpRequestService.POST);
     }
 
 }

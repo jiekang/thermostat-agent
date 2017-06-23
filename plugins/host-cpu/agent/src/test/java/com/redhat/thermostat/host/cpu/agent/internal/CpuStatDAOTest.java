@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.host.cpu.agent.internal;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -45,9 +44,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.Clock;
@@ -57,20 +58,11 @@ import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.host.cpu.model.CpuStat;
 
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
-
 public class CpuStatDAOTest {
 
     private static final String URL = "http://localhost:26000/api/system-cpu/0.0.1";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final double times[] = { 33., 44, };
-    private static final String CONTENT_TYPE = "application/json";
     private static final String HOST_NAME = "somehostname";
 
     private static final String URL_PROP = "gatewayURL";
@@ -88,13 +80,6 @@ public class CpuStatDAOTest {
         Clock clock = new SystemClock();
         info = new CpuStat("foo-agent", clock.getRealTimeMillis(), times);
 
-        Request request = mock(Request.class);
-        HttpClient httpClient = mock(HttpClient.class);
-        when(httpClient.newRequest(anyString())).thenReturn(request);
-        ContentResponse response = mock(ContentResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
-        when(request.send()).thenReturn(response);
-
         jsonHelper = mock(CpuStatDAOImpl.JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(CpuStat.class))).thenReturn(SOME_JSON);
 
@@ -107,11 +92,6 @@ public class CpuStatDAOTest {
         when(configCreator.create(eq(cfiSource))).thenReturn(new PluginConfiguration(cfiSource, CpuStatDAOImpl.PLUGIN_ID));
 
         httpRequestService = mock(HttpRequestService.class);
-        ContentResponse contentResponse = mock(ContentResponse.class);
-
-        when(httpRequestService.sendHttpRequest(anyString(), anyString(), any(HttpMethod.class))).thenReturn(contentResponse);
-        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
-
         idservice = mock(SystemID.class);
         when(idservice.getSystemID()).thenReturn(HOST_NAME);
     }
@@ -126,7 +106,7 @@ public class CpuStatDAOTest {
         dao.activate();
         dao.put(info);
 
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpMethod.POST);
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpRequestService.POST);
     }
 
 }

@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.host.memory.agent.internal;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -45,33 +44,24 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
-
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.host.memory.model.MemoryStat;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.mockito.Matchers;
 
 public class MemoryStatDAOTest {
 
     private static final String URL = "http://localhost:26000/api/system-memory/0.0.1";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
-    private static final String CONTENT_TYPE = "application/json";
     private static final String HOST_NAME = "somehostname";
 
     private static final String URL_PROP = "gatewayURL";
@@ -91,22 +81,12 @@ public class MemoryStatDAOTest {
         this.jsonHelper = mock(MemoryStatDAOImpl.JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(MemoryStat.class))).thenReturn(SOME_JSON);
 
-        Request request = mock(Request.class);
-        HttpClient httpClient = mock(HttpClient.class);
-        when(httpClient.newRequest(anyString())).thenReturn(request);
-        ContentResponse response = mock(ContentResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
-        when(request.send()).thenReturn(response);
-
         cfiSource = mock(ConfigurationInfoSource.class);
         Map<String, String> map = new HashMap<>();
         map.put(URL_PROP, URL);
         when(cfiSource.getConfiguration(anyString(), anyString())).thenReturn(map);
 
         httpRequestService = mock(HttpRequestService.class);
-        ContentResponse contentResponse = mock(ContentResponse.class);
-        when(httpRequestService.sendHttpRequest(anyString(), anyString(), any(HttpMethod.class))).thenReturn(contentResponse);
-        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
 
         configCreator = mock(MemoryStatDAOImpl.ConfigurationCreator.class);
         when(configCreator.create(eq(cfiSource))).thenReturn(new PluginConfiguration(cfiSource, MemoryStatDAOImpl.PLUGIN_ID));
@@ -117,7 +97,6 @@ public class MemoryStatDAOTest {
 
     @Test
     public void testPut() throws Exception {
-
         MemoryStatDAOImpl dao = new MemoryStatDAOImpl(jsonHelper, configCreator);
         dao.bindSystemID(idservice);
         dao.bindConfigurationInfoSource(cfiSource);
@@ -125,7 +104,7 @@ public class MemoryStatDAOTest {
         dao.activate();
         dao.put(info);
 
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpMethod.POST);
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpRequestService.POST);
     }
 }
 
