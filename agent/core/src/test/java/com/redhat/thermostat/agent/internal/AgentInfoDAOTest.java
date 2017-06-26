@@ -80,7 +80,6 @@ public class AgentInfoDAOTest {
     public void setUp() throws Exception {
         info = new AgentInformation("1234");
         info.setAlive(true);
-        info.setConfigListenAddress("foobar:666");
         info.setStartTime(100);
         info.setStopTime(10);
         
