@@ -39,14 +39,9 @@ package com.redhat.thermostat.storage.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
@@ -90,12 +85,6 @@ public class ActivatorTest {
     @Test
     public void verifyActivatorRegistersServicesMultipleTimes() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        ApplicationService appService = mock(ApplicationService.class);
-        TimerFactory timerFactory = mock(TimerFactory.class);
-        when(appService.getTimerFactory()).thenReturn(timerFactory);        
-        Timer timer = mock(Timer.class);
-        when(timerFactory.createTimer()).thenReturn(timer);
-        context.registerService(ApplicationService.class, appService, null);
 
         Activator activator = new Activator();
 
@@ -103,22 +92,23 @@ public class ActivatorTest {
 
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
+        assertEquals(2, context.getAllServices().size());
 
         activator.stop(context);
         
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(0, context.getAllServices().size());
         
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
+        assertEquals(2, context.getAllServices().size());
 
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
-        
+        assertEquals(0, context.getAllServices().size());
     }
 }
 
