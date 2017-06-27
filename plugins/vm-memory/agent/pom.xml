@@ -56,9 +56,12 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.memory.agent</Bundle-SymbolicName>
-            <Export-Package />
+            <Export-Package>
+              com.redhat.thermostat.vm.memory.agent.model
+            </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.vm.memory.agent.internal
+              com.redhat.thermostat.vm.memory.agent.internal,
+              com.redhat.thermostat.vm.memory.agent.internal.models
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -107,11 +110,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-core</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -123,6 +121,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-jvm-overview-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

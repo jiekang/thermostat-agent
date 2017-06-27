@@ -38,7 +38,7 @@ package com.redhat.thermostat.vm.memory.agent.internal;
 
 import com.redhat.thermostat.jvm.overview.agent.VmUpdate;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Generation;
 
 /**
  * A helper class to provide type-safe access to commonly used jvmstat monitors

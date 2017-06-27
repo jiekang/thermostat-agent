@@ -52,12 +52,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
-import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAO;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Space;
+import com.redhat.thermostat.vm.memory.agent.model.VmTlabStat;
 
 public class VmMemoryVmListenerTest {
     private static final String[] GEN_NAMES = new String[] { "Gen1", "Gen2" };

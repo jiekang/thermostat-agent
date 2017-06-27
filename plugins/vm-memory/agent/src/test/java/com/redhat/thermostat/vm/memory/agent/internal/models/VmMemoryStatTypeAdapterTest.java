@@ -34,16 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common.internal;
+package com.redhat.thermostat.vm.memory.agent.internal.models;
 
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import static com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
-import static com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
+import static com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Generation;
+import static com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Space;
 import static org.junit.Assert.assertEquals;
 
 public class VmMemoryStatTypeAdapterTest {

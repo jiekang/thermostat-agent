@@ -34,16 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common;
+package com.redhat.thermostat.vm.memory.agent.internal.models;
 
-import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat;
 
-public class Constants {
+@Service
+public interface VmMemoryStatDAO {
 
-    public static final int ORDER = Ordered.ORDER_MEMORY_GROUP + 40;
-
-    private Constants() {
-        throw new AssertionError("Do not instantiate this");
-    }
+    public void putVmMemoryStat(VmMemoryStat stat);
 
 }
+

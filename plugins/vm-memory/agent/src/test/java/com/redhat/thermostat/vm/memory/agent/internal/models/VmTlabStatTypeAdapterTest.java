@@ -34,18 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common;
+package com.redhat.thermostat.vm.memory.agent.internal.models;
 
+import com.redhat.thermostat.vm.memory.agent.model.VmTlabStat;
+import org.junit.Test;
+
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
+import static org.junit.Assert.assertEquals;
 
-@Service
-public interface VmMemoryStatDAO {
+public class VmTlabStatTypeAdapterTest {
 
-    public void putVmMemoryStat(VmMemoryStat stat);
+    @Test
+    public void testWrite() throws IOException {
+        VmTlabStatTypeAdapter typeAdapter = new VmTlabStatTypeAdapter();
+        VmTlabStat stat = new VmTlabStat();
+        stat.setAgentId("AGENT-1");
+        stat.setVmId("VM-1");
+        stat.setTimeStamp(1000l);
+        stat.setTotalAllocatingThreads(10l);
+        stat.setTotalAllocations(1342l);
+        stat.setTotalRefills(58l);
+        stat.setMaxRefills(90l);
+        stat.setTotalSlowAllocations(343l);
+        stat.setMaxSlowAllocations(989l);
+        stat.setTotalGcWaste(788l);
+        stat.setMaxGcWaste(992l);
+        stat.setTotalSlowWaste(899l);
+        stat.setMaxSlowWaste(634l);
+        stat.setTotalFastWaste(678l);
+        stat.setMaxFastWaste(333l);
+        assertEquals("[{\"vmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"timeStamp\":{\"$numberLong\":\"1000\"},\"allocThreads\":{\"$numberLong\":\"10\"},\"totalAllocations\":{\"$numberLong\":\"1342\"},\"refills\":{\"$numberLong\":\"58\"},\"maxRefills\":{\"$numberLong\":\"90\"},\"slowAllocations\":{\"$numberLong\":\"343\"},\"maxSlowAllocations\":{\"$numberLong\":\"989\"},\"gcWaste\":{\"$numberLong\":\"788\"},\"maxGcWaste\":{\"$numberLong\":\"992\"},\"slowWaste\":{\"$numberLong\":\"899\"},\"maxSlowWaste\":{\"$numberLong\":\"634\"},\"fastWaste\":{\"$numberLong\":\"678\"},\"maxFastWaste\":{\"$numberLong\":\"333\"}}]", typeAdapter.toJson(Arrays.asList(stat)));
+    }
 
 }
-

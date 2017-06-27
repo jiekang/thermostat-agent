@@ -49,9 +49,8 @@ import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.memory.common.Constants;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAO;
 
 @Component
 @Service(value = Backend.class)

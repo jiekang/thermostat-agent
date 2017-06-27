@@ -34,19 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common.internal;
+package com.redhat.thermostat.vm.memory.agent.internal.models;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
-import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -56,63 +57,62 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
 @Component
-@Service(value = VmTlabStatDAO.class)
-public class VmTlabStatDAOImpl implements VmTlabStatDAO {
+@Service(value = VmMemoryStatDAO.class)
+public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
-    private static final Logger logger = LoggingUtils.getLogger(VmTlabStatDAOImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
     private static final String PLUGIN_ID = "vm-memory";
     private static final String CONTENT_TYPE = "application/json";
 
     private final HttpClient client;
     private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
-    private final ConfigurationCreator configurationCreator;
+    private final ConfigurationCreator configCreator;
 
     private String gatewayURL;
 
     @Reference
     private ConfigurationInfoSource configInfoSource;
 
-    public VmTlabStatDAOImpl() throws Exception {
-        this(new HttpClient(), new HttpHelper(), new JsonHelper(new VmTlabStatTypeAdapter()), new ConfigurationCreator(), null);
+    public VmMemoryStatDAOImpl() {
+        this(new HttpClient(), new JsonHelper(new VmMemoryStatTypeAdapter()), new HttpHelper(),
+                new ConfigurationCreator(), null);
     }
 
-    VmTlabStatDAOImpl(HttpClient client, HttpHelper httpHelper, JsonHelper jsonHelper,
-            ConfigurationCreator configurationCreator, ConfigurationInfoSource configInfoSource) throws Exception {
+    VmMemoryStatDAOImpl(HttpClient client, JsonHelper jh, HttpHelper hh, ConfigurationCreator creator,
+            ConfigurationInfoSource source) {
         this.client = client;
-        this.httpHelper = httpHelper;
-        this.jsonHelper = jsonHelper;
-        this.configurationCreator = configurationCreator;
-        this.configInfoSource = configInfoSource;
+        this.httpHelper = hh;
+        this.jsonHelper = jh;
+        this.configCreator = creator;
+        this.configInfoSource = source;
     }
 
     @Activate
     void activate() throws Exception {
-        PluginConfiguration config = configurationCreator.create(configInfoSource);
+        PluginConfiguration config = configCreator.create(configInfoSource);
         this.gatewayURL = config.getGatewayURL();
 
-        this.httpHelper.startClient(this.client);
+        httpHelper.startClient(client);
     }
 
     @Override
-    public void putStat(final VmTlabStat stat) {
-//      TODO: Re-enable when web-gateway service for TLAB stats is available
-//      Also see VmTlabStatDAOTest for disabled tests
-        return;
-//        try {
-//            String json = jsonHelper.toJson(Arrays.asList(stat));
-//            StringContentProvider provider = httpHelper.createContentProvider(json);
-//
-//            Request httpRequest = client.newRequest(gatewayURL);
-//            httpRequest.method(HttpMethod.POST);
-//            httpRequest.content(provider, CONTENT_TYPE);
-//            sendRequest(httpRequest);
-//        } catch (Exception e) {
-//            logger.log(Level.WARNING, "Failed to send VmTlabStat to Web Gateway", e);
-//        }
+    public void putVmMemoryStat(final VmMemoryStat stat) {
+        try {
+            String json = jsonHelper.toJson(Arrays.asList(stat));
+            StringContentProvider provider = httpHelper.createContentProvider(json);
+
+            Request httpRequest = client.newRequest(gatewayURL);
+            httpRequest.method(HttpMethod.POST);
+            httpRequest.content(provider, CONTENT_TYPE);
+            sendRequest(httpRequest);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to send VmMemoryStat to Web Gateway", e);
+        }
     }
 
     private void sendRequest(Request httpRequest)
@@ -128,15 +128,16 @@ public class VmTlabStatDAOImpl implements VmTlabStatDAO {
         return logger;
     }
 
+    // For testing purposes
     static class JsonHelper {
 
-        private final VmTlabStatTypeAdapter adapter;
+        private final VmMemoryStatTypeAdapter adapter;
 
-        public JsonHelper(VmTlabStatTypeAdapter adapter) {
+        public JsonHelper(VmMemoryStatTypeAdapter adapter) {
             this.adapter = adapter;
         }
 
-        String toJson(List<VmTlabStat> stats) throws IOException {
+        String toJson(List<VmMemoryStat> stats) throws IOException {
             return adapter.toJson(stats);
         }
     }
@@ -154,12 +155,13 @@ public class VmTlabStatDAOImpl implements VmTlabStatDAO {
 
     }
 
-    // For testing purposes
+    // For Testing purposes
     static class ConfigurationCreator {
 
         PluginConfiguration create(ConfigurationInfoSource source) {
             return new PluginConfiguration(source, PLUGIN_ID);
         }
+
     }
 }
 

@@ -46,7 +46,7 @@ import com.redhat.thermostat.jvm.overview.agent.VmUpdateException;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Generation;
 
 public class VmMemoryDataExtractorTest {
 

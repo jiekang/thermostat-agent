@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common.internal;
+package com.redhat.thermostat.vm.memory.agent.internal.models;
 
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -57,11 +57,11 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
-import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.HttpHelper;
-import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl.JsonHelper;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmMemoryStatDAOImpl.HttpHelper;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmMemoryStatDAOImpl.JsonHelper;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Space;
 
 public class VmMemoryStatDAOImplTest {
 

@@ -34,12 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.common.internal;
+package com.redhat.thermostat.vm.memory.agent.internal.models;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
+import com.redhat.thermostat.vm.memory.agent.model.VmTlabStat;
 
 import java.io.IOException;
 import java.util.List;
