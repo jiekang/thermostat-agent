@@ -51,6 +51,7 @@ public class SSLConfigurationImpl implements SSLConfiguration {
 
     private CommonPaths paths;
     private Properties configProps = null;
+    private static final String DISABLE_HOSTNAME_VERIFICATION = "DISABLE_HOSTNAME_VERIFICATION";
     private static final String SSL_PROPS_FILENAME = "ssl.properties";
     private static final String KEYSTORE_FILE_KEY = "KEYSTORE_FILE";
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
@@ -58,6 +59,28 @@ public class SSLConfigurationImpl implements SSLConfiguration {
 
     public SSLConfigurationImpl(CommonPaths paths) {
         this.paths = paths;
+    }
+    
+    @Override
+    public boolean disableHostnameVerification() {
+        return readBooleanProperty(DISABLE_HOSTNAME_VERIFICATION);
+    }
+    
+    private boolean readBooleanProperty(final String property) {
+        boolean result = false;
+        try {
+            loadProperties();
+        } catch (InvalidConfigurationException e) {
+            logger.log(Level.WARNING,
+                    "THERMOSTAT_HOME not set and config file attempted to be " +
+                          "read from there! Returning false.");
+            return result;
+        }
+        String token = configProps.getProperty(property);
+        if (token != null) {
+            result = Boolean.parseBoolean(token);
+        }
+        return result;
     }
 
     @Override

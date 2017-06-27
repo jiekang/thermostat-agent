@@ -120,6 +120,7 @@ public class SSLConfigurationImplTest {
         // use this assertion in order to avoid false positives if loading of
         // ssl.properties did not work, but boolean matches default values.
         assertEquals("system thermostat home", config.getKeyStorePassword());
+        assertTrue(config.disableHostnameVerification());
     }
     
     /*
@@ -153,6 +154,7 @@ public class SSLConfigurationImplTest {
         // use this assertion in order to avoid false positives if loading of
         // ssl.properties did not work, but boolean matches default values.
         assertEquals("user thermostat home", config.getKeyStorePassword());
+        assertFalse(config.disableHostnameVerification());
     }
     
     /*
@@ -187,6 +189,7 @@ public class SSLConfigurationImplTest {
         // use this assertion in order to avoid false positives if loading of
         // ssl.properties did not work, but boolean matches default values.
         assertEquals("user thermostat home", config.getKeyStorePassword());
+        assertFalse(config.disableHostnameVerification());
     }
     
     /*
@@ -218,6 +221,16 @@ public class SSLConfigurationImplTest {
         // assert default values
         assertNull(config.getKeyStorePassword());
         assertNull(config.getKeystoreFile());
+        assertFalse(config.disableHostnameVerification());
+    }
+    
+    @Test
+    public void canGetSSLEnabledConfigs() {
+        assertTrue(sslConf.disableHostnameVerification());
+        File disabledSSLProps = new File(this.getClass().getResource("/ssl.properties").getFile());
+        SSLConfigurationImpl disabledSSLConf = new SSLConfigurationImpl(null);
+        disabledSSLConf.initProperties(disabledSSLProps);
+        assertFalse(disabledSSLConf.disableHostnameVerification());
     }
     
     private static String decodeFilePath(URL url) {

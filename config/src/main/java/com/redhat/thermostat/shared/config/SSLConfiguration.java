@@ -53,6 +53,14 @@ public interface SSLConfiguration {
      *         if any, null otherwise.
      */
     public String getKeyStorePassword();
+    
+    /**
+     * 
+     * @return true if and only if host name verification should not be
+     *         performed during SSL handshake. It might be useful to set to
+     *         true for testing purposes or for self signed certificates.
+     */
+    public boolean disableHostnameVerification();
 
 }
 
