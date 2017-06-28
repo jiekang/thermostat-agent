@@ -233,7 +233,7 @@ public class HttpRequestService {
         }
         
         private RequestFailedException(int responseCode, String reason, Throwable cause) {
-            super(reason);
+            super(reason, cause);
             this.reasonStr = reason;
             this.responseCode = responseCode;
         }

@@ -39,7 +39,6 @@ package com.redhat.thermostat.jvm.overview.agent.internal.model;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -49,33 +48,26 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.HttpHelper;
-import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.JsonHelper;
-import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoUpdate;
-import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-public class VmInfoDAOTest {
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.JsonHelper;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoUpdate;
+import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
+
+public class VmInfoDAOImplTest {
 
     private static final String URL = "http://localhost:26000/api/v100/vm-info/systems/*/agents/foo-agent";
     private static final String UPDATE_URL = URL + "/jvms/vmId";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
-    private static final String CONTENT_TYPE = "application/json";
     
     private VmInfo info;
     private JsonHelper jsonHelper;
-    private HttpHelper httpHelper;
-    private StringContentProvider contentProvider;
-    private Request request;
-    private ContentResponse response;
+    private HttpRequestService httpRequestService;
 
     @Before
     public void setUp() throws Exception {
@@ -100,51 +92,37 @@ public class VmInfoDAOTest {
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
                 props, env, libs, uid, username);
         
-        httpHelper = mock(HttpHelper.class);
-        contentProvider = mock(StringContentProvider.class);
-        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
-        request = mock(Request.class);
-        when(httpHelper.newRequest(anyString())).thenReturn(request);
-        response = mock(ContentResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
-        when(request.send()).thenReturn(response);
-        
+        httpRequestService = mock(HttpRequestService.class);
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmInfo.class))).thenReturn(SOME_JSON);
         when(jsonHelper.toJson(any(VmInfoUpdate.class))).thenReturn(SOME_OTHER_JSON);
     }
 
+    @Ignore("Re-enable when proper /jvms endpoint is being used")
     @Test
     public void testPutVmInfo() throws Exception {
-        VmInfoDAO dao = new VmInfoDAOImpl(httpHelper, jsonHelper);
+        VmInfoDAOImpl dao = new VmInfoDAOImpl(jsonHelper);
+        dao.bindHttpRequestService(httpRequestService);
         dao.putVmInfo(info);
         
-        verify(httpHelper).newRequest(URL);
-        verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(eq(Arrays.asList(info)));
-        verify(httpHelper).createContentProvider(SOME_JSON);
-        verify(request).content(contentProvider, CONTENT_TYPE);
-        verify(request).send();
-        verify(response).getStatus();
+        verify(httpRequestService).sendHttpRequest(SOME_JSON, URL, HttpRequestService.POST);
     }
 
+    @Ignore("Re-enable when proper /jvms endpoint is being used")
     @Test
     public void testPutVmStoppedTime() throws Exception {
-        VmInfoDAO dao = new VmInfoDAOImpl(httpHelper, jsonHelper);
+        VmInfoDAOImpl dao = new VmInfoDAOImpl(jsonHelper);
+        dao.bindHttpRequestService(httpRequestService);
+        
         dao.putVmStoppedTime("foo-agent", "vmId", 3L);
 
-        verify(httpHelper).newRequest(UPDATE_URL);
-        verify(request).method(HttpMethod.PUT);
-        
         ArgumentCaptor<VmInfoUpdate> updateCaptor = ArgumentCaptor.forClass(VmInfoUpdate.class);
         verify(jsonHelper).toJson(updateCaptor.capture());
         VmInfoUpdate update = updateCaptor.getValue();
         assertEquals(3L, update.getStoppedTime());
                 
-        verify(httpHelper).createContentProvider(SOME_OTHER_JSON);
-        verify(request).content(contentProvider, CONTENT_TYPE);
-        verify(request).send();
-        verify(response).getStatus();
+        verify(httpRequestService).sendHttpRequest(SOME_OTHER_JSON, UPDATE_URL, HttpRequestService.PUT);
     }
 
 }
