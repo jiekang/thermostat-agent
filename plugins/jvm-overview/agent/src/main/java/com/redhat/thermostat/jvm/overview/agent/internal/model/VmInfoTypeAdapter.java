@@ -51,27 +51,27 @@ import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
 public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
     
     private static final String AGENT_ID = "agentId";
-    private static final String VM_ID = "vmId";
-    private static final String VM_PID = "vmPid";
+    private static final String VM_ID = "jvmId";
+    private static final String VM_PID = "jvmPid";
     private static final String JAVA_VERSION = "javaVersion";
     private static final String JAVA_HOME = "javaHome";
     private static final String MAIN_CLASS = "mainClass";
     private static final String JAVA_COMMAND_LINE = "javaCommandLine";
-    private static final String VM_ARGUMENTS = "vmArguments";
-    private static final String VM_NAME = "vmName";
-    private static final String VM_INFO = "vmInfo";
-    private static final String VM_VERSION = "vmVersion";
-    private static final String PROPERTIES_AS_ARRAY = "propertiesAsArray";
-    private static final String ENVIRONMENT_AS_ARRAY = "environmentAsArray";
+    private static final String VM_ARGUMENTS = "jvmArguments";
+    private static final String VM_NAME = "jvmName";
+    private static final String VM_INFO = "jvmInfo";
+    private static final String VM_VERSION = "jvmVersion";
+    private static final String PROPERTIES_AS_ARRAY = "properties";
+    private static final String ENVIRONMENT_AS_ARRAY = "environment";
     private static final String LOADED_NATIVE_LIBRARIES = "loadedNativeLibraries";
-    private static final String START_TIME_STAMP = "startTimeStamp";
-    private static final String STOP_TIME_STAMP = "stopTimeStamp";
+    private static final String START_TIME_STAMP = "startTime";
+    private static final String STOP_TIME_STAMP = "stopTime";
     private static final String UID = "uid";
     private static final String USERNAME = "username";
     private static final String TYPE_LONG = "$numberLong";
     private static final String KEY = "key";
     private static final String VALUE = "value";
-    
+
     @Override
     public void write(JsonWriter out, List<VmInfo> value) throws IOException {
         // Request is an array of VmInfo objects
@@ -86,7 +86,7 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
 
     private void writeVmInfo(JsonWriter out, VmInfo info) throws IOException {
         out.beginObject();
-        
+
         // Write each field of VmInfo as part of a JSON object
         out.name(AGENT_ID);
         out.value(info.getAgentId());

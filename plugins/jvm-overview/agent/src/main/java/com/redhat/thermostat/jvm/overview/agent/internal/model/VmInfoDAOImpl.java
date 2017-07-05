@@ -44,12 +44,16 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoTypeAdapter.VmInfoUpdateTypeAdapter;
 import com.redhat.thermostat.jvm.overview.agent.model.VmId;
@@ -59,24 +63,42 @@ import com.redhat.thermostat.storage.core.AgentId;
 @Component
 @Service(VmInfoDAO.class)
 public class VmInfoDAOImpl implements VmInfoDAO {
-    
+
+    private static final String PLUGIN_ID = "jvm-overview";
+    private static final String SYSTEM_PATH = "systems/";
+    private static final String VM_PATH = "/jvms/";
+    private static final String UPDATE_PREFIX = "update/";
+
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
     
-    private static final String GATEWAY_URL = "http://localhost:26000/api/v100"; // TODO configurable
-    private static final String GATEWAY_PATH = "/vm-info/systems/*/agents/";
-    private static final String GATEWAY_PATH_JVM_SUFFIX = "/jvms/";
-    
     private final JsonHelper jsonHelper;
-    
+    private final ConfigurationCreator configCreator;
+
+    private String gatewayURL;
+
+    @Reference
+    private ConfigurationInfoSource configInfoSource;
+
     @Reference
     private HttpRequestService httpRequestService;
 
+    @Reference
+    private SystemID systemID;
+
     public VmInfoDAOImpl() throws Exception {
-        this(new JsonHelper(new VmInfoTypeAdapter(), new VmInfoUpdateTypeAdapter()));
+        this(new JsonHelper(new VmInfoTypeAdapter(), new VmInfoUpdateTypeAdapter()), new ConfigurationCreator(), null);
     }
 
-    VmInfoDAOImpl(JsonHelper jsonHelper) throws Exception {
+    VmInfoDAOImpl(JsonHelper jsonHelper, ConfigurationCreator creator, ConfigurationInfoSource source) throws Exception {
         this.jsonHelper = jsonHelper;
+        this.configCreator = creator;
+        this.configInfoSource = source;
+    }
+
+    @Activate
+    public void activate() throws Exception {
+        PluginConfiguration config = configCreator.create(configInfoSource);
+        this.gatewayURL = config.getGatewayURL();
     }
 
     @Override
@@ -91,16 +113,14 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmInfo(final VmInfo info) {
-        // FIXME: Re-enable once /jvms endpoint is being used properly and re-enable ignored
-        //        unit-tests.
-//        try {
-//            // Encode as JSON and send as POST request
-//            String json = jsonHelper.toJson(Arrays.asList(info));
-//            String url = getAddURL(info.getAgentId());
-//            httpRequestService.sendHttpRequest(json, url, HttpRequestService.POST);
-//        } catch (IOException | RequestFailedException e) {
-//           logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
-//        }
+        try {
+            // Encode as JSON and send as POST request
+            String json = jsonHelper.toJson(Arrays.asList(info));
+            String url = getAddURL();
+            httpRequestService.sendHttpRequest(json, url, HttpRequestService.POST);
+        } catch (IOException | RequestFailedException e) {
+           logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
+        }
     }
 
     @Override
@@ -109,29 +129,33 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             // Encode as JSON and send as PUT request
             VmInfoUpdate update = new VmInfoUpdate(timestamp);
             String json = jsonHelper.toJson(update);
-            String url = getUpdateURL(agentId, vmId);
+            String url = getUpdateURL(vmId);
             httpRequestService.sendHttpRequest(json, url, HttpRequestService.PUT);
         } catch (IOException | RequestFailedException e) {
            logger.log(Level.WARNING, "Failed to send JVM information update to web gateway", e);
         }
     }
     
-    private String getAddURL(String agentId) {
-        StringBuilder builder = buildURL(agentId);
+    private String getAddURL() {
+        StringBuilder builder = buildURL();
+        builder.append(SYSTEM_PATH);
+        builder.append(systemID.getSystemID());
         return builder.toString();
     }
 
-    private StringBuilder buildURL(String agentId) {
+    private StringBuilder buildURL() {
         StringBuilder builder = new StringBuilder();
-        builder.append(GATEWAY_URL);
-        builder.append(GATEWAY_PATH);
-        builder.append(agentId);
+        builder.append(gatewayURL);
         return builder;
     }
     
-    private String getUpdateURL(String agentId, String vmId) {
-        StringBuilder builder = buildURL(agentId);
-        builder.append(GATEWAY_PATH_JVM_SUFFIX);
+    private String getUpdateURL(String vmId) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(buildURL());
+        builder.append(UPDATE_PREFIX);
+        builder.append(SYSTEM_PATH);
+        builder.append(systemID.getSystemID());
+        builder.append(VM_PATH);
         builder.append(vmId);
         return builder.toString();
     }
@@ -143,6 +167,14 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     protected void unbindHttpRequestService(HttpRequestService httpRequestService) {
         this.httpRequestService = null;
         logger.log(Level.INFO, "Unbound HTTP service. Further attempts to store data will fail until bound again.");
+    }
+
+    protected void bindSystemId(SystemID id) {
+        this.systemID = id;
+    }
+
+    protected void unbindSystemId(SystemID id) {
+        this.systemID = null;
     }
     
     static class VmInfoUpdate {
@@ -177,6 +209,15 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             return updateTypeAdapter.toJson(update);
         }
         
+    }
+
+    // For Testing purposes
+    static class ConfigurationCreator {
+
+        PluginConfiguration create(ConfigurationInfoSource source) {
+            return new PluginConfiguration(source, PLUGIN_ID);
+        }
+
     }
 }
 
