@@ -55,7 +55,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.ExecutorService;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -72,15 +71,12 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
-import com.redhat.thermostat.common.internal.test.TestTimerFactory;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
@@ -122,18 +118,9 @@ public class LauncherImplTest {
         }
     }
 
-    private static class TestCmd2 implements TestCommand.Handle {
-        @Override
-        public void run(CommandContext ctx) {
-            Arguments args = ctx.getArguments();
-            ctx.getConsole().getOutput().print(args.getArgument("arg4") + ": " + args.getArgument("arg3"));
-        }
-    }
-
     private TestCommandContextFactory  ctxFactory;
     private StubBundleContext bundleContext;
     private Bundle sysBundle;
-    private TestTimerFactory timerFactory;
     private BundleManager registry;
     private Version version;
     private CommandInfoSource infos;
@@ -143,7 +130,6 @@ public class LauncherImplTest {
 
     private CommonPaths paths;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws CommandInfoNotFoundException, BundleException, IOException {
         setupCommandContextFactory();
@@ -197,13 +183,6 @@ public class LauncherImplTest {
         helpCommand.setCommandGroupMetadataSource(commandGroupMetadataSource);
 
         registry = mock(BundleManager.class);
-
-        timerFactory = new TestTimerFactory();
-        ExecutorService exec = mock(ExecutorService.class);
-        ApplicationService appSvc = mock(ApplicationService.class);
-        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
-        when(appSvc.getApplicationExecutor()).thenReturn(exec);
-        bundleContext.registerService(ApplicationService.class, appSvc, null);
 
         version = mock(Version.class);
 
@@ -525,7 +504,6 @@ public class LauncherImplTest {
     private void runAndVerifyCommand(String[] args, String expected) {
         wrappedRun(launcher, args);
         assertEquals(expected, ctxFactory.getOutput());
-        assertTrue(timerFactory.isShutdown());
     }
     
     private void wrappedRun(LauncherImpl launcher, String[] args) {
@@ -551,7 +529,6 @@ public class LauncherImplTest {
         wrappedRun(launcher, new String[] {Version.VERSION_OPTION});
 
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
-        assertTrue(timerFactory.isShutdown());
     }
     
     /**

@@ -55,7 +55,6 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.junit.Test;
@@ -71,61 +70,6 @@ import com.redhat.thermostat.shared.config.SSLConfiguration;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SSLContext.class, KeyManagerFactory.class, javax.net.ssl.TrustManagerFactory.class })
 public class SSLContextFactoryTest {
-
-    /*
-     * cmdChanServer.keystore is a keystore converted from openssl. It contains
-     * key material which was signed by ca.crt. More information as to how to
-     * create such a file here (first create server.crt => convert it to java
-     * keystore format):
-     * http://icedtea.classpath.org/wiki/Thermostat/DevDeployWarInTomcatNotes
-     * 
-     * Unfortunately, powermock messes up the KeyManagerFactory. We can only
-     * verify that proper methods are called.
-     */
-    @Test
-    public void verifySetsUpServerContextWithProperKeyMaterial()
-            throws Exception {
-        File keystoreFile = new File(decodeFilePath(this.getClass()
-                .getResource("/cmdChanServer.keystore")));
-
-        SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        when(sslConf.getKeystoreFile()).thenReturn(
-                keystoreFile);
-        when(sslConf.getKeyStorePassword()).thenReturn(
-                "testpassword");
-
-        PowerMockito.mockStatic(SSLContext.class);
-        SSLContext context = PowerMockito.mock(SSLContext.class);
-        when(SSLContext.getInstance("TLSv1.2", "SunJSSE")).thenReturn(context);
-        ArgumentCaptor<KeyManager[]> keymanagersCaptor = ArgumentCaptor
-                .forClass(KeyManager[].class);
-        ArgumentCaptor<TrustManager[]> tmsCaptor = ArgumentCaptor
-                .forClass(TrustManager[].class);
-        PowerMockito.mockStatic(KeyManagerFactory.class);
-        KeyManagerFactory mockFactory = PowerMockito.mock(KeyManagerFactory.class);
-        when(KeyManagerFactory.getInstance("SunX509", "SunJSSE")).thenReturn(mockFactory);
-        KeyManager[] mockKms = new KeyManager[] { mock(X509KeyManager.class) };
-        when(mockFactory.getKeyManagers()).thenReturn(mockKms);
-        PowerMockito.mockStatic(javax.net.ssl.TrustManagerFactory.class);
-        javax.net.ssl.TrustManagerFactory mockTrustFactory = PowerMockito.mock(javax.net.ssl.TrustManagerFactory.class);
-        when(mockTrustFactory.getTrustManagers()).thenReturn(new TrustManager[0]);
-        when(javax.net.ssl.TrustManagerFactory.getInstance("SunX509", "SunJSSE")).thenReturn(mockTrustFactory);
-        
-        SSLContextFactory.getServerContext(sslConf);
-        verify(context).init(keymanagersCaptor.capture(),
-                tmsCaptor.capture(), any(SecureRandom.class));
-        KeyManager[] kms = keymanagersCaptor.getValue();
-        assertEquals(1, kms.length);
-        // Keymanagers should be wrapped by JSSEKeyManager
-        assertEquals(
-                "com.redhat.thermostat.common.internal.JSSEKeyManager",
-                kms[0].getClass().getName());
-        TrustManager[] tms = tmsCaptor.getValue();
-        assertEquals(1, tms.length);
-        assertEquals(
-                "com.redhat.thermostat.common.internal.CustomX509TrustManager",
-                tms[0].getClass().getName());
-    }
 
     @Test
     public void verifySetsUpClientContextWithProperTrustManager()

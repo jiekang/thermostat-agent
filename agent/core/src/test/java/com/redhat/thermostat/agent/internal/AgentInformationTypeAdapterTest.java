@@ -53,12 +53,12 @@ public class AgentInformationTypeAdapterTest {
     public void testWrite() throws Exception {
         AgentInformationTypeAdapter adapter = new AgentInformationTypeAdapter();
         final String expected = "[{\"agentId\":\"agent1\",\"startTime\":{\"$numberLong\":\"4000\"},"
-                + "\"stopTime\":{\"$numberLong\":\"6000\"},\"alive\":false,\"configListenAddress\":\"127.0.0.1:12000\"},"
+                + "\"stopTime\":{\"$numberLong\":\"6000\"},\"alive\":false},"
                 + "{\"agentId\":\"agent2\",\"startTime\":{\"$numberLong\":\"5000\"},\"stopTime\":{\"$numberLong\":\"0\"},"
-                + "\"alive\":true,\"configListenAddress\":\"1.2.3.4:12000\"}]";
+                + "\"alive\":true}]";
         
-        AgentInformation first = createAgentInformation("agent1", 4000L, 6000L, false, "127.0.0.1:12000");
-        AgentInformation second = createAgentInformation("agent2", 5000L, 0L, true, "1.2.3.4:12000");
+        AgentInformation first = createAgentInformation("agent1", 4000L, 6000L, false);
+        AgentInformation second = createAgentInformation("agent2", 5000L, 0L, true);
         List<AgentInformation> infos = Arrays.asList(first, second);
         
         String json = adapter.toJson(infos);
@@ -69,22 +69,20 @@ public class AgentInformationTypeAdapterTest {
     public void testUpdate() throws Exception {
         AgentInformationUpdateTypeAdapter adapter = new AgentInformationUpdateTypeAdapter();
         final String expected = "{\"set\":{\"startTime\":{\"$numberLong\":\"5000\"},"
-                + "\"stopTime\":{\"$numberLong\":\"7000\"},\"alive\":false,\"configListenAddress\":\"1.2.3.4:12000\"}}";
+                + "\"stopTime\":{\"$numberLong\":\"7000\"},\"alive\":false}}";
         
-        AgentInformation info = createAgentInformation("agent2", 5000L, 7000L, false, "1.2.3.4:12000");
+        AgentInformation info = createAgentInformation("agent2", 5000L, 7000L, false);
         AgentInformationUpdate update = new AgentInformationUpdate(info);
         
         String json = adapter.toJson(update);
         assertEquals(expected, json);
     }
     
-    private AgentInformation createAgentInformation(String agentId, long startTime, long stopTime, 
-            boolean alive, String configListenAddress) {
+    private AgentInformation createAgentInformation(String agentId, long startTime, long stopTime, boolean alive) {
         AgentInformation info = new AgentInformation(agentId);
         info.setStartTime(startTime);
         info.setStopTime(stopTime);
         info.setAlive(alive);
-        info.setConfigListenAddress(configListenAddress);
         return info;
     }
 

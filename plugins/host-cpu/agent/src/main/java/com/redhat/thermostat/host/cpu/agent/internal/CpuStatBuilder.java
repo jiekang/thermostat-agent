@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.host.cpu.agent.internal;
 
-import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.host.cpu.model.CpuStat;
 
 interface CpuStatBuilder {
     CpuStat build();

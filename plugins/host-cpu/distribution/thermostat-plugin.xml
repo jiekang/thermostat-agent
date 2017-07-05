@@ -43,7 +43,6 @@
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.host.cpu.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.host.cpu.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>

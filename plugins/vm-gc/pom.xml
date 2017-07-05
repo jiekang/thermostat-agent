@@ -52,10 +52,8 @@
 
   <modules>
     <module>agent</module>
-    <module>common</module>
     <module>distribution</module>
     <module>remote-collector-command</module>
-    <module>remote-collector-common</module>
   </modules>
 
 </project>

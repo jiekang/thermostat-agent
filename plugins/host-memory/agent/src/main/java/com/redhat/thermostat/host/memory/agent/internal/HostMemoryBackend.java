@@ -36,23 +36,58 @@
 
 package com.redhat.thermostat.host.memory.agent.internal;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.common.portability.HostName;
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.backend.HostPollingAction;
 import com.redhat.thermostat.backend.HostPollingBackend;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.WriterID;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.osgi.framework.BundleContext;
+
+@Component
+@Service(value = Backend.class)
 public class HostMemoryBackend extends HostPollingBackend {
 
-    public HostMemoryBackend(ScheduledExecutorService executor, MemoryStatDAO memoryStatDAO, Version version, final WriterID writerId) {
-        super("Host Memory Backend",
-                "Gathers memory statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
-        registerAction(new MemoryProcBackendAction(writerId, memoryStatDAO));
+    @Reference
+    private MemoryStatDAO memoryStatDAO;
+
+    @Reference
+    private WriterID writerID;
+
+    public HostMemoryBackend() {
+        this(Executors.newSingleThreadScheduledExecutor());
+    }
+
+    public HostMemoryBackend(ScheduledExecutorService executor) {
+        this("Host Memory Backend", "Gathers memory statistics about a host", "Red Hat, Inc.", new Version(), executor);
+    }
+
+    public HostMemoryBackend(String name, String descr, String vendor, Version version, ScheduledExecutorService executor) {
+        super(name, descr, vendor, version, executor);
+    }
+
+    @Activate
+    protected void componentActivated(BundleContext context) {
+        Version version = new Version(context.getBundle());
+        setVersion(version.getVersionNumber());
+        registerAction(new MemoryProcBackendAction(writerID, memoryStatDAO));
+    }
+
+    @Deactivate
+    protected void componentDeactivated() {
+        if (isActive()) {
+            deactivate();
+        }
     }
 
     private static class MemoryProcBackendAction implements HostPollingAction {
@@ -68,9 +103,17 @@ public class HostMemoryBackend extends HostPollingBackend {
 
         @Override
         public void run() {
-            dao.putMemoryStat(builder.build());
+            dao.put(builder.build());
         }
 
+    }
+
+    void bindMemoryStatDAO(MemoryStatDAO dao) {
+        this.memoryStatDAO = dao;
+    }
+
+    void bindWriterID(WriterID id) {
+        this.writerID = id;
     }
 
     @Override

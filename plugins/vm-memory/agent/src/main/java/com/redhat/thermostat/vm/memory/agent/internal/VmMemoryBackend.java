@@ -36,32 +36,73 @@
 
 package com.redhat.thermostat.vm.memory.agent.internal;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.osgi.framework.BundleContext;
+
+import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.memory.common.Constants;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAO;
 
+@Component
+@Service(value = Backend.class)
 public class VmMemoryBackend extends VmListenerBackend {
 
-    private final VmMemoryStatDAO vmMemoryStats;
-    private final VmTlabStatDAO tlabStats;
-    
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO,
-                           VmTlabStatDAO vmTlabStatDAO,
-                           Version version,
-                           VmStatusListenerRegistrar registrar,
-                           WriterID writerId) {
-        super("VM Memory Backend",
-                "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.",
-                true);
-        this.vmMemoryStats = vmMemoryStatDAO;
-        this.tlabStats = vmTlabStatDAO;
+    private final ListenerCreator listenerCreator;
+
+    @Reference
+    private VmMemoryStatDAO vmMemoryStatDAO;
+
+    @Reference
+    private VmTlabStatDAO vmTlabStatDAO;
+
+    @Reference
+    private WriterID writerId;
+
+    public VmMemoryBackend() {
+        this(new ListenerCreator());
+    }
+
+    public VmMemoryBackend(ListenerCreator listenerCreator) {
+        super("VM Memory Backend", "Gathers memory statistics about a JVM", "Red Hat, Inc.", true);
+        this.listenerCreator = listenerCreator;
+    }
+
+    @Activate
+    protected void componentActivated(BundleContext context) {
+        VmStatusListenerRegistrar registrar = new VmStatusListenerRegistrar(context);
+        Version version = new Version(context.getBundle());
         initialize(writerId, registrar, version.getVersionNumber());
+    }
+
+    @Deactivate
+    protected void componentDeactivated() {
+        if (isActive()) {
+            deactivate();
+        }
+    }
+
+    // DS bind method
+    protected void bindVmMemoryStatDAO(VmMemoryStatDAO dao) {
+        this.vmMemoryStatDAO = dao;
+    }
+
+    // DS bind method
+    protected void bindVmTlabStatDAO(VmTlabStatDAO vmTlabStatDAO) {
+        this.vmTlabStatDAO = vmTlabStatDAO;
+    }
+
+    // DS bind method
+    protected void bindWriterId(WriterID id) {
+        this.writerId = id;
     }
 
     @Override
@@ -71,8 +112,13 @@ public class VmMemoryBackend extends VmListenerBackend {
 
     @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmMemoryVmListener(writerId, vmMemoryStats, tlabStats, vmId);
+        return listenerCreator.create(writerId, vmMemoryStatDAO, vmTlabStatDAO, vmId);
     }
-    
+
+    static class ListenerCreator {
+        VmMemoryVmListener create(String writerId, VmMemoryStatDAO dao, VmTlabStatDAO tlabDao, String vmId) {
+            return new VmMemoryVmListener(writerId, dao, tlabDao, vmId);
+        }
+    }
 }
 

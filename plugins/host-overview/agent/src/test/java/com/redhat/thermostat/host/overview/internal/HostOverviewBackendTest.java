@@ -86,7 +86,7 @@ public class HostOverviewBackendTest {
         
         verify(builderCreator).create(writerID);
         verify(builder).build();
-        verify(hostInfoDAO).put(info.getHostname(), info);
+        verify(hostInfoDAO).put(info);
     }
     
     @Test

@@ -47,6 +47,26 @@
   <packaging>bundle</packaging>
   <name>Thermostat VM GC Agent plugin</name>
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.png</exclude>
+          <exclude>**/*.xml</exclude>
+          <exclude>**/*.xsd</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.png</include>
+          <include>**/*.xml</include>
+          <include>**/*.xsd</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -56,9 +76,14 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.gc.agent</Bundle-SymbolicName>
-            <Export-Package />
+            <Export-Package>
+              com.redhat.thermostat.vm.gc.agent,
+              com.redhat.thermostat.vm.gc.agent.model,
+              com.redhat.thermostat.vm.gc.agent.params
+            </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.vm.gc.agent.internal
+              com.redhat.thermostat.vm.gc.agent.internal,
+              com.redhat.thermostat.vm.gc.agent.internal.models
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -107,7 +132,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-gc-common</artifactId>
+      <artifactId>thermostat-common-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -130,6 +155,11 @@
       <artifactId>thermostat-common-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+    </dependency>
+    <!-- declarative services -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
   </dependencies>
 </project>

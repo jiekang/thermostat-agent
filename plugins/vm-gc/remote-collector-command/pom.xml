@@ -77,12 +77,7 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>provided</scope>
     </dependency>
-    
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-gc-remote-collector-common</artifactId>
-      <version>${project.version}</version>      
-    </dependency>
+
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-core</artifactId>

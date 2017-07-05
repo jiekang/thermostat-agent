@@ -84,7 +84,6 @@
             <Include-Resource>{maven-resources}, com/redhat/thermostat/app-info.properties=target/classes/com/redhat/thermostat/app-info.properties</Include-Resource>
             <Bundle-SymbolicName>com.redhat.thermostat.common.core</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.common.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.common.cli,
               com.redhat.thermostat.common.tools,
@@ -93,8 +92,7 @@
               com.redhat.thermostat.common.config.experimental,
               com.redhat.thermostat.common.utils,
               com.redhat.thermostat.common.ssl,
-              com.redhat.thermostat.common.model,
-              com.redhat.thermostat.common.plugins,
+              com.redhat.thermostat.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.common.internal.test,

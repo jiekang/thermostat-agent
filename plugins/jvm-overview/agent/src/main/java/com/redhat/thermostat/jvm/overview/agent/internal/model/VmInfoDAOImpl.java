@@ -37,32 +37,23 @@
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
-
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoTypeAdapter.VmInfoUpdateTypeAdapter;
 import com.redhat.thermostat.jvm.overview.agent.model.VmId;
 import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpContentResponse;
-import org.eclipse.jetty.client.HttpRequest;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 
 @Component
@@ -74,20 +65,18 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     private static final String GATEWAY_URL = "http://localhost:26000/api/v100"; // TODO configurable
     private static final String GATEWAY_PATH = "/vm-info/systems/*/agents/";
     private static final String GATEWAY_PATH_JVM_SUFFIX = "/jvms/";
-    private static final String CONTENT_TYPE = "application/json";
     
-    private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
+    
+    @Reference
+    private HttpRequestService httpRequestService;
 
     public VmInfoDAOImpl() throws Exception {
-        this(new HttpHelper(new HttpClient()), new JsonHelper(new VmInfoTypeAdapter(), new VmInfoUpdateTypeAdapter()));
+        this(new JsonHelper(new VmInfoTypeAdapter(), new VmInfoUpdateTypeAdapter()));
     }
 
-    VmInfoDAOImpl(HttpHelper httpHelper, JsonHelper jsonHelper) throws Exception {
+    VmInfoDAOImpl(JsonHelper jsonHelper) throws Exception {
         this.jsonHelper = jsonHelper;
-        this.httpHelper = httpHelper;
-        
-        this.httpHelper.startClient();
     }
 
     @Override
@@ -102,19 +91,16 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmInfo(final VmInfo info) {
-        try {
-            // Encode as JSON and send as POST request
-            String json = jsonHelper.toJson(Arrays.asList(info));
-            StringContentProvider provider = httpHelper.createContentProvider(json);
-            
-            String url = getAddURL(info.getAgentId());
-            Request httpRequest = httpHelper.newRequest(url);
-            httpRequest.method(HttpMethod.POST);
-            httpRequest.content(provider, CONTENT_TYPE);
-            sendRequest(httpRequest);
-        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
-           logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
-        }
+        // FIXME: Re-enable once /jvms endpoint is being used properly and re-enable ignored
+        //        unit-tests.
+//        try {
+//            // Encode as JSON and send as POST request
+//            String json = jsonHelper.toJson(Arrays.asList(info));
+//            String url = getAddURL(info.getAgentId());
+//            httpRequestService.sendHttpRequest(json, url, HttpRequestService.POST);
+//        } catch (IOException | RequestFailedException e) {
+//           logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
+//        }
     }
 
     @Override
@@ -123,24 +109,10 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             // Encode as JSON and send as PUT request
             VmInfoUpdate update = new VmInfoUpdate(timestamp);
             String json = jsonHelper.toJson(update);
-            StringContentProvider provider = httpHelper.createContentProvider(json);
-            
             String url = getUpdateURL(agentId, vmId);
-            Request httpRequest = httpHelper.newRequest(url);
-            httpRequest.method(HttpMethod.PUT);
-            httpRequest.content(provider, CONTENT_TYPE);
-            sendRequest(httpRequest);
-        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
+            httpRequestService.sendHttpRequest(json, url, HttpRequestService.PUT);
+        } catch (IOException | RequestFailedException e) {
            logger.log(Level.WARNING, "Failed to send JVM information update to web gateway", e);
-        }
-    }
-
-    private void sendRequest(Request httpRequest)
-            throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        ContentResponse resp = httpRequest.send();
-        int status = resp.getStatus();
-        if (status != HttpStatus.OK_200) {
-            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
         }
     }
     
@@ -164,6 +136,15 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         return builder.toString();
     }
     
+    protected void bindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = httpRequestService;
+    }
+
+    protected void unbindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = null;
+        logger.log(Level.INFO, "Unbound HTTP service. Further attempts to store data will fail until bound again.");
+    }
+    
     static class VmInfoUpdate {
         
         private final long stoppedTime;
@@ -176,7 +157,6 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             return stoppedTime;
         }
     }
-    
     
     // For testing purposes
     static class JsonHelper {
@@ -195,57 +175,6 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         
         String toJson(VmInfoUpdate update) throws IOException {
             return updateTypeAdapter.toJson(update);
-        }
-        
-    }
-    
-    // For testing purposes
-    static class HttpHelper {
-        
-        private final HttpClient httpClient;
-
-        HttpHelper(HttpClient httpClient) {
-            this.httpClient = httpClient;
-        }
-        
-        void startClient() throws Exception {
-            httpClient.start();
-        }
-        
-        StringContentProvider createContentProvider(String content) {
-            return new StringContentProvider(content);
-        }
-        
-        Request newRequest(String url) {
-            return new MockRequest(httpClient, URI.create(url));
-        }
-        
-    }
-    
-    // FIXME This class should be removed when the web gateway has a microservice for this DAO
-    private static class MockRequest extends HttpRequest {
-
-        MockRequest(HttpClient client, URI uri) {
-            super(client, uri);
-        }
-        
-        @Override
-        public ContentResponse send() throws InterruptedException, TimeoutException, ExecutionException {
-            return new MockResponse();
-        }
-        
-    }
-    
-    // FIXME This class should be removed when the web gateway has a microservice for this DAO
-    private static class MockResponse extends HttpContentResponse {
-
-        MockResponse() {
-            super(null, null, null);
-        }
-        
-        @Override
-        public int getStatus() {
-            return HttpStatus.OK_200;
         }
         
     }

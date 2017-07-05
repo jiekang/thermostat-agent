@@ -57,7 +57,6 @@ import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
@@ -205,15 +204,6 @@ public class LauncherImpl implements Launcher {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void shutdown() throws InternalError {
         try {
-            ServiceReference appServiceRef = context.getServiceReference(ApplicationService.class);
-            if (appServiceRef != null) {
-                ApplicationService appSvc = (ApplicationService) context.getService(appServiceRef);
-                appSvc.getApplicationExecutor().shutdown();
-                appSvc.getTimerFactory().shutdown();
-                appSvc = null;
-                context.ungetService(appServiceRef);
-            }
-
             // default to success for exit status
             int exitStatus = ExitStatus.EXIT_SUCCESS;
             if (context != null) {
@@ -232,10 +222,6 @@ public class LauncherImpl implements Launcher {
 
     private boolean hasNoArguments(String[] args) {
         return args == null || args.length == 0;
-    }
-
-    private void runHelpCommand() {
-        runCommand(HELP_COMMAND_NAME, new String[0], null);
     }
 
     private void runHelpCommandFor(String cmdName) {

@@ -59,8 +59,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.host.cpu.agent</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.host.cpu.agent.internal.Activator</Bundle-Activator>
-            <Export-Package />
+            <Export-Package>com.redhat.thermostat.host.cpu.model</Export-Package>
             <Private-Package>
               com.redhat.thermostat.host.cpu.agent.internal
             </Private-Package>
@@ -70,6 +69,18 @@
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -101,6 +112,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <!-- the test needs to link to common-portability native libraries -->
           <systemPropertyVariables>
             <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}</com.redhat.thermostat.shared.loader.testNativesHome>
           </systemPropertyVariables>
@@ -131,18 +143,23 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${gson.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-portability</artifactId>
+      <artifactId>thermostat-common-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-cpu-common</artifactId>
+      <artifactId>thermostat-common-portability</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -161,5 +178,12 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- declarative services -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
+    </dependency>
   </dependencies>
 </project>
+

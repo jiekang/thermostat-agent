@@ -36,42 +36,121 @@
 
 package com.redhat.thermostat.vm.memory.agent.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.memory.agent.internal.VmMemoryBackend.ListenerCreator;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAO;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Version;
 
 public class VmMemoryBackendTest {
-    
-    private VmMemoryBackend backend;
 
-    @Before
-    public void setup() {
-        VmMemoryStatDAO vmMemoryStatDao = mock(VmMemoryStatDAO.class);
-        VmTlabStatDAO vmTlabStatDao = mock(VmTlabStatDAO.class);
-        
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
+    private static ListenerCreator listenerCreator;
+    private static WriterID id;
+    private static Version version;
 
+    @BeforeClass
+    public static void setup() {
+        listenerCreator = mock(ListenerCreator.class);
+        id = mock(WriterID.class);
+        version = new Version(1, 2, 3);
+    }
+
+    @Test
+    public void testComponentActivated() {
+        TestVmMemoryBackend backend = new TestVmMemoryBackend(listenerCreator);
+
+        BundleContext context = mock(BundleContext.class);
+        Bundle bundle = mock(Bundle.class);
+        when(bundle.getVersion()).thenReturn(version);
+        when(context.getBundle()).thenReturn(bundle);
+        backend.bindWriterId(id);
+
+        assertFalse(backend.wasInitializeCalled);
+        backend.componentActivated(context);
+        assertTrue(backend.wasInitializeCalled);
+        verify(context).getBundle();
+
+        assertEquals(version.toString(), backend.getVersion());
+        assertEquals(id, backend.writerId);
+        assertNotNull(backend.registrar);
+    }
+
+    @Test
+    public void testComponentActivateAndDeactivate() {
+        TestVmMemoryBackend backend = new TestVmMemoryBackend(listenerCreator);
         VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-        
-        backend = new VmMemoryBackend(vmMemoryStatDao, vmTlabStatDao, version, registrar, null);
+        backend.initialize(id, registrar, version.toString());
+
+        assertFalse(backend.isActive());
+        verify(registrar, times(0)).register(backend);
+
+        assertTrue(backend.activate());
+
+        assertTrue(backend.isActive());
+        verify(registrar).register(backend);
+        verify(registrar, times(0)).unregister(backend);
+
+        backend.componentDeactivated();
+
+        assertFalse(backend.isActive());
+        verify(registrar).unregister(backend);
+    }
+
+    @Test
+    public void testCreateVmListener() {
+        final String writerId = "myAgent";
+        final String vmId = "myJVM";
+        final int pid = 1234;
+
+        TestVmMemoryBackend backend = new TestVmMemoryBackend(listenerCreator);
+        VmMemoryStatDAO dao = mock(VmMemoryStatDAO.class);
+        VmTlabStatDAO tlabDao = mock(VmTlabStatDAO.class);
+        backend.bindVmMemoryStatDAO(dao);
+        backend.bindVmTlabStatDAO(tlabDao);
+        backend.createVmListener(writerId, vmId, pid);
+
+        verify(listenerCreator).create(writerId, dao, tlabDao, vmId);
     }
 
     @Test
     public void testOrderValue() {
+        TestVmMemoryBackend backend = new TestVmMemoryBackend(listenerCreator);
         int orderValue = backend.getOrderValue();
-
         assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
         assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
     }
-}
 
+    static class TestVmMemoryBackend extends VmMemoryBackend {
+
+        VmStatusListenerRegistrar registrar;
+        WriterID writerId;
+        boolean wasInitializeCalled = false;
+
+        TestVmMemoryBackend(ListenerCreator creator) {
+            super(creator);
+        }
+
+        @Override
+        protected void initialize(WriterID id, VmStatusListenerRegistrar registrar, String version) {
+            super.initialize(id, registrar, version);
+            this.wasInitializeCalled = true;
+            this.registrar = registrar;
+            this.writerId = id;
+        }
+    }
+}

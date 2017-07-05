@@ -38,7 +38,7 @@ package com.redhat.thermostat.host.cpu.agent.internal;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.host.cpu.model.CpuStat;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 import org.junit.Assume;

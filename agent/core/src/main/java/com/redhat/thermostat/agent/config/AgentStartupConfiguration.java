@@ -41,19 +41,26 @@ import com.redhat.thermostat.storage.config.StartupConfiguration;
 public class AgentStartupConfiguration implements StartupConfiguration {
 
     private boolean purge;
-    private String url;
+    private String dbUrl;
     private long startTime;
+
+    private boolean keycloakEnabled;
+    private String keycloakUrl;
+    private String keycloakRealm;
+    private String keycloakClient;
+    private String keycloakUsername;
+    private String keycloakPassword;
     
     AgentStartupConfiguration() {
     }
     
     @Override
     public String getDBConnectionString() {
-        return url;
+        return dbUrl;
     }
 
     public void setDatabaseURL(String url) {
-        this.url = url;
+        this.dbUrl = url;
     }
     
     // TODO: that should be a friend, we only want the Service to set this value
@@ -71,6 +78,54 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     
     public boolean purge() {
         return purge;
+    }
+
+    public String getKeycloakUrl() {
+        return keycloakUrl;
+    }
+
+    public void setKeycloakUrl(String keycloakUrl) {
+        this.keycloakUrl = keycloakUrl;
+    }
+
+    public String getKeycloakClient() {
+        return keycloakClient;
+    }
+
+    public void setKeycloakClient(String keycloakClient) {
+        this.keycloakClient = keycloakClient;
+    }
+
+    public String getKeycloakUsername() {
+        return keycloakUsername;
+    }
+
+    public void setKeycloakUsername(String keycloakUsername) {
+        this.keycloakUsername = keycloakUsername;
+    }
+
+    public String getKeycloakPassword() {
+        return keycloakPassword;
+    }
+
+    public void setKeycloakPassword(String keycloakPassword) {
+        this.keycloakPassword = keycloakPassword;
+    }
+
+    public boolean isKeycloakEnabled() {
+        return keycloakEnabled;
+    }
+
+    public void setKeycloakEnabled(boolean keycloakEnabled) {
+        this.keycloakEnabled = keycloakEnabled;
+    }
+
+    public String getKeycloakRealm() {
+        return keycloakRealm;
+    }
+
+    public void setKeycloakRealm(String keycloakRealm) {
+        this.keycloakRealm = keycloakRealm;
     }
 }
 

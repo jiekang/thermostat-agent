@@ -64,14 +64,9 @@
             <Bundle-Activator>com.redhat.thermostat.storage.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.storage.core,
-              com.redhat.thermostat.storage.core.experimental,
-              com.redhat.thermostat.storage.core.experimental.statement,
-              com.redhat.thermostat.storage.core.auth,
               com.redhat.thermostat.storage.config,
               com.redhat.thermostat.storage.model,
               com.redhat.thermostat.storage.dao,
-              com.redhat.thermostat.storage.query,
-              com.redhat.thermostat.storage.monitor,
             </Export-Package>
             <!-- TODO: For the thread tab (i.e. thread plug-in) the web server
                  bundle requires model classes provided by said bundle. Since

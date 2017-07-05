@@ -43,9 +43,7 @@
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.gc.agent</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.gc.remote.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.gc.remote.command</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>

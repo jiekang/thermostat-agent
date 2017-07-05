@@ -105,6 +105,11 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
+    <!-- declarative services -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -120,6 +125,8 @@
             <Bundle-Activator>com.redhat.thermostat.agent.internal.Activator</Bundle-Activator>
             <Export-Package>
                 com.redhat.thermostat.agent,
+                com.redhat.thermostat.agent.http,
+                com.redhat.thermostat.agent.http.internal.keycloak,
                 com.redhat.thermostat.agent.config,
                 com.redhat.thermostat.agent.dao,
                 com.redhat.thermostat.agent.utils,
@@ -135,6 +142,19 @@
             <_nouses>true</_nouses>
           </instructions>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>

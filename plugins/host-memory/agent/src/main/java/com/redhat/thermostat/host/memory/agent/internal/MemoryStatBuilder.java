@@ -47,7 +47,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.portability.PortableMemoryStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+import com.redhat.thermostat.host.memory.model.MemoryStat;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 

@@ -52,7 +52,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
-import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+import com.redhat.thermostat.host.memory.model.MemoryStat;
 import com.redhat.thermostat.storage.core.WriterID;
 
 public class MemoryStatBuilderTest {

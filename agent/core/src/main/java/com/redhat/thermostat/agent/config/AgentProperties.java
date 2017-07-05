@@ -40,5 +40,12 @@ public enum AgentProperties {
 
     DB_URL,
     SAVE_ON_EXIT,
+
+    KEYCLOAK_ENABLED,
+    KEYCLOAK_URL,
+    KEYCLOAK_REALM,
+    KEYCLOAK_CLIENT,
+    KEYCLOAK_USERNAME,
+    KEYCLOAK_PASSWORD
 }
 

@@ -56,15 +56,29 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.memory.agent</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.vm.memory.agent.internal.Activator</Bundle-Activator>
-            <Export-Package />
+            <Export-Package>
+              com.redhat.thermostat.vm.memory.agent.model
+            </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.vm.memory.agent.internal
+              com.redhat.thermostat.vm.memory.agent.internal,
+              com.redhat.thermostat.vm.memory.agent.internal.models
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -96,11 +110,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-core</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -116,9 +125,19 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-plugin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+    </dependency>
+    <!-- declarative services -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
   </dependencies>
 </project>

@@ -54,7 +54,7 @@ import org.osgi.framework.Version;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.agent.internal.VmGcBackend.ListenerCreator;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAO;
 
 public class VmGcBackendTest {
 

@@ -453,6 +453,11 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-plugin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-portability</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -474,6 +479,18 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-cpu-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-memory-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
@@ -507,18 +524,6 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
-    <!--<dependency>-->
-      <!--<groupId>com.redhat.thermostat</groupId>-->
-      <!--<artifactId>thermostat-host-cpu-distribution</artifactId>-->
-      <!--<version>${project.version}</version>-->
-      <!--<type>zip</type>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>com.redhat.thermostat</groupId>-->
-      <!--<artifactId>thermostat-host-memory-distribution</artifactId>-->
-      <!--<version>${project.version}</version>-->
-      <!--<type>zip</type>-->
-    <!--</dependency>-->
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
       <!--<artifactId>thermostat-numa-distribution</artifactId>-->

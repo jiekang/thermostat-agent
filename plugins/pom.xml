@@ -54,12 +54,12 @@
     <!--<module>thread</module>-->
     <module>killvm</module>
     <module>host-overview</module>
+    <module>host-cpu</module>
+    <module>host-memory</module>
     <module>jvm-overview</module>
     <module>vm-gc</module>
     <module>vm-memory</module>
     <module>commands</module>
-    <!--<module>host-cpu</module>-->
-    <!--<module>host-memory</module>-->
     <!--<module>vm-byteman</module>-->
     <!--<module>vm-cpu</module>-->
     <!--<module>vm-classstat</module>-->

@@ -51,7 +51,6 @@ public class AgentInformationTypeAdapter extends TypeAdapter<List<AgentInformati
     private static final String START_TIME = "startTime";
     private static final String STOP_TIME = "stopTime";
     private static final String ALIVE = "alive";
-    private static final String CONFIG_LISTEN_ADDRESS = "configListenAddress";
     private static final String TYPE_LONG = "$numberLong";
     
     @Override
@@ -78,8 +77,6 @@ public class AgentInformationTypeAdapter extends TypeAdapter<List<AgentInformati
         writeLong(out, info.getStopTime());
         out.name(ALIVE);
         out.value(info.isAlive());
-        out.name(CONFIG_LISTEN_ADDRESS);
-        out.value(info.getConfigListenAddress());
         
         out.endObject();
     }
@@ -115,8 +112,6 @@ public class AgentInformationTypeAdapter extends TypeAdapter<List<AgentInformati
             writeLong(out, info.getStopTime());
             out.name(ALIVE);
             out.value(info.isAlive());
-            out.name(CONFIG_LISTEN_ADDRESS);
-            out.value(info.getConfigListenAddress());
             out.endObject();
             
             out.endObject();

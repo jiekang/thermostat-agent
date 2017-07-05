@@ -43,7 +43,6 @@
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.memory.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
