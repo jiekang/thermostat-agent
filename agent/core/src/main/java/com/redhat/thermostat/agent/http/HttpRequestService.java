@@ -121,6 +121,7 @@ public class HttpRequestService {
      * @return The returned body for GET requests. {@code null} otherwise.
      */
     public String sendHttpRequest(String jsonPayload, String url, String requestType) throws RequestFailedException {
+        // TODO: refactor agent pass around HttpMethod enum instead of string - it's faster and takes less space.
         HttpMethod requestMethod = HttpMethod.valueOf(requestType);
         Request request = client.newRequest(url);
         if (jsonPayload != null) {

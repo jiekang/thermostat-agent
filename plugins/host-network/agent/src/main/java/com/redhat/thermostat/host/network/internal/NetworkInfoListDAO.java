@@ -34,48 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.host.network.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.host.network.model.NetworkInfoList;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+@Service
+public interface NetworkInfoListDAO {
 
-import com.redhat.thermostat.storage.core.WriterID;
-
-public class Activator implements BundleActivator {
-    
-    private static final String WRITER_UUID = UUID.randomUUID().toString();
-    
-    List<ServiceRegistration<?>> regs;
-    
-    public Activator() {
-        regs = new ArrayList<>();
-    }
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        // WriterID has to be registered unconditionally (at least not as part
-        // of the Storage.class tracker, since that is only registered once
-        // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-    }
-
-    private void unregisterServices() {
-        for (ServiceRegistration<?> reg : regs) {
-            reg.unregister();
-        }
-        regs.clear();
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        unregisterServices();
-    }
+    void put(NetworkInfoList infolist);
 }
 

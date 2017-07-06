@@ -34,48 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.host.network.model;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.model.BasePojo;
 
-import com.redhat.thermostat.storage.core.WriterID;
+@Entity
+public class NetworkInfoList extends BasePojo {
 
-public class Activator implements BundleActivator {
-    
-    private static final String WRITER_UUID = UUID.randomUUID().toString();
-    
-    List<ServiceRegistration<?>> regs;
-    
-    public Activator() {
-        regs = new ArrayList<>();
+    private long timeStamp;
+    private List<NetworkInterfaceInfo> interfaces;
+
+    public NetworkInfoList(String writerID, long timeStamp, List<NetworkInterfaceInfo> list) {
+        super(writerID);
+        this.timeStamp = timeStamp;
+        this.interfaces = list;
+    }
+
+    public List<NetworkInterfaceInfo> getList() {
+        return interfaces;
+    }
+
+    public int size() {
+        return interfaces.size();
+    }
+
+    public NetworkInterfaceInfo get(int n) {
+        return interfaces.get(n);
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
     @Override
-    public void start(final BundleContext context) throws Exception {
-        // WriterID has to be registered unconditionally (at least not as part
-        // of the Storage.class tracker, since that is only registered once
-        // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-    }
-
-    private void unregisterServices() {
-        for (ServiceRegistration<?> reg : regs) {
-            reg.unregister();
-        }
-        regs.clear();
+    public int hashCode() {
+        return Objects.hash(timeStamp, interfaces, super.hashCode());
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        unregisterServices();
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        NetworkInfoList other = (NetworkInfoList) obj;
+        return timeStamp == other.timeStamp && interfaces.equals(other.interfaces) && super.equals(other);
     }
 }
-

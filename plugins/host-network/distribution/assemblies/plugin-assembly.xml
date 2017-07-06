@@ -36,42 +36,38 @@
  to do so, delete this exception statement from your version.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>plugin-assembly</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
 
-  <parent>
-    <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
-    <version>1.99.12-SNAPSHOT</version>
-  </parent>
+    <dependencySets>
+        <dependencySet>
+            <includes>
+                <include>com.redhat.thermostat:thermostat-host-network-agent</include>
+            </includes>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useStrictFiltering>true</useStrictFiltering>
+            <outputDirectory>plugins/${thermostat.plugin}</outputDirectory>
+        </dependencySet>
+    </dependencySets>
 
-  <artifactId>thermostat-plugins</artifactId>
-  <packaging>pom</packaging>
-
-  <name>Thermostat Plugins</name>
-
-  <modules>
-    <!--<module>thread</module>-->
-    <module>killvm</module>
-    <module>host-overview</module>
-    <module>host-cpu</module>
-    <module>host-memory</module>
-    <module>host-network</module>
-    <module>jvm-overview</module>
-    <module>vm-gc</module>
-    <module>vm-memory</module>
-    <module>commands</module>
-    <!--<module>vm-byteman</module>-->
-    <!--<module>vm-cpu</module>-->
-    <!--<module>vm-classstat</module>-->
-    <!--<module>vm-compiler</module>-->
-    <!--<module>vm-heap-analysis</module>-->
-    <!--<module>vm-io</module>-->
-    <!--<module>vm-jmx</module>-->
-    <!--<module>vm-profiler</module>-->
-    <!--<module>numa</module>-->
-    <!--<module>vm-numa</module>-->
-  </modules>
-
-</project>
-
+    <fileSets>
+        <fileSet>
+            <includes>
+                <include>thermostat-plugin.xml</include>
+            </includes>
+            <outputDirectory>plugins/${thermostat.plugin}</outputDirectory>
+            <filtered>true</filtered>
+        </fileSet>
+        <fileSet>
+            <directory>configFiles</directory>
+            <outputDirectory>etc/plugins.d/${thermostat.plugin}</outputDirectory>
+            <filtered>true</filtered>
+        </fileSet>
+    </fileSets>
+</assembly>

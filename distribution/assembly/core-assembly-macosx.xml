@@ -65,7 +65,6 @@
         <include>com.redhat.thermostat:thermostat-common-portability</include>
         <include>com.redhat.thermostat:thermostat-process-handler</include>
         <include>com.redhat.thermostat:thermostat-storage-core</include>
-        <include>com.redhat.thermostat:thermostat-system-backend</include>
         <include>org.osgi:org.osgi.compendium</include>
         <include>org.apache:org.apache.felix.scr</include>
         <include>commons-codec:commons-codec</include>

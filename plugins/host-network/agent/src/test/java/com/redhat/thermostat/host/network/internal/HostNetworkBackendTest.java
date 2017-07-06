@@ -34,48 +34,62 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.host.network.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.common.Version;
 
-public class Activator implements BundleActivator {
+import java.util.concurrent.ScheduledExecutorService;
+
+public class HostNetworkBackendTest {
+
+    private static final String VERSION = "0.0.0";
+    private HostNetworkBackend b;
+
+    @Before
+    public void setUp() {
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn(VERSION);
+        b = new HostNetworkBackend("backend", "test backend", "redhat", version, executor);
+    }
+
+    @Test
+    public void testBasicBackend() {
+        Assert.assertFalse(b.isActive());
+        b.activate();
+        assertTrue(b.isActive());
+        b.deactivate();
+        assertFalse(b.isActive());
+    }
+
+    @Test
+    public void testActivateTwice() {
+        b.activate();
+        b.activate();
+        Assert.assertTrue(b.isActive());
+    }
+
+    @Test
+    public void testDeactiateWhenNotActive() {
+        b.deactivate();
+        b.deactivate();
+        assertFalse(b.isActive());
+    }
     
-    private static final String WRITER_UUID = UUID.randomUUID().toString();
-    
-    List<ServiceRegistration<?>> regs;
-    
-    public Activator() {
-        regs = new ArrayList<>();
+    @Test
+    public void testVersion() {
+        assertEquals(VERSION, b.getVersion());
     }
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        // WriterID has to be registered unconditionally (at least not as part
-        // of the Storage.class tracker, since that is only registered once
-        // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-    }
-
-    private void unregisterServices() {
-        for (ServiceRegistration<?> reg : regs) {
-            reg.unregister();
-        }
-        regs.clear();
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        unregisterServices();
-    }
 }
 

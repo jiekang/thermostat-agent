@@ -43,7 +43,6 @@ public class PojoModelInstantiationTest extends DataObjectTest {
     private static final Class<?>[] CLASSES_LIST = new Class[] {
         AgentInformation.class,
         BackendInformation.class,
-        NetworkInterfaceInfo.class,
     };
 
     @Override

@@ -34,48 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.host.network.internal;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import com.redhat.thermostat.host.network.model.NetworkInterfaceInfo;
+import org.junit.Assert;
+import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.WriterID;
+public class NetworkInfoBuilderTest {
 
-public class Activator implements BundleActivator {
-    
-    private static final String WRITER_UUID = UUID.randomUUID().toString();
-    
-    List<ServiceRegistration<?>> regs;
-    
-    public Activator() {
-        regs = new ArrayList<>();
-    }
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        // WriterID has to be registered unconditionally (at least not as part
-        // of the Storage.class tracker, since that is only registered once
-        // storage is connected).
-        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
-        regs.add(reg);
-    }
-
-    private void unregisterServices() {
-        for (ServiceRegistration<?> reg : regs) {
-            reg.unregister();
+    @Test
+    public void testBuilder() {
+        NetworkInfoBuilder builder = new NetworkInfoBuilder();
+        List<NetworkInterfaceInfo> info = builder.build();
+        Assert.assertNotNull(info);
+        for (NetworkInterfaceInfo iface: info) {
+            Assert.assertNotNull(iface);
+            Assert.assertNotNull(iface.getInterfaceName());
+            if (iface.getIp4Addr() != null) {
+                // ipv4 address matches the form XX.XX.XX.XX
+                Assert.assertTrue(iface.getIp4Addr().matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"));
+            }
+            if (iface.getIp6Addr() != null) {
+                validateIpv6Address(iface.getIp6Addr());
+            }
         }
-        regs.clear();
+
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        unregisterServices();
+    private void validateIpv6Address(String address) {
+        // ipv6 addresses may contain a scope id
+        if (address.contains("%")) {
+            int index = address.indexOf("%");
+            Assert.assertTrue(index >= 0);
+            String scopeId = address.substring(index);
+            Assert.assertFalse(scopeId.isEmpty());
+            address = address.substring(0, index);
+        }
+
+        String[] parts = address.split(":");
+        Assert.assertEquals(8, parts.length);
+
+        for (String part : parts) {
+            Assert.assertNotNull(part);
+            if (!part.isEmpty()) {
+                Assert.assertTrue(part.matches("[0-9a-f]*"));
+            }
+        }
     }
+
 }
 
