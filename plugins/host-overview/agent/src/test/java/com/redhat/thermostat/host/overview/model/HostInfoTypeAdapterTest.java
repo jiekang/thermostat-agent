@@ -55,15 +55,17 @@ public class HostInfoTypeAdapterTest {
 
     @Test
     public void testWrite() throws Exception {
-        final String expected = "[{\"agentId\":\"myAgent1\",\"hostname\":\"myHost1\"," 
+        final String expected = "[{\"agentId\":\"myAgent1\",\"hostname\":\"myHost1\","
+                + "\"timeStamp\":{\"$numberLong\":\"111\"},"
                 + "\"osName\":\"myOS1\",\"osKernel\":\"myKernel1\",\"cpuModel\":\"myCPU1\"," 
                 + "\"cpuCount\":4,\"totalMemory\":{\"$numberLong\":\"400000000\"}}," 
-                + "{\"agentId\":\"myAgent2\",\"hostname\":\"myHost2\",\"osName\":\"myOS2\"," 
-                + "\"osKernel\":\"myKernel2\",\"cpuModel\":\"myCPU2\",\"cpuCount\":2," 
+                + "{\"agentId\":\"myAgent2\",\"hostname\":\"myHost2\","
+                + "\"timeStamp\":{\"$numberLong\":\"222\"},"
+                + "\"osName\":\"myOS2\",\"osKernel\":\"myKernel2\",\"cpuModel\":\"myCPU2\",\"cpuCount\":2,"
                 + "\"totalMemory\":{\"$numberLong\":\"800000000\"}}]";
         
-        HostInfo first = new HostInfo("myAgent1", "myHost1", "myOS1", "myKernel1", "myCPU1", 4, 400000000L);
-        HostInfo second = new HostInfo("myAgent2", "myHost2", "myOS2", "myKernel2", "myCPU2", 2, 800000000L);
+        HostInfo first = new HostInfo("myAgent1", 111, "myHost1", "myOS1", "myKernel1", "myCPU1", 4, 400000000L);
+        HostInfo second = new HostInfo("myAgent2", 222, "myHost2", "myOS2", "myKernel2", "myCPU2", 2, 800000000L);
         List<HostInfo> infos = Arrays.asList(first, second);
         
         String json = adapter.toJson(infos);

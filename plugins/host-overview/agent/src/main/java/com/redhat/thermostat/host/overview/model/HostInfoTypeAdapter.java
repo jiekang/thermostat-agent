@@ -47,6 +47,7 @@ public class HostInfoTypeAdapter extends TypeAdapter<List<HostInfo>> {
     
     private static final String AGENT_ID = "agentId";
     private static final String HOSTNAME = "hostname";
+    private static final String TIMESTAMP = "timeStamp";
     private static final String OS_NAME = "osName";
     private static final String OS_KERNEL = "osKernel";
     private static final String CPU_MODEL = "cpuModel";
@@ -74,6 +75,8 @@ public class HostInfoTypeAdapter extends TypeAdapter<List<HostInfo>> {
         out.value(info.getAgentId());
         out.name(HOSTNAME);
         out.value(info.getHostname());
+        out.name(TIMESTAMP);
+        writeLong(out, info.getTimeStamp());
         out.name(OS_NAME);
         out.value(info.getOsName());
         out.name(OS_KERNEL);
