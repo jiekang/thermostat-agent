@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.proxy.server;
+package com.redhat.thermostat.utils.management.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,16 +56,16 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.proxy.server.AgentProxyControlImpl.VirtualMachineUtils;
+import com.redhat.thermostat.utils.management.internal.ManagementAgentAttacher.VirtualMachineUtils;
 import com.sun.tools.attach.VirtualMachine;
 
-public class AgentProxyControlImplTest {
+public class ManagementAgentAttacherTest {
     
     private static final int SUCCESS = 0;
     private static final int FAILURE = 3;
     private static final int VM_PID = 0;
     private static final String PATH_TO_JAVA_HOME = new File("/path/to/java/home").getAbsolutePath();
-    private AgentProxyControlImpl control;
+    private ManagementAgentAttacher control;
     private VirtualMachine vm;
     private VirtualMachineUtils vmUtils;
     
@@ -84,7 +84,7 @@ public class AgentProxyControlImplTest {
         when(vm.getSystemProperties()).thenReturn(sysProps);
         
         when(vmUtils.attach(anyString())).thenReturn(vm);
-        control = new AgentProxyControlImpl(VM_PID, vmUtils);
+        control = new ManagementAgentAttacher(VM_PID, vmUtils);
     }
     
     @Test
@@ -93,7 +93,7 @@ public class AgentProxyControlImplTest {
         when(process.waitFor()).thenReturn(SUCCESS);
         @SuppressWarnings("unchecked")
         final List<String>[] startProcessArgs = new List[1];
-        AgentProxyControlImpl controlUnderTest = new AgentProxyControlImpl(VM_PID, vmUtils) {
+        ManagementAgentAttacher controlUnderTest = new ManagementAgentAttacher(VM_PID, vmUtils) {
             @Override
             Process startProcess(List<String> args) {
                 startProcessArgs[0] = args;
@@ -121,7 +121,7 @@ public class AgentProxyControlImplTest {
     public void testAttachManagementJar() throws Exception {
         final Process process = mock(Process.class);
         when(process.waitFor()).thenReturn(FAILURE);
-        AgentProxyControlImpl controlUnderTest = new AgentProxyControlImpl(VM_PID, vmUtils) {
+        ManagementAgentAttacher controlUnderTest = new ManagementAgentAttacher(VM_PID, vmUtils) {
             @Override
             Process startProcess(List<String> args) {
                 return process; // pretending jcmd process start fails

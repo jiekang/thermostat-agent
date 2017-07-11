@@ -48,8 +48,6 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.agent.dao.AgentInfoDAO;
-import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +64,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.cli.internal.AgentApplication.ConfigurationCreator;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.LaunchException;
@@ -76,7 +76,6 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 
 @RunWith(PowerMockRunner.class)
 public class AgentApplicationTest {
@@ -102,7 +101,6 @@ public class AgentApplicationTest {
         context.registerService(AgentInfoDAO.class.getName(), agentInfoDAO, null);
         BackendInfoDAO backendInfoDAO = mock(BackendInfoDAO.class);
         context.registerService(BackendInfoDAO.class.getName(), backendInfoDAO, null);
-        context.registerService(MXBeanConnectionPoolControl.class, mock(MXBeanConnectionPoolControl.class), null);
         writerId = mock(WriterID.class);
 
         exitStatus = mock(ExitStatus.class);

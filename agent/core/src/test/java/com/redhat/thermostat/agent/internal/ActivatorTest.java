@@ -37,85 +37,47 @@
 package com.redhat.thermostat.agent.internal;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 
-import com.redhat.thermostat.common.portability.UserNameUtil;
-import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
+import com.redhat.thermostat.agent.internal.Activator.AgentConfigSetter;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 
 public class ActivatorTest {
     
-    private StubBundleContext context;
-    private ServiceRegistration ipcReg;
-
-    @Before
-    public void setup() {
-        CommonPaths paths = mock(CommonPaths.class);
-    	when(paths.getSystemNativeLibsRoot()).thenReturn(new File("target"));
-        when(paths.getUserAgentAuthConfigFile()).thenReturn(new File("not.exist.does.not.matter"));
-    	NativeLibraryResolver.setCommonPaths(paths);
-    
-        context = new StubBundleContext();
-        context.registerService(CommonPaths.class.getName(), paths, null);
-
-        // required by MXBeanConnectionPoolImpl
-        UserNameUtil userNameUtil = mock(UserNameUtil.class);
-        context.registerService(UserNameUtil.class.getName(), userNameUtil, null);
-
-        AgentIPCService ipcService = mock(AgentIPCService.class);
-        ipcReg = context.registerService(AgentIPCService.class.getName(), ipcService, null);
-    }
-
     @Test
     public void verifyServiceIsRegistered() throws Exception {
+        StubBundleContext context = new StubBundleContext();
         Activator activator = new Activator();
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
-        assertTrue(context.isServiceRegistered(MXBeanConnectionPoolControl.class.getName(), MXBeanConnectionPoolImpl.class));
-    }
-
-    @Test
-    public void verifyPoolShutdown() throws Exception {
-        Activator activator = new Activator();
-        activator.start(context);
-        
-        MXBeanConnectionPoolImpl pool = mock(MXBeanConnectionPoolImpl.class);
-        when(pool.isStarted()).thenReturn(true);
-        activator.setPool(pool);
-
-        // Remove tracked service
-        ipcReg.unregister();
-        
-        verify(pool).shutdown();
+        assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
     }
     
     @Test
-    public void verifyPoolShutdownNotStarted() throws Exception {
-        Activator activator = new Activator();
+    public void verifyAgentConfig() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        
+        CommonPaths paths = mock(CommonPaths.class);
+        File sysPropFile = mock(File.class);
+        when(paths.getSystemAgentConfigurationFile()).thenReturn(sysPropFile);
+        File userPropFile = mock(File.class);
+        when(paths.getUserAgentConfigurationFile()).thenReturn(userPropFile);
+        context.registerService(CommonPaths.class.getName(), paths, null);
+        
+        AgentConfigSetter configSetter = mock(AgentConfigSetter.class);
+        Activator activator = new Activator(configSetter);
         activator.start(context);
         
-        MXBeanConnectionPoolImpl pool = mock(MXBeanConnectionPoolImpl.class);
-        activator.setPool(pool);
-
-        // Remove tracked service
-        ipcReg.unregister();
-        
-        verify(pool, never()).shutdown();
+        verify(configSetter).setConfigFiles(sysPropFile, userPropFile);
     }
+
 }
 

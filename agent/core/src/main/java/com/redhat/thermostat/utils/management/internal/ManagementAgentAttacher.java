@@ -34,11 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.proxy.server;
+package com.redhat.thermostat.utils.management.internal;
 
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -51,9 +50,9 @@ import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 
-class AgentProxyControlImpl {
+class ManagementAgentAttacher {
     
-    private static final Logger logger = LoggingUtils.getLogger(AgentProxyControlImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(ManagementAgentAttacher.class);
     private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
     private static final String JCMD_NAME = "jcmd";
     private static final String JCMD_MANAGEMENT_AGENT_START_LOCAL = "ManagementAgent.start_local";
@@ -65,33 +64,31 @@ class AgentProxyControlImpl {
     private boolean attached;
     private String connectorAddress;
     
-    AgentProxyControlImpl(int pid) {
+    ManagementAgentAttacher(int pid) {
         this(pid, new VirtualMachineUtils());
     }
     
-    AgentProxyControlImpl(int pid, VirtualMachineUtils vmUtils) {
+    ManagementAgentAttacher(int pid, VirtualMachineUtils vmUtils) {
         this.pid = pid;
         this.vmUtils = vmUtils;
     }
 
-    void attach() throws AttachNotSupportedException, IOException {
-        vm = vmUtils.attach(String.valueOf(pid));
-        attached = true;
+    void attach() throws IOException {
+        try {
+            vm = vmUtils.attach(String.valueOf(pid));
+            attached = true;
 
-        Properties props = vm.getAgentProperties();
-        connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
-        if (connectorAddress == null) {
-            String home = null;
-            String agent = null;
-            try {
+            Properties props = vm.getAgentProperties();
+            connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
+            if (connectorAddress == null) {
                 props = vm.getSystemProperties();
                 startManagementAgent(props);
                 logger.fine("Started management agent for vm '" + pid + "'");
                 props = vm.getAgentProperties();
                 connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
-            } catch (IOException | AgentLoadException | AgentInitializationException e) {
-                throw new RemoteException("Failed to load agent ('" + agent + "', from home '" + home + "') into VM (pid: " + pid + ")", e);
             }
+        } catch (IOException | AgentLoadException | AgentInitializationException | AttachNotSupportedException e) {
+            throw new IOException("Failed to load management agent into VM (pid: " + pid + ")", e);
         }
     }
 

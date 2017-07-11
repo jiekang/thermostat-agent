@@ -36,217 +36,53 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
-import java.nio.file.attribute.UserPrincipal;
-import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
-import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.ipc.server.IPCMessage;
-import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
-import com.redhat.thermostat.common.portability.ProcessUserInfo;
-import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
-import com.redhat.thermostat.common.portability.ProcessUserInfoBuilderFactory;
-import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
+
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.common.portability.UserNameUtil;
 
-public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, ThermostatIPCCallbacks {
+@Component
+@Service(value = MXBeanConnectionPool.class)
+public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
 
-    private static final Object CURRENT_ENTRY_LOCK = new Object();
-    private static final String IPC_SERVER_PREFIX = "agent-proxy";
-    static final String JSON_PID = "pid";
-    static final String JSON_JMX_URL = "jmxUrl";
-    
-    // pid -> (usageCount, actualObject)
+    // Keys are PIDs of target JVMs
     private final Map<Integer, MXBeanConnectionPoolEntry> pool;
-    private final ConnectorCreator creator;
-    private final File binPath;
-    private final ProcessUserInfoBuilder userInfoBuilder;
-    private final AgentIPCService ipcService;
-    private final FileSystemUtils fsUtils;
-    // Keep track of IPC servers we created
-    private final Set<String> ipcServerNames;
+    private final ManagementAgentHelper helper;
     
-    /**
-     * Current {@link MXBeanConnectionPoolEntry} being created by {@link #acquire(int)} for use
-     * by {@link #messageReceived(IPCMessage)}. 
-     * Since {@link #acquire(int)} is a synchronized method and blocks until
-     * {@link #messageReceived(IPCMessage)} is invoked, only one entry can be processed at a time.
-     * Access/modification must be synchronized using {@link #CURRENT_ENTRY_LOCK}.
-     */
-    private MXBeanConnectionPoolEntry currentNewEntry;
-    private boolean started;
-
-    public MXBeanConnectionPoolImpl(File binPath, UserNameUtil userNameUtil, AgentIPCService ipcService) {
-        this(new ConnectorCreator(), binPath, ProcessUserInfoBuilderFactory.createBuilder(new ProcDataSource(), userNameUtil),
-                ipcService, new FileSystemUtils());
+    public MXBeanConnectionPoolImpl() {
+        this(new ManagementAgentHelper());
     }
 
-    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, File binPath, ProcessUserInfoBuilder userInfoBuilder, 
-            AgentIPCService ipcService, FileSystemUtils fsUtils) {
+    MXBeanConnectionPoolImpl(ManagementAgentHelper helper) {
         this.pool = new HashMap<>();
-        this.creator = connectorCreator;
-        this.binPath = binPath;
-        this.userInfoBuilder = userInfoBuilder;
-        this.ipcService = ipcService;
-        this.fsUtils = fsUtils;
-        this.currentNewEntry = null;
-        this.started = false;
-        this.ipcServerNames = new HashSet<>();
+        this.helper = helper;
     }
 
-    @Override
-    public synchronized void start() throws IOException {
-        this.started = true;
-    }
-    
-    @Override
-    public synchronized boolean isStarted() {
-        return started;
-    }
-    
-    @Override
-    public synchronized void shutdown() throws IOException {
-        this.started = false;
-        
-        // Delete all IPC servers created by this class
-        Set<String> serverNames = new HashSet<>(ipcServerNames);
-        for (String serverName : serverNames) {
-            deleteServerIfExists(serverName);
-            ipcServerNames.remove(serverName);
-        }
-    }
-
-    private void deleteServerIfExists(String serverName) throws IOException {
-        if (ipcService.serverExists(serverName)) {
-            ipcService.destroyServer(serverName);
-        }
-    }
-    
-    @Override
-    public void messageReceived(IPCMessage message) {
-        synchronized (CURRENT_ENTRY_LOCK) {
-            MXBeanConnectionPoolEntry entry = currentNewEntry;
-            Objects.requireNonNull(entry, "currentNewEntry was null, should never happen");
-            
-            ByteBuffer buf = message.get();
-            CharBuffer charBuf = Charset.forName("UTF-8").decode(buf);
-            String dataString = charBuf.toString();
-            try {
-                // Deserialize JSON data
-                GsonBuilder builder = new GsonBuilder();
-                Gson gson = builder.create();
-                JsonParser parser = new JsonParser();
-                
-                // Get root of JsonObject tree
-                JsonElement parsed = parser.parse(dataString);
-                requireNonNull(parsed, "Received empty JSON data");
-                if (!parsed.isJsonObject()) {
-                    throw new IOException("Malformed data from agent proxy");
-                }
-                JsonObject jsonObj = parsed.getAsJsonObject();
-                
-                int pid = getPidFromJson(gson, jsonObj);
-                // Verify PID is correct
-                if (entry.getPid() != pid) {
-                    throw new IOException("Expected message for PID: " + currentNewEntry.getPid() 
-                        + ", got message for PID: " + pid);
-                }
-
-                String jmxUrl = getJmxUrlFromJson(gson, jsonObj, pid);
-                entry.setJmxUrl(jmxUrl);
-            } catch (JsonParseException | IOException e) {
-                entry.setException(e);
-            }
-        }
-    }
-    
-    private int getPidFromJson(Gson gson, JsonObject json) throws IOException {
-        JsonElement jsonPid = json.get(JSON_PID);
-        requireNonNull(jsonPid, "No PID received from agent proxy");
-        return gson.fromJson(jsonPid, Integer.class);
-    }
-    
-    private String getJmxUrlFromJson(Gson gson, JsonObject json, int pid) throws IOException {
-        JsonElement jsonJmxUrl = json.get(JSON_JMX_URL);
-        requireNonNull(jsonJmxUrl, "No JMX service URL received from agent proxy for PID: " + pid);
-        return gson.fromJson(jsonJmxUrl, String.class);
-    }
-    
-    private void requireNonNull(JsonElement element, String errorMessage) throws IOException {
-        if (element == null || element.isJsonNull()) {
-            throw new IOException(errorMessage);
-        }
-    }
-    
     @Override
     public synchronized MXBeanConnection acquire(int pid) throws MXBeanConnectionException {
-        checkRunning();
         MXBeanConnectionPoolEntry data = pool.get(pid);
         if (data == null) {
-            MXBeanConnector connector = null;
-            ProcessUserInfo info = userInfoBuilder.build(pid);
-            String username = info.getUsername();
-            if (username == null) {
-                throw new MXBeanConnectionException("Unable to determine owner of " + pid);
-            }
-            // Create an Agent Proxy IPC server for this user if it does not already exist
-            String serverName = IPC_SERVER_PREFIX + "-" + String.valueOf(info.getUid());
+            data = new MXBeanConnectionPoolEntry(pid);
             try {
-                // Check if we created an IPC server for this user already
-                if (!ipcServerNames.contains(serverName)) {
-                    createIPCServer(username, serverName);
-                }
+                // Attach to JVM and retrieve JMX service URL
+                ManagementAgentAttacher attacher = helper.createAttacher(pid);
+                attacher.attach();
+                String jmxUrl = attacher.getConnectorAddress();
                 
-                data = new MXBeanConnectionPoolEntry(pid);
-                // Synchronized to ensure any previous callback has completely finished 
-                // before changing currentNewEntry
-                synchronized (CURRENT_ENTRY_LOCK) {
-                    this.currentNewEntry = data;
-                }
-                // Add this to the map early, so our callback can find it
-                pool.put(pid, data);
-                
-                // Start agent proxy which will send the JMX service URL to the IPC server we created
-                File configFile = ipcService.getConfigurationFile();
-                AgentProxyClient proxy = creator.createAgentProxy(pid, username, binPath, configFile, serverName);
-                proxy.runProcess(); // Process completed when this returns
-                
-                // Block until we get a JMX service URL, or Exception
-                String jmxUrl = data.getJmxUrlOrBlock();
-                connector = creator.createConnector(jmxUrl);
+                // Connect using JMX service URL
+                MXBeanConnector connector = helper.createConnector(jmxUrl);
                 MXBeanConnectionImpl connection = connector.connect();
                 data.setConnection(connection);
+                pool.put(pid, data);
             } catch (IOException e) {
                 pool.remove(pid);
                 throw new MXBeanConnectionException(e);
-            } catch (InterruptedException e) {
-                pool.remove(pid);
-                Thread.currentThread().interrupt();
-                throw new MXBeanConnectionException(e);
-            } finally {
-                // Reset currentNewEntry
-                synchronized (CURRENT_ENTRY_LOCK) {
-                    this.currentNewEntry = null;
-                }
             }
         } else {
             data.incrementUsageCount();
@@ -254,24 +90,8 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
         return data.getConnection();
     }
 
-    private void createIPCServer(String username, String serverName) throws IOException {
-        // Lookup UserPrincipal using username
-        UserPrincipalLookupService lookup = fsUtils.getUserPrincipalLookupService();
-        UserPrincipal principal = lookup.lookupPrincipalByName(username);
-        deleteServerIfExists(serverName); // Chance of old server left behind
-        ipcService.createServer(serverName, this, principal);
-        ipcServerNames.add(serverName);
-    }
-
-    private void checkRunning() throws MXBeanConnectionException {
-        if (!started) {
-            throw new MXBeanConnectionException(MXBeanConnectionPool.class.getSimpleName() + " service is not running");
-        }
-    }
-
     @Override
     public synchronized void release(int pid, MXBeanConnection toRelease) throws MXBeanConnectionException {
-        checkRunning();
         MXBeanConnectionPoolEntry data = pool.get(pid);
         if (data == null) {
             throw new MXBeanConnectionException("Unknown pid: " + pid);
@@ -295,31 +115,15 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
         }
     }
     
-    static class ConnectorCreator {
-        AgentProxyClient createAgentProxy(int pid, String user, File binPath, File ipcConfigFile, String serverName) {
-            return new AgentProxyClient(pid, user, binPath, ipcConfigFile, serverName);
+    static class ManagementAgentHelper {
+        ManagementAgentAttacher createAttacher(int pid) {
+            return new ManagementAgentAttacher(pid);
         }
         
         MXBeanConnector createConnector(String jmxUrl) throws IOException {
             MXBeanConnector connector = new MXBeanConnector(jmxUrl);
             return connector;
         }
-    }
-    
-    static class FileSystemUtils {
-        UserPrincipalLookupService getUserPrincipalLookupService() {
-            return FileSystems.getDefault().getUserPrincipalLookupService();
-        }
-    }
-    
-    // For testing purposes
-    MXBeanConnectionPoolEntry getPoolEntry(int pid) {
-        return pool.get(pid);
-    }
-    
-    // For testing purposes
-    synchronized Set<String> getIPCServerNames() {
-        return ipcServerNames;
     }
     
 }
