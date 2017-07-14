@@ -46,8 +46,8 @@ import java.util.logging.Logger;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -60,6 +60,7 @@ import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.agent.http.internal.keycloak.KeycloakAccessToken;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 @Component
 @Service(value = HttpRequestService.class)
@@ -87,26 +88,29 @@ public class HttpRequestService {
     private static final String KEYCLOAK_TOKEN_SERVICE = "/auth/realms/__REALM__/protocol/openid-connect/token";
     private static final String KEYCLOAK_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
+    private final HttpClientCreator httpClientCreator;
     private Gson gson = new GsonBuilder().create();
-    private HttpClient client;
+    private HttpClientFacade client;
     private AgentStartupConfiguration agentStartupConfiguration;
 
     private KeycloakAccessToken keycloakAccessToken;
+    @Reference
+    private SSLConfiguration sslConfig;
 
     public HttpRequestService() {
-        this(new HttpClient(), AgentConfigsUtils.createAgentConfigs());
+        this(new HttpClientCreator(), AgentConfigsUtils.createAgentConfigs());
     }
 
-    HttpRequestService(HttpClient client, AgentStartupConfiguration agentStartupConfiguration) {
-        this.client = client;
+    HttpRequestService(HttpClientCreator clientCreator, AgentStartupConfiguration agentStartupConfiguration) {
+        this.httpClientCreator = clientCreator;
         this.agentStartupConfiguration = agentStartupConfiguration;
     }
 
     @Activate
     public void activate() {
         try {
+            client = httpClientCreator.create(sslConfig);
             client.start();
-
             logger.log(Level.FINE, "HttpRequestService activated");
         } catch (Exception e) {
             logger.log(Level.SEVERE, "HttpRequestService failed to start correctly. Behaviour undefined.", e);
@@ -216,6 +220,14 @@ public class HttpRequestService {
     private String getKeycloakRefreshPayload() {
         return "grant_type=refresh_token&client_id=" + agentStartupConfiguration.getKeycloakClient() +
                 "&refresh_token=" + keycloakAccessToken.getRefreshToken();
+    }
+    
+    static class HttpClientCreator {
+    
+        HttpClientFacade create(SSLConfiguration config) {
+            return new HttpClientFacade(config);
+        }
+
     }
     
     @SuppressWarnings("serial")
