@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.host.overview.internal.models;
 
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.portability.PortableHost;
 import com.redhat.thermostat.common.portability.PortableHostFactory;
 import com.redhat.thermostat.host.overview.model.HostInfo;
@@ -48,6 +50,7 @@ public class HostInfoBuilderImpl implements HostInfoBuilder {
 
     private final WriterID writerID;
     private final PortableHost helper;
+    private final Clock clock;
 
     public HostInfoBuilderImpl(final WriterID writerID) {
         this(writerID, PortableHostFactory.getInstance());
@@ -56,12 +59,14 @@ public class HostInfoBuilderImpl implements HostInfoBuilder {
     HostInfoBuilderImpl(final WriterID writerID, PortableHost helper) {
         this.writerID = writerID;
         this.helper = helper;
+        this.clock = new SystemClock();
     }
 
     @Override
     public HostInfo build() {
         String wId = writerID.getWriterID();
         return new HostInfo(wId,
+                clock.getRealTimeMillis(),
                 helper.getHostName(),
                 helper.getOSName(),
                 helper.getOSVersion(),

@@ -62,6 +62,7 @@ public class HostInfoDAOImplTest {
     private static final String URL = "http://localhost:26000/api/systems/v0.0.3";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final String HOST_NAME = "a host name";
+    private static final long TIMESTAMP = 77L;
     private static final String OS_NAME = "some os";
     private static final String OS_KERNEL = "some kernel";
     private static final String CPU_MODEL = "some cpu that runs fast";
@@ -79,7 +80,7 @@ public class HostInfoDAOImplTest {
     
     @Before
     public void setup() throws Exception {
-        info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        info = new HostInfo("foo-agent", TIMESTAMP, HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
 
         httpRequestService = mock(HttpRequestService.class);
         jsonHelper = mock(HostInfoDAOImpl.JsonHelper.class);

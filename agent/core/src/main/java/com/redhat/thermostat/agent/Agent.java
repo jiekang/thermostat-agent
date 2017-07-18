@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.agent;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -55,8 +54,6 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolTracker;
 
 /**
  * Represents the Agent running on a host.
@@ -71,12 +68,9 @@ public class Agent {
     private final AgentInfoDAO agentDao;
     private final BackendInfoDAO backendDao;
     private final WriterID writerID;
-    private final MXBeanConnectionPoolTracker poolTracker;
     
-    private MXBeanConnectionPoolControl pool;
     private AgentInformation agentInfo;
     private boolean started = false;
-    
 
     private ActionListener<ThermostatExtensionRegistry.Action> backendRegistryListener =
             new ActionListener<ThermostatExtensionRegistry.Action>()
@@ -126,20 +120,11 @@ public class Agent {
     
     public Agent(BackendRegistry registry, AgentStartupConfiguration config,
             AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao, WriterID writerId) {
-        this(registry, config, agentInfoDao, backendInfoDao, writerId, new MXBeanConnectionPoolTracker());
-    }
-    
-    Agent(BackendRegistry registry, AgentStartupConfiguration config,
-            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao, WriterID writerId,
-            MXBeanConnectionPoolTracker poolTracker) {
         this.backendRegistry = registry;
         this.config = config;
         this.agentDao = agentInfoDao;
         this.backendDao = backendInfoDao;
         this.writerID = writerId;
-        // Need MXBeanConnectionPool without breaking 1.x API
-        this.poolTracker = poolTracker;
-        poolTracker.open();
         
         backendInfos = new ConcurrentHashMap<>();
         
@@ -153,13 +138,7 @@ public class Agent {
             agentDao.addAgentInformation(agentInfo);
             
             backendRegistry.start();
-            try {
-                pool = poolTracker.getPoolWithTimeout();
-                pool.start();
-                started = true;
-            } catch (IOException e) {
-                throw new LaunchException("Failed to start JMX services for agent", e);
-            }
+            started = true;
         } else {
             logger.warning("Attempt to start agent when already started.");
         }
@@ -180,7 +159,6 @@ public class Agent {
 
     public synchronized void stop() {
         if (started) {
-            
             backendRegistry.stop();
             
             if (config.purge()) {
@@ -189,14 +167,6 @@ public class Agent {
                 updateAgentStatusToStopped();
             }
             
-            if (pool.isStarted()) {
-                try {
-                    pool.shutdown();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to cleanly shut down JMX services", e);
-                }
-            }
-            poolTracker.close();
             started = false;
         } else {
             logger.warning("Attempt to stop agent which is not active");

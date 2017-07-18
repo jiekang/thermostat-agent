@@ -48,13 +48,13 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 
-import com.redhat.thermostat.agent.dao.AgentInfoDAO;
-import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.ActionEvent;
@@ -63,8 +63,6 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolTracker;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class AgentTest {
@@ -75,8 +73,6 @@ public class AgentTest {
 
     private AgentInfoDAO agentInfoDao;
     private BackendInfoDAO backendInfoDao;
-    private MXBeanConnectionPoolImpl pool;
-    private MXBeanConnectionPoolTracker poolTracker;
     
     @Before
     public void setUp() throws Exception {
@@ -95,16 +91,12 @@ public class AgentTest {
         when(backend.isActive()).thenReturn(true);
 
         backendRegistry = mock(BackendRegistry.class);
-        pool = mock(MXBeanConnectionPoolImpl.class);
-        when(pool.isStarted()).thenReturn(true);
-        poolTracker = mock(MXBeanConnectionPoolTracker.class);
-        when(poolTracker.getPoolWithTimeout()).thenReturn(pool);
     }
     
     @SuppressWarnings("unused")
     @Test
     public void testAgentInit() throws Exception {
-        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, null, poolTracker);
+        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, null);
         
         verify(backendRegistry).addActionListener(any(ActionListener.class));
     }
@@ -116,7 +108,7 @@ public class AgentTest {
         UUID uuid = UUID.randomUUID();
         WriterID id = mock(WriterID.class);
         when(id.getWriterID()).thenReturn(uuid.toString());
-        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id, poolTracker);
+        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id);
         
         agent.start();
 
@@ -127,8 +119,6 @@ public class AgentTest {
         verify(agentInfoDao).addAgentInformation(argument.capture());
         assertEquals(123, argument.getValue().getStartTime());
         assertEquals(uuid.toString(), argument.getValue().getAgentId());
-        
-        verify(pool).start();
     }
     
     @Test
@@ -137,7 +127,7 @@ public class AgentTest {
 
         // Start agent.
         WriterID id = mock(WriterID.class);
-        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id, poolTracker);
+        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id);
         verify(backendRegistry).addActionListener(backendListener.capture());
         
         agent.start();
@@ -185,7 +175,7 @@ public class AgentTest {
         UUID uuid = UUID.randomUUID();
         WriterID id = mock(WriterID.class);
         when(id.getWriterID()).thenReturn(uuid.toString());
-        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id, poolTracker);
+        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id);
         agent.start();
         
         // stop agent
@@ -196,8 +186,6 @@ public class AgentTest {
         ArgumentCaptor<AgentInformation> argument = ArgumentCaptor.forClass(AgentInformation.class);        
         verify(agentInfoDao, never()).updateAgentInformation(argument.capture());
         //verify(storage, times(1)).purge(uuid.toString()); TODO
-        
-        verify(pool).shutdown();
     }
    
     @Test
@@ -208,7 +196,7 @@ public class AgentTest {
         when(config.purge()).thenReturn(false);
         
         WriterID id = mock(WriterID.class);
-        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id, poolTracker);
+        Agent agent = new Agent(backendRegistry, config, agentInfoDao, backendInfoDao, id);
         agent.start();
         
         // stop agent
@@ -218,8 +206,6 @@ public class AgentTest {
 
         verify(agentInfoDao).updateAgentInformation(isA(AgentInformation.class));
         //verify(storage, times(0)).purge(anyString()); TODO
-        
-        verify(pool).shutdown();
     }
 }
 

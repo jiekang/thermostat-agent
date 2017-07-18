@@ -54,20 +54,29 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.SystemID;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.ConfigurationCreator;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.JsonHelper;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoUpdate;
 import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
 
 public class VmInfoDAOImplTest {
 
-    private static final String URL = "http://localhost:26000/api/v100/vm-info/systems/*/agents/foo-agent";
-    private static final String UPDATE_URL = URL + "/jvms/vmId";
+    private static final String GATEWAY_URL = "http://localhost:30000/jvms/0.0.1/";
+    private static final String POST_URL = GATEWAY_URL + "systems/foo";
+    private static final String UPDATE_URL = GATEWAY_URL + "update/systems/foo/jvms/vmId";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
     
     private VmInfo info;
     private JsonHelper jsonHelper;
     private HttpRequestService httpRequestService;
+    private SystemID systemID;
+    private ConfigurationCreator creator;
+    private ConfigurationInfoSource source;
+    private PluginConfiguration config;
 
     @Before
     public void setUp() throws Exception {
@@ -91,30 +100,39 @@ public class VmInfoDAOImplTest {
         info = new VmInfo("foo-agent", vmId, vmPid, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
                 props, env, libs, uid, username);
-        
+
+        source = mock(ConfigurationInfoSource.class);
+        config = mock(PluginConfiguration.class);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+        creator = mock(ConfigurationCreator.class);
+        when(creator.create(source)).thenReturn(config);
+        systemID = mock(SystemID.class);
+        when(systemID.getSystemID()).thenReturn("foo");
+
         httpRequestService = mock(HttpRequestService.class);
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmInfo.class))).thenReturn(SOME_JSON);
         when(jsonHelper.toJson(any(VmInfoUpdate.class))).thenReturn(SOME_OTHER_JSON);
     }
 
-    @Ignore("Re-enable when proper /jvms endpoint is being used")
     @Test
     public void testPutVmInfo() throws Exception {
-        VmInfoDAOImpl dao = new VmInfoDAOImpl(jsonHelper);
+        VmInfoDAOImpl dao = new VmInfoDAOImpl(jsonHelper, creator, source);
+        dao.bindSystemId(systemID);
         dao.bindHttpRequestService(httpRequestService);
+        dao.activate();
         dao.putVmInfo(info);
         
         verify(jsonHelper).toJson(eq(Arrays.asList(info)));
-        verify(httpRequestService).sendHttpRequest(SOME_JSON, URL, HttpRequestService.POST);
+        verify(httpRequestService).sendHttpRequest(SOME_JSON, POST_URL, HttpRequestService.POST);
     }
 
-    @Ignore("Re-enable when proper /jvms endpoint is being used")
     @Test
     public void testPutVmStoppedTime() throws Exception {
-        VmInfoDAOImpl dao = new VmInfoDAOImpl(jsonHelper);
+        VmInfoDAOImpl dao = new VmInfoDAOImpl(jsonHelper, creator, source);
+        dao.bindSystemId(systemID);
         dao.bindHttpRequestService(httpRequestService);
-        
+        dao.activate();
         dao.putVmStoppedTime("foo-agent", "vmId", 3L);
 
         ArgumentCaptor<VmInfoUpdate> updateCaptor = ArgumentCaptor.forClass(VmInfoUpdate.class);

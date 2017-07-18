@@ -49,13 +49,15 @@ public class HostInfo extends BasePojo {
     private String cpuModel;
     private int cpuCount;
     private long totalMemory;
+    private long timeStamp;
 
     public HostInfo() {
-        this(null, null, null, null, null, -1, -1);
+        this(null, 0, null, null, null, null, -1, -1);
     }
 
-    public HostInfo(String writerId, String hostname, String osName, String osKernel, String cpuModel, int cpuCount, long totalMemory) {
+    public HostInfo(String writerId, long timeStamp, String hostname, String osName, String osKernel, String cpuModel, int cpuCount, long totalMemory) {
         super(writerId);
+        this.timeStamp = timeStamp;
         this.hostname = hostname;
         this.osName = osName;
         this.osKernel = osKernel;
@@ -127,5 +129,12 @@ public class HostInfo extends BasePojo {
         return totalMemory;
     }
 
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 }
 

@@ -36,12 +36,10 @@
 
 package com.redhat.thermostat.agent.internal;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.dao.AgentInfoDAO;
-import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -49,29 +47,34 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
-import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
-import com.redhat.thermostat.common.portability.UserNameUtil;
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 
 public class Activator implements BundleActivator {
     
     private static final Logger logger = LoggingUtils.getLogger(Activator.class);
     
+    private final AgentConfigSetter configSetter;
     private ServiceTracker<CommonPaths, CommonPaths> commonPathsTracker;
-    private MultipleServiceTracker agentIPCTracker;
-    private MXBeanConnectionPoolControl pool;
+    
+    public Activator() {
+        this(new AgentConfigSetter());
+    }
+    
+    Activator(AgentConfigSetter configSetter) {
+        this.configSetter = configSetter;
+    }
 
     @Override
     public void start(final BundleContext context) throws Exception {
+        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl();
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
+
+        BackendInfoDAO backendInfoDAO = new BackendInfoDAOImpl();
+        context.registerService(BackendInfoDAO.class, backendInfoDAO, null);
 
         // Track common paths separately and register storage credentials quickly
         // We need to do this since otherwise no storage credentials will be
@@ -82,8 +85,7 @@ public class Activator implements BundleActivator {
             public CommonPaths addingService(ServiceReference<CommonPaths> ref) {
                 CommonPaths paths = context.getService(ref);
                 try {
-                    AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
-
+                    configSetter.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
                 } catch (InvalidConfigurationException e) {
                     logger.log(Level.SEVERE, "Failed to start agent services", e);
                 }
@@ -101,57 +103,19 @@ public class Activator implements BundleActivator {
             }
         });
         
-        // Track IPC related deps separately from CommonPaths/StorageCredentials
-        Class<?>[] deps = new Class<?>[] { CommonPaths.class, AgentIPCService.class, UserNameUtil.class };
-        agentIPCTracker = new MultipleServiceTracker(context, deps, new Action() {
-            
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-
-                try {
-                    AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl();
-                    context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
-
-                    BackendInfoDAO backendInfoDAO = new BackendInfoDAOImpl();
-                    context.registerService(BackendInfoDAO.class, backendInfoDAO, null);
-
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-                AgentIPCService ipcService = services.get(AgentIPCService.class);
-                CommonPaths paths = services.get(CommonPaths.class);
-                UserNameUtil util = services.get(UserNameUtil.class);
-                pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, ipcService);
-                context.registerService(MXBeanConnectionPool.class, pool, null);
-                // Used only internally
-                context.registerService(MXBeanConnectionPoolControl.class, pool, null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                try {
-                    if (pool != null && pool.isStarted()) {
-                        pool.shutdown();
-                    }
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to clean up IPC server", e);
-                }
-            }
-        });
         commonPathsTracker.open();
-        agentIPCTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         commonPathsTracker.close();
-        agentIPCTracker.close();
     }
-
-    // Testing hook.
-    void setPool(MXBeanConnectionPoolControl pool) {
-        this.pool = pool;
+    
+    // For testing purposes
+    static class AgentConfigSetter {
+        void setConfigFiles(File systemConfigFile, File userConfigFile) {
+            AgentConfigsUtils.setConfigFiles(systemConfigFile, userConfigFile);
+        }
     }
 
 }

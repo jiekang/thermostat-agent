@@ -43,8 +43,6 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -57,7 +55,6 @@ public class ActivatorTest {
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
-        assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
 
         activator.stop(context);
 
@@ -74,8 +71,7 @@ public class ActivatorTest {
         activator.start(context);
 
         activator.stop(context);
-        
-        assertFalse(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
+
         assertFalse(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
         
         assertEquals(0, context.getServiceListeners().size());
@@ -90,9 +86,8 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(1, context.getAllServices().size());
 
         activator.stop(context);
         
@@ -101,9 +96,8 @@ public class ActivatorTest {
         
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(1, context.getAllServices().size());
 
         activator.stop(context);
 

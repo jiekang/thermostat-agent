@@ -64,6 +64,11 @@
       <outputDirectory>plugins/${thermostat.plugin}</outputDirectory>
       <filtered>true</filtered>
     </fileSet>
+    <fileSet>
+      <directory>configFiles</directory>
+      <outputDirectory>etc/plugins.d/${thermostat.plugin}</outputDirectory>
+      <filtered>true</filtered>
+    </fileSet>
   </fileSets>
 </assembly>
 

@@ -53,23 +53,21 @@ public class VmInfoTypeAdapterTest {
     @Test
     public void testWrite() throws Exception {
         VmInfoTypeAdapter adapter = new VmInfoTypeAdapter();
-        final String expected = "[{\"agentId\":\"agent1\",\"vmId\":\"vm1\",\"vmPid\":8000,"
-                + "\"startTimeStamp\":{\"$numberLong\":\"50000\"},\"stopTimeStamp\":"
-                + "{\"$numberLong\":\"-9223372036854775808\"},\"javaVersion\":\"1.8.0\","
-                + "\"javaHome\":\"/path/to/java\",\"mainClass\":\"myClass\",\"javaCommandLine\":\"java myClass\","
-                + "\"vmName\":\"myJVM\",\"vmArguments\":\"-Dhello\",\"vmInfo\":\"interesting\","
-                + "\"vmVersion\":\"1800\",\"propertiesAsArray\":[{\"key\":\"A\",\"value\":\"B\"},"
-                + "{\"key\":\"C\",\"value\":\"D\"}],\"environmentAsArray\":[{\"key\":\"E\",\"value\":\"F\"},"
-                + "{\"key\":\"G\",\"value\":\"H\"}],\"loadedNativeLibraries\":[],\"uid\":{\"$numberLong\":\"1234\"},"
-                + "\"username\":\"test\"},"
-                + "{\"agentId\":\"agent2\",\"vmId\":\"vm2\",\"vmPid\":9000,\"startTimeStamp\":"
-                + "{\"$numberLong\":\"100000\"},\"stopTimeStamp\":{\"$numberLong\":\"200000\"},"
-                + "\"javaVersion\":\"1.7.0\",\"javaHome\":\"/path/to/jre\",\"mainClass\":\"myOtherClass\","
-                + "\"javaCommandLine\":\"otherClass.sh\",\"vmName\":\"myOtherJVM\",\"vmArguments\":\"-Dworld\","
-                + "\"vmInfo\":\"info\",\"vmVersion\":\"1700\",\"propertiesAsArray\":[],\"environmentAsArray\":"
-                + "[{\"key\":\"A\",\"value\":\"B\"},{\"key\":\"C\",\"value\":\"D\"}],"
-                + "\"loadedNativeLibraries\":[\"libhello\",\"libworld\"],\"uid\":{\"$numberLong\":\"5678\"}"
-                + ",\"username\":\"user\"}]";
+        final String expected = "[{\"agentId\":\"agent1\",\"jvmId\":\"vm1\",\"jvmPid\":8000," +
+                "\"startTime\":{\"$numberLong\":\"50000\"},\"stopTime\":{\"$numberLong\":\"-9223372036854775808\"}," +
+                "\"javaVersion\":\"1.8.0\",\"javaHome\":\"/path/to/java\",\"mainClass\":\"myClass\"," +
+                "\"javaCommandLine\":\"java myClass\",\"jvmName\":\"myJVM\",\"jvmArguments\":\"-Dhello\",\"" +
+                "jvmInfo\":\"interesting\",\"jvmVersion\":\"1800\"," +
+                "\"properties\":[{\"key\":\"A\",\"value\":\"B\"},{\"key\":\"C\",\"value\":\"D\"}]," +
+                "\"environment\":[{\"key\":\"E\",\"value\":\"F\"},{\"key\":\"G\",\"value\":\"H\"}]," +
+                "\"loadedNativeLibraries\":[],\"uid\":{\"$numberLong\":\"1234\"},\"username\":\"test\"}," +
+                "{\"agentId\":\"agent2\",\"jvmId\":\"vm2\",\"jvmPid\":9000,\"startTime\":{\"$numberLong\":\"100000\"}," +
+                "\"stopTime\":{\"$numberLong\":\"200000\"},\"javaVersion\":\"1.7.0\",\"javaHome\":\"/path/to/jre\"," +
+                "\"mainClass\":\"myOtherClass\",\"javaCommandLine\":\"otherClass.sh\",\"jvmName\":\"myOtherJVM\"," +
+                "\"jvmArguments\":\"-Dworld\",\"jvmInfo\":\"info\",\"jvmVersion\":\"1700\",\"properties\":[]," +
+                "\"environment\":[{\"key\":\"A\",\"value\":\"B\"},{\"key\":\"C\",\"value\":\"D\"}]," +
+                "\"loadedNativeLibraries\":[\"libhello\",\"libworld\"],\"uid\":{\"$numberLong\":\"5678\"}," +
+                "\"username\":\"user\"}]";
         
         final Map<String, String> props = new HashMap<>();
         props.put("A", "B");
@@ -96,7 +94,7 @@ public class VmInfoTypeAdapterTest {
     @Test
     public void testUpdate() throws Exception {
         VmInfoUpdateTypeAdapter adapter = new VmInfoUpdateTypeAdapter();
-        final String expected = "{\"set\":{\"stopTimeStamp\":{\"$numberLong\":\"5000\"}}}";
+        final String expected = "{\"set\":{\"stopTime\":{\"$numberLong\":\"5000\"}}}";
         
         VmInfoUpdate update = new VmInfoUpdate(5000L);
         String json = adapter.toJson(update);

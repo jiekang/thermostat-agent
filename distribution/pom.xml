@@ -423,11 +423,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-proxy-server</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-ipc-tcpsocket-server</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -466,11 +461,6 @@
         <artifactId>thermostat-process-handler</artifactId>
         <version>${project.version}</version>
     </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-system-backend</artifactId>
-        <version>${project.version}</version>
-    </dependency>
 
     <!-- Plugins -->
 
@@ -491,6 +481,12 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-memory-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-network-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
