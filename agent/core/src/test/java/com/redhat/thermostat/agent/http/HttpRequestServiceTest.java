@@ -48,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
@@ -69,8 +70,8 @@ import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class HttpRequestServiceTest {
     private static final String POST_METHOD = HttpRequestService.POST;
-    private static final String URL = "http://127.0.0.1:30000/test";
-    private static final String GET_URL = URL + "?q=foo&l=3";
+    private static final URI GATEWAY_URI = URI.create("http://127.0.0.1:30000/test/");
+    private static final URI GET_URI = GATEWAY_URI.resolve("?q=foo&l=3");
     private static final String payload = "{}";
     private static final String keycloakUrl = "http://127.0.0.1:31000/keycloak";
 
@@ -82,7 +83,7 @@ public class HttpRequestServiceTest {
     public void setup() throws InterruptedException, ExecutionException, TimeoutException {
         client = mock(HttpClientFacade.class);
         httpRequest = mock(Request.class);
-        when(client.newRequest(eq(URL))).thenReturn(httpRequest);
+        when(client.newRequest(eq(GATEWAY_URI))).thenReturn(httpRequest);
         ContentResponse response = mock(ContentResponse.class);
         when(response.getStatus()).thenReturn(HttpStatus.OK_200);
         when(httpRequest.send()).thenReturn(response);
@@ -96,7 +97,7 @@ public class HttpRequestServiceTest {
 
         HttpRequestService service = createAndActivateRequestService(configuration);
 
-        service.sendHttpRequest(payload, URL, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
@@ -112,7 +113,7 @@ public class HttpRequestServiceTest {
         Request keycloakRequest = mock(Request.class);
         setupKeycloakRequest(keycloakRequest);
 
-        service.sendHttpRequest(payload, URL, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
@@ -131,7 +132,7 @@ public class HttpRequestServiceTest {
         Request keycloakRequest = mock(Request.class);
         setupKeycloakRequest(keycloakRequest);
 
-        service.sendHttpRequest(payload, URL, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
@@ -140,7 +141,7 @@ public class HttpRequestServiceTest {
 
         verifyKeycloakAcquire(keycloakRequest);
 
-        service.sendHttpRequest(payload, URL, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
 
 
         ArgumentCaptor<StringContentProvider> payloadCaptor = ArgumentCaptor.forClass(StringContentProvider.class);
@@ -164,10 +165,10 @@ public class HttpRequestServiceTest {
 
         HttpRequestService service = createAndActivateRequestService(configuration);
 
-        String response = service.sendHttpRequest(null, URL, POST_METHOD);
+        String response = service.sendHttpRequest(null, GATEWAY_URI, POST_METHOD);
         assertNull(response);
 
-        verify(client).newRequest(URL);
+        verify(client).newRequest(GATEWAY_URI);
         verify(configuration).isKeycloakEnabled();
 
         verify(httpRequest, times(0)).content(any(StringContentProvider.class), anyString());
@@ -185,31 +186,55 @@ public class HttpRequestServiceTest {
     @Test
     public void testGetRequestWithResponse() throws Exception {
         String getContent = "foo bar";
+        HttpClientCreator creator = mock(HttpClientCreator.class);
+        HttpClientFacade getClient = setupHttpClient(creator, getContent);
+        
+        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        HttpRequestService service = new HttpRequestService(creator, configuration);
+        service.activate();
+        String content = service.sendHttpRequest(null, GET_URI, HttpRequestService.GET);
+        verify(getClient).newRequest(GET_URI);
+        assertEquals(getContent, content);
+    }
+    
+    @Test
+    public void testGetRequestNormalizesURI() throws Exception {
+        String getContent = "foo bar";
+        HttpClientCreator creator = mock(HttpClientCreator.class);
+        HttpClientFacade getClient = setupHttpClient(creator, getContent);
+        
+        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        HttpRequestService service = new HttpRequestService(creator, configuration);
+        service.activate();
+        
+        // Add extra slashes to URI
+        URI uri = URI.create("http://127.0.0.1:30000//test//?q=bar&l=5");
+        URI normalized = URI.create("http://127.0.0.1:30000/test/?q=bar&l=5");
+        String content = service.sendHttpRequest(null, uri, HttpRequestService.GET);
+        verify(getClient).newRequest(normalized);
+        assertEquals(getContent, content);
+    }
+
+    private HttpClientFacade setupHttpClient(HttpClientCreator creator, String getContent) throws Exception {
         Request request = mock(Request.class);
         ContentResponse contentResponse = mock(ContentResponse.class);
         when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
         when(contentResponse.getContentAsString()).thenReturn(getContent);
         when(request.send()).thenReturn(contentResponse);
         HttpClientFacade getClient = mock(HttpClientFacade.class);
-        when(getClient.newRequest(eq(GET_URL))).thenReturn(request);
-        HttpClientCreator creator = mock(HttpClientCreator.class);
+        when(getClient.newRequest(any(URI.class))).thenReturn(request);
         when(creator.create(any(SSLConfiguration.class))).thenReturn(getClient);
-        
-        AgentStartupConfiguration configuration = createNoKeycloakConfig();
-        HttpRequestService service = new HttpRequestService(creator, configuration);
-        service.activate();
-        String content = service.sendHttpRequest(null, GET_URL, HttpRequestService.GET);
-        assertEquals(getContent, content);
+        return getClient;
     }
     
     @Test(expected = RequestFailedException.class)
     public void failureThrowsRequestFailedException() throws Exception {
         Request request = mock(Request.class);
-        when(client.newRequest(any(String.class))).thenReturn(request);
+        when(client.newRequest(any(URI.class))).thenReturn(request);
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
         doThrow(IOException.class).when(request).send();
         HttpRequestService service = createAndActivateRequestService(configuration);
-        service.sendHttpRequest("foo", "bar", HttpRequestService.DELETE /*any valid method*/);
+        service.sendHttpRequest("foo", GATEWAY_URI, HttpRequestService.DELETE /*any valid method*/);
     }
 
     private AgentStartupConfiguration createNoKeycloakConfig() {
@@ -219,7 +244,7 @@ public class HttpRequestServiceTest {
     }
 
     private void verifyHttpPostRequest(Request httpRequest) throws InterruptedException, ExecutionException, TimeoutException {
-        verify(client).newRequest(URL);
+        verify(client).newRequest(GATEWAY_URI);
         verify(httpRequest).content(any(StringContentProvider.class), eq("application/json"));
         verify(httpRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
         verify(httpRequest).send();

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.gc.agent.internal.models;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -66,7 +67,7 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     
     @Reference
     private ConfigurationInfoSource configInfoSource;
-    private String gatewayURL;
+    private URI gatewayURL;
 
     @Reference
     private HttpRequestService httpRequestService;

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.plugin;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,7 +49,7 @@ abstract public class PluginDAOBase<Tobj,Tdao> {
     protected abstract String toJsonString(Tobj obj) throws IOException;
     protected abstract HttpRequestService getHttpRequestService();
     protected abstract PluginConfiguration getConfig();
-    protected abstract String getURL(final String basepath);
+    protected abstract URI getPostURI(final URI basepath);
     protected abstract Logger getLogger();
 
     public void put(final Tobj obj) {
@@ -56,9 +57,9 @@ abstract public class PluginDAOBase<Tobj,Tdao> {
             HttpRequestService httpRequestService = getHttpRequestService();
             String json = toJsonString(obj);
 
-            final String gatewayURL = getConfig().getGatewayURL();
-            final String url = getURL(gatewayURL);
-            httpRequestService.sendHttpRequest(json, url, HttpRequestService.POST);
+            final URI gatewayURI = getConfig().getGatewayURL();
+            final URI postURI = getPostURI(gatewayURI);
+            httpRequestService.sendHttpRequest(json, postURI, HttpRequestService.POST);
         } catch (IOException | RequestFailedException e) {
             getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
         }

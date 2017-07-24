@@ -40,6 +40,8 @@ import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 public class PluginConfiguration {
@@ -55,13 +57,32 @@ public class PluginConfiguration {
         this.pluginId = pluginId;
     }
 
-    public String getGatewayURL() throws IOException {
+    /**
+     * Returns the microservice URL defined by the "gatewayURL" property in the gateway.properties file
+     * for this plugin, expressed as a {@link URI}. If the provided URL does not end in a '/' character, 
+     * one is appended by this method.
+     * <p>
+     * Since the microservice path is already included, appending to this URI should be done using 
+     * the {@link URI#resolve(String)} method with a relative path.
+     * @return a URI to the web gateway microservice used by this plugin
+     * @throws IOException if the gatewayURL property is missing or invalid
+     */
+    public URI getGatewayURL() throws IOException {
         Map<String, String> props = source.getConfiguration(pluginId, CONFIG_FILE);
         String url = props.get(URL_PROP);
         if (url == null) {
             throw new IOException("No gateway URL found for " + pluginId + " in " + getConfigFilePath());
         }
-        return url;
+        try {
+            // Ensure the URI ends with a '/' so relative paths resolve under the microservice path segment
+            if (!url.endsWith("/")) {
+                url = url.concat("/");
+            }
+            URI gatewayURI = new URI(url);
+            return gatewayURI;
+        } catch (URISyntaxException e) {
+            throw new IOException("Invalid URL found for " + pluginId + ": " + url, e);
+        }
     }
 
     private String getConfigFilePath() {

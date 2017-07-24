@@ -37,41 +37,35 @@
 package com.redhat.thermostat.host.network.internal;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+
+import org.eclipse.jetty.http.HttpMethod;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.plugin.SystemID;
+import com.redhat.thermostat.host.network.internal.NetworkInfoListDAOImpl.ConfigurationCreator;
+import com.redhat.thermostat.host.network.internal.NetworkInfoListDAOImpl.JsonHelper;
 import com.redhat.thermostat.host.network.model.NetworkInfoList;
 import com.redhat.thermostat.host.network.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.host.network.internal.NetworkInfoListDAOImpl.JsonHelper;
-
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
-
-import org.junit.Before;
-import org.junit.Test;
 
 public class NetworkInfoListDAOTest {
 
-    private static final String URL = "http://localhost:26000/api/v100/network-info/systems/";
+    private static final URI GATEWAY_URI = URI.create("http://localhost:26000/api/v100/network-info/");
     private static final String INTERFACE_NAME = "some interface. maybe eth0";
     private static final long TIMESTAMP = 333;
     private static final String IPV4_ADDR = "256.256.256.256";
     private static final String IPV6_ADDR = "100:100:100::::1";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
-    private static final String URL_PROP = "gatewayURL";
     private static final String HOST_NAME = "somehostname";
     private static final String AGENT_ID = "xxx some agent";
 
@@ -93,18 +87,12 @@ public class NetworkInfoListDAOTest {
         when(jsonHelper.toJson(any(NetworkInfoList.class))).thenReturn(SOME_JSON);
 
         cfiSource = mock(ConfigurationInfoSource.class);
-        Map<String,String> map = new HashMap<>();
-        map.put(URL_PROP, URL);
-        when(cfiSource.getConfiguration(anyString(),anyString())).thenReturn(map);
-
-        configCreator = mock(NetworkInfoListDAOImpl.ConfigurationCreator.class);
-        when(configCreator.create(eq(cfiSource))).thenReturn(new PluginConfiguration(cfiSource, NetworkInfoListDAOImpl.PLUGIN_ID));
-
+        configCreator = mock(ConfigurationCreator.class);
+        PluginConfiguration pluginConfig = mock(PluginConfiguration.class);
+        when(pluginConfig.getGatewayURL()).thenReturn(GATEWAY_URI);
+        when(configCreator.create(cfiSource)).thenReturn(pluginConfig);
+        
         httpRequestService = mock(HttpRequestService.class);
-        ContentResponse contentResponse = mock(ContentResponse.class);
-       // when(httpRequestService.sendHttpRequest(anyString(), anyString(), anyString())).thenReturn(contentResponse);
-        when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
-
         idservice = mock(SystemID.class);
         when(idservice.getSystemID()).thenReturn(HOST_NAME);
     }
@@ -121,7 +109,7 @@ public class NetworkInfoListDAOTest {
         NetworkInfoList obj = new NetworkInfoList(AGENT_ID, TIMESTAMP, new ArrayList<NetworkInterfaceInfo>());
         dao.put(obj);
 
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpMethod.POST.asString());
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, GATEWAY_URI.resolve("systems/" + HOST_NAME), HttpMethod.POST.asString());
     }
 }
 

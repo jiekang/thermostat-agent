@@ -41,6 +41,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +60,7 @@ import com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Space;
 public class VmMemoryStatDAOImplTest {
 
     private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
-    private static final String GATEWAY_URL = "http://example.com/jvm-memory/0.0.2/";
+    private static final URI GATEWAY_URI = URI.create("http://example.com/jvm-memory/0.0.2/");
     
     private JsonHelper jsonHelper;
     private PluginConfiguration config;
@@ -73,7 +74,7 @@ public class VmMemoryStatDAOImplTest {
         when(jsonHelper.toJson(anyListOf(VmMemoryStat.class))).thenReturn(JSON);
         
         config = mock(PluginConfiguration.class);
-        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URI);
 
         source = mock(ConfigurationInfoSource.class);
 
@@ -122,7 +123,7 @@ public class VmMemoryStatDAOImplTest {
         dao.putVmMemoryStat(stat);
 
         verify(jsonHelper).toJson(Arrays.asList(stat));
-        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URL, HttpRequestService.POST);
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.POST);
     }
     
 }

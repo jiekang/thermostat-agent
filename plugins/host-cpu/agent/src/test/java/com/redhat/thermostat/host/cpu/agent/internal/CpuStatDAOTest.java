@@ -37,15 +37,12 @@
 package com.redhat.thermostat.host.cpu.agent.internal;
 
 import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URI;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,16 +53,15 @@ import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.plugin.SystemID;
+import com.redhat.thermostat.host.cpu.agent.internal.CpuStatDAOImpl.ConfigurationCreator;
 import com.redhat.thermostat.host.cpu.model.CpuStat;
 
 public class CpuStatDAOTest {
 
-    private static final String URL = "http://localhost:26000/api/system-cpu/0.0.1";
+    private static final URI GATEWAY_URI = URI.create("http://localhost:26000/api/system-cpu/0.0.1/");
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final double times[] = { 33., 44, };
     private static final String HOST_NAME = "somehostname";
-
-    private static final String URL_PROP = "gatewayURL";
 
     private CpuStat info;
     private CpuStatDAOImpl.JsonHelper jsonHelper;
@@ -84,12 +80,10 @@ public class CpuStatDAOTest {
         when(jsonHelper.toJson(anyListOf(CpuStat.class))).thenReturn(SOME_JSON);
 
         cfiSource = mock(ConfigurationInfoSource.class);
-        Map<String,String> map = new HashMap<>();
-        map.put(URL_PROP, URL);
-        when(cfiSource.getConfiguration(anyString(),anyString())).thenReturn(map);
-
-        configCreator = mock(CpuStatDAOImpl.ConfigurationCreator.class);
-        when(configCreator.create(eq(cfiSource))).thenReturn(new PluginConfiguration(cfiSource, CpuStatDAOImpl.PLUGIN_ID));
+        configCreator = mock(ConfigurationCreator.class);
+        PluginConfiguration pluginConfig = mock(PluginConfiguration.class);
+        when(pluginConfig.getGatewayURL()).thenReturn(GATEWAY_URI);
+        when(configCreator.create(cfiSource)).thenReturn(pluginConfig);
 
         httpRequestService = mock(HttpRequestService.class);
         idservice = mock(SystemID.class);
@@ -106,7 +100,7 @@ public class CpuStatDAOTest {
         dao.activate();
         dao.put(info);
 
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpRequestService.POST);
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, GATEWAY_URI.resolve("systems/" + HOST_NAME), HttpRequestService.POST);
     }
 
 }

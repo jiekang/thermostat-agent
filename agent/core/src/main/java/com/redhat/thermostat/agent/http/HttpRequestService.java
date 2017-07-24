@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.http;
 
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -120,14 +121,16 @@ public class HttpRequestService {
     /**
      * Send a HTTP request
      * @param jsonPayload The payload to send, or null if no payload
-     * @param url The complete url to send to
+     * @param uri The complete URI to send to
      * @param requestType The HTTP request type: GET, PUT, POST or DELETE
      * @return The returned body for GET requests. {@code null} otherwise.
      */
-    public String sendHttpRequest(String jsonPayload, String url, String requestType) throws RequestFailedException {
+    public String sendHttpRequest(String jsonPayload, URI uri, String requestType) throws RequestFailedException {
         // TODO: refactor agent pass around HttpMethod enum instead of string - it's faster and takes less space.
         HttpMethod requestMethod = HttpMethod.valueOf(requestType);
-        Request request = client.newRequest(url);
+        // Normalize URI to ensure any duplicate slashes are removed
+        uri = uri.normalize();
+        Request request = client.newRequest(uri);
         if (jsonPayload != null) {
             request.content(new StringContentProvider(jsonPayload), "application/json");
         }

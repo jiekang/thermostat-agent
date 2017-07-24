@@ -45,6 +45,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.Arrays;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
@@ -66,7 +67,7 @@ public class VmTlabStatDAOTest {
     private static final String VM_ID = "0xcafe";
     private static final String AGENT_ID = "agent";
     private static final String CONTENT_TYPE = "application/json";
-    private static final String GATEWAY_URL = "http://example.com/jvm-memory/0.0.2/";
+    private static final URI GATEWAY_URI = URI.create("http://example.com/jvm-memory/0.0.2/");
     
     private HttpClient httpClient;
     private HttpHelper httpHelper;
@@ -92,13 +93,13 @@ public class VmTlabStatDAOTest {
         when(jsonHelper.toJson(anyListOf(VmTlabStat.class))).thenReturn(JSON);
         
         config = mock(PluginConfiguration.class);
-        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URI);
     }
 
     @Test
     public void testActivation() throws Exception {
         PluginConfiguration pluginConfig = mock(PluginConfiguration.class);
-        when(pluginConfig.getGatewayURL()).thenReturn("someGatewayURL");
+        when(pluginConfig.getGatewayURL()).thenReturn(GATEWAY_URI);
         VmTlabStatDAOImpl.ConfigurationCreator configCreator = mock(VmTlabStatDAOImpl.ConfigurationCreator.class);
         ConfigurationInfoSource configInfoSource = mock(ConfigurationInfoSource.class);
         when(configCreator.create(configInfoSource)).thenReturn(pluginConfig);
@@ -138,7 +139,7 @@ public class VmTlabStatDAOTest {
         VmTlabStatDAO dao = new VmTlabStatDAOImpl(httpClient, httpHelper, jsonHelper, configurationCreator, configInfoSource);
         dao.putStat(stat);
 
-        verify(httpClient).newRequest(GATEWAY_URL);
+        verify(httpClient).newRequest(GATEWAY_URI);
         verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(Arrays.asList(stat));
         verify(httpHelper).createContentProvider(JSON);

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +75,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     private final JsonHelper jsonHelper;
     private final ConfigurationCreator configCreator;
 
-    private String gatewayURL;
+    private URI gatewayURL;
 
     @Reference
     private ConfigurationInfoSource configInfoSource;
@@ -116,8 +117,8 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         try {
             // Encode as JSON and send as POST request
             String json = jsonHelper.toJson(Arrays.asList(info));
-            String url = getAddURL();
-            httpRequestService.sendHttpRequest(json, url, HttpRequestService.POST);
+            URI uri = getAddURI();
+            httpRequestService.sendHttpRequest(json, uri, HttpRequestService.POST);
         } catch (IOException | RequestFailedException e) {
            logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
         }
@@ -129,35 +130,28 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             // Encode as JSON and send as PUT request
             VmInfoUpdate update = new VmInfoUpdate(timestamp);
             String json = jsonHelper.toJson(update);
-            String url = getUpdateURL(vmId);
-            httpRequestService.sendHttpRequest(json, url, HttpRequestService.PUT);
+            URI uri = getUpdateURI(vmId);
+            httpRequestService.sendHttpRequest(json, uri, HttpRequestService.PUT);
         } catch (IOException | RequestFailedException e) {
            logger.log(Level.WARNING, "Failed to send JVM information update to web gateway", e);
         }
     }
     
-    private String getAddURL() {
-        StringBuilder builder = buildURL();
+    private URI getAddURI() {
+        StringBuilder builder = new StringBuilder();
         builder.append(SYSTEM_PATH);
         builder.append(systemID.getSystemID());
-        return builder.toString();
+        return gatewayURL.resolve(builder.toString());
     }
 
-    private StringBuilder buildURL() {
+    private URI getUpdateURI(String vmId) {
         StringBuilder builder = new StringBuilder();
-        builder.append(gatewayURL);
-        return builder;
-    }
-    
-    private String getUpdateURL(String vmId) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(buildURL());
         builder.append(UPDATE_PREFIX);
         builder.append(SYSTEM_PATH);
         builder.append(systemID.getSystemID());
         builder.append(VM_PATH);
         builder.append(vmId);
-        return builder.toString();
+        return gatewayURL.resolve(builder.toString());
     }
     
     protected void bindHttpRequestService(HttpRequestService httpRequestService) {

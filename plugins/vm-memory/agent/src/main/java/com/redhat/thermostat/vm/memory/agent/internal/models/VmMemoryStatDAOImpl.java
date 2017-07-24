@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.memory.agent.internal.models;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -64,7 +65,7 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     private final JsonHelper jsonHelper;
     private final ConfigurationCreator configCreator;
 
-    private String gatewayURL;
+    private URI gatewayURL;
 
     @Reference
     private ConfigurationInfoSource configInfoSource;

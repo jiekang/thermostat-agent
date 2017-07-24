@@ -38,7 +38,6 @@ package com.redhat.thermostat.commands.agent.internal;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -78,7 +77,7 @@ public class CommandsBackend extends BaseBackend {
     private static final String DESCRIPTION = "Establishes web-socket connections to the microservice endpoint so as to be able to receive command requests";
     private static final String VENDOR = "Red Hat Inc.";
     private static final String PLUGIN_ID = "commands";
-    private static final String ENDPOINT_FORMAT = "%s/systems/%s/agents/%s";
+    private static final String ENDPOINT_FORMAT = "systems/%s/agents/%s";
     private static final String UNKNOWN_CREDS = "UNKNOWN:UNKNOWN";
 
     private final WsClientCreator wsClientCreator;
@@ -184,14 +183,15 @@ public class CommandsBackend extends BaseBackend {
     private boolean connectWsClient() {
         boolean expired = false;
         try {
-            String microserviceURL = config.getGatewayURL();
+            URI microserviceURI = config.getGatewayURL();
             // String agent = agentId.getWriterID();
             // FIXME: Use reasonable agent/system name to register, not
             // hard-coded one
             // Unfortunately, the microservice is currently set up only for
             // a hard-coded one.
             String agent = "testAgent";
-            URI agentUri = new URI(String.format(ENDPOINT_FORMAT, microserviceURL, "ignoreMe", agent));
+            String cmdUriPath = String.format(ENDPOINT_FORMAT, "ignoreMe", agent);
+            URI agentUri = microserviceURI.resolve(cmdUriPath);
             AgentSocketOnMessageCallback onMsgCallback = new AgentSocketOnMessageCallback(receiverReg);
             CmdChannelAgentSocket agentSocket = new CmdChannelAgentSocket(
                     onMsgCallback, socketConnectLatch, agent);
@@ -201,7 +201,7 @@ public class CommandsBackend extends BaseBackend {
             wsClient.connect(agentSocket, agentUri, agentRequest);
             logger.fine("WebSocket connect initiated.");
             expired = !socketConnectLatch.await(10, TimeUnit.SECONDS);
-        } catch (IOException | URISyntaxException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             logger.warning("Failed to connect to endpoint. Reason: " + e.getMessage());
             logger.log(Level.FINE, "Failed to connect to endpoint", e);
             return false;

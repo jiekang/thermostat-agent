@@ -44,12 +44,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -64,9 +64,9 @@ import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
 
 public class VmInfoDAOImplTest {
 
-    private static final String GATEWAY_URL = "http://localhost:30000/jvms/0.0.1/";
-    private static final String POST_URL = GATEWAY_URL + "systems/foo";
-    private static final String UPDATE_URL = GATEWAY_URL + "update/systems/foo/jvms/vmId";
+    private static final URI GATEWAY_URI = URI.create("http://localhost:30000/jvms/0.0.1/");
+    private static final URI POST_URI = GATEWAY_URI.resolve("systems/foo");
+    private static final URI UPDATE_URI = GATEWAY_URI.resolve("update/systems/foo/jvms/vmId");
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
     
@@ -103,7 +103,7 @@ public class VmInfoDAOImplTest {
 
         source = mock(ConfigurationInfoSource.class);
         config = mock(PluginConfiguration.class);
-        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URI);
         creator = mock(ConfigurationCreator.class);
         when(creator.create(source)).thenReturn(config);
         systemID = mock(SystemID.class);
@@ -124,7 +124,7 @@ public class VmInfoDAOImplTest {
         dao.putVmInfo(info);
         
         verify(jsonHelper).toJson(eq(Arrays.asList(info)));
-        verify(httpRequestService).sendHttpRequest(SOME_JSON, POST_URL, HttpRequestService.POST);
+        verify(httpRequestService).sendHttpRequest(SOME_JSON, POST_URI, HttpRequestService.POST);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class VmInfoDAOImplTest {
         VmInfoUpdate update = updateCaptor.getValue();
         assertEquals(3L, update.getStoppedTime());
                 
-        verify(httpRequestService).sendHttpRequest(SOME_OTHER_JSON, UPDATE_URL, HttpRequestService.PUT);
+        verify(httpRequestService).sendHttpRequest(SOME_OTHER_JSON, UPDATE_URI, HttpRequestService.PUT);
     }
 
 }
