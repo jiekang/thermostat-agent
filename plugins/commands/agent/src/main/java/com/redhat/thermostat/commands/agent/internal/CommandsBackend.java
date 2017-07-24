@@ -64,6 +64,7 @@ import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.FileStorageCredentials;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -98,6 +99,9 @@ public class CommandsBackend extends BaseBackend {
 
     @Reference
     private ConfigurationInfoSource commandInfo;
+    
+    @Reference
+    private SSLConfiguration sslConfig;
 
     public CommandsBackend() {
         this(new WsClientCreator(), new CredentialsCreator(), new ConfigCreator(), new CountDownLatch(1));
@@ -154,7 +158,7 @@ public class CommandsBackend extends BaseBackend {
         creds = credsCreator.create(paths);
         config = configCreator.createConfig(commandInfo);
         try {
-            wsClient = wsClientCreator.createClient();
+            wsClient = wsClientCreator.createClient(sslConfig);
             wsClient.start();
         } catch (Exception e) {
             logger.log(Level.WARNING,
@@ -234,8 +238,8 @@ public class CommandsBackend extends BaseBackend {
     }
     
     static class WsClientCreator {
-        WebSocketClientFacade createClient() {
-            return new WebSocketClientFacadeImpl();
+        WebSocketClientFacade createClient(SSLConfiguration sslConfig) {
+            return new WebSocketClientFacadeImpl(sslConfig);
         }
     }
     

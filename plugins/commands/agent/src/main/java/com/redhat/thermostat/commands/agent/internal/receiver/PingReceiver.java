@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.commands.agent.internal.receiver;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -44,12 +48,20 @@ import com.redhat.thermostat.commands.agent.receiver.RequestReceiver;
 import com.redhat.thermostat.commands.model.AgentRequest;
 import com.redhat.thermostat.commands.model.WebSocketResponse;
 import com.redhat.thermostat.commands.model.WebSocketResponse.ResponseType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 @Component
 @Service(value = RequestReceiver.class)
 @Property(name = "servicename", value = "com.redhat.thermostat.commands.agent.internal.receiver.PingReceiver")
 public class PingReceiver implements RequestReceiver {
 
+    private static Logger logger = LoggingUtils.getLogger(PingReceiver.class);
+    
+    @Activate
+    public void activate() {
+        logger.log(Level.FINE, "PingReceiver activated.");
+    }
+    
     @Override
     public WebSocketResponse receive(AgentRequest request) {
         return new WebSocketResponse(request.getSequenceId(), ResponseType.OK);

@@ -41,8 +41,8 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,7 +53,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -64,7 +63,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.http.HttpRequestService.HttpClientCreator;
 import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class HttpRequestServiceTest {
     private static final String POST_METHOD = HttpRequestService.POST;
@@ -73,24 +74,27 @@ public class HttpRequestServiceTest {
     private static final String payload = "{}";
     private static final String keycloakUrl = "http://127.0.0.1:31000/keycloak";
 
-    private HttpClient client;
+    private HttpClientCreator clientCreator;
+    private HttpClientFacade client;
     private Request httpRequest;
-
+    
     @Before
     public void setup() throws InterruptedException, ExecutionException, TimeoutException {
-        client = mock(HttpClient.class);
+        client = mock(HttpClientFacade.class);
         httpRequest = mock(Request.class);
         when(client.newRequest(eq(URL))).thenReturn(httpRequest);
         ContentResponse response = mock(ContentResponse.class);
         when(response.getStatus()).thenReturn(HttpStatus.OK_200);
         when(httpRequest.send()).thenReturn(response);
+        clientCreator = mock(HttpClientCreator.class);
+        when(clientCreator.create(any(SSLConfiguration.class))).thenReturn(client);
     }
 
     @Test
     public void testRequestWithoutKeycloak() throws Exception {
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
 
-        HttpRequestService service = new HttpRequestService(client, configuration);
+        HttpRequestService service = createAndActivateRequestService(configuration);
 
         service.sendHttpRequest(payload, URL, POST_METHOD);
 
@@ -103,7 +107,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
         setupKeycloakConfig(configuration);
 
-        HttpRequestService service = new HttpRequestService(client, configuration);
+        HttpRequestService service = createAndActivateRequestService(configuration);
 
         Request keycloakRequest = mock(Request.class);
         setupKeycloakRequest(keycloakRequest);
@@ -122,7 +126,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
         setupKeycloakConfig(configuration);
 
-        HttpRequestService service = new HttpRequestService(client, configuration);
+        HttpRequestService service = createAndActivateRequestService(configuration);
 
         Request keycloakRequest = mock(Request.class);
         setupKeycloakRequest(keycloakRequest);
@@ -158,7 +162,7 @@ public class HttpRequestServiceTest {
     public void testRequestWithNullPayload() throws Exception {
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
 
-        HttpRequestService service = new HttpRequestService(client, configuration);
+        HttpRequestService service = createAndActivateRequestService(configuration);
 
         String response = service.sendHttpRequest(null, URL, POST_METHOD);
         assertNull(response);
@@ -170,6 +174,13 @@ public class HttpRequestServiceTest {
         verify(httpRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
         verify(httpRequest).send();
     }
+    
+    private HttpRequestService createAndActivateRequestService(AgentStartupConfiguration configuration) throws Exception {
+        HttpRequestService service = new HttpRequestService(clientCreator, configuration);
+        service.activate();
+        verify(client).start();
+        return service;
+    }
 
     @Test
     public void testGetRequestWithResponse() throws Exception {
@@ -179,11 +190,14 @@ public class HttpRequestServiceTest {
         when(contentResponse.getStatus()).thenReturn(HttpStatus.OK_200);
         when(contentResponse.getContentAsString()).thenReturn(getContent);
         when(request.send()).thenReturn(contentResponse);
-        HttpClient getClient = mock(HttpClient.class);
+        HttpClientFacade getClient = mock(HttpClientFacade.class);
         when(getClient.newRequest(eq(GET_URL))).thenReturn(request);
+        HttpClientCreator creator = mock(HttpClientCreator.class);
+        when(creator.create(any(SSLConfiguration.class))).thenReturn(getClient);
         
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
-        HttpRequestService service = new HttpRequestService(getClient, configuration);
+        HttpRequestService service = new HttpRequestService(creator, configuration);
+        service.activate();
         String content = service.sendHttpRequest(null, GET_URL, HttpRequestService.GET);
         assertEquals(getContent, content);
     }
@@ -194,7 +208,7 @@ public class HttpRequestServiceTest {
         when(client.newRequest(any(String.class))).thenReturn(request);
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
         doThrow(IOException.class).when(request).send();
-        HttpRequestService service = new HttpRequestService(client, configuration);
+        HttpRequestService service = createAndActivateRequestService(configuration);
         service.sendHttpRequest("foo", "bar", HttpRequestService.DELETE /*any valid method*/);
     }
 

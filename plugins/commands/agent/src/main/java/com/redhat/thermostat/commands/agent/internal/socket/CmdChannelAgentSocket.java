@@ -39,6 +39,7 @@ package com.redhat.thermostat.commands.agent.internal.socket;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,6 +66,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 @WebSocket
 public class CmdChannelAgentSocket {
 
+    private static final long SOCKET_SESSION_IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
     private static final Logger logger = LoggingUtils
             .getLogger(CmdChannelAgentSocket.class);
     private final GsonFacade gson;
@@ -134,6 +136,13 @@ public class CmdChannelAgentSocket {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
+        // Be sure to have the socket timeout the same as on the
+        // microservice endpoint. Otherwise the agent socket might
+        // time out where it should not since the microservice will
+        // send a ping periodically which is strictly less than
+        // the configured idle timeout.
+        this.session.setIdleTimeout(SOCKET_SESSION_IDLE_TIMEOUT);
+        logger.config("Socket session idle timeout: " + session.getIdleTimeout() + "ms");
         this.connectLatch.countDown();
     }
 

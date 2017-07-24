@@ -39,6 +39,7 @@ package com.redhat.thermostat.killvm.agent.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -61,6 +62,11 @@ public class KillVmReceiver implements RequestReceiver {
     
     @Reference
     private ProcessHandler processService;
+    
+    @Activate
+    public void activate() {
+        log.log(Level.FINE, "KillVmReceiver activated.");
+    }
     
     @Override
     public WebSocketResponse receive(AgentRequest request) {

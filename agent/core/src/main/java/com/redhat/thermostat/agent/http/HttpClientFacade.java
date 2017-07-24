@@ -34,61 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.commands.agent.internal;
+package com.redhat.thermostat.agent.http;
 
-import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 
-import com.redhat.thermostat.commands.agent.internal.socket.CmdChannelAgentSocket;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-class WebSocketClientFacadeImpl implements WebSocketClientFacade {
+class HttpClientFacade {
+
+    private static final Logger logger = LoggingUtils.getLogger(HttpClientFacade.class);
+    private static final long PER_REQUEST_TIMEOUT_SEC = 5;
+    private final HttpClient httpsClient;
     
-    private static final Logger logger = LoggingUtils.getLogger(WebSocketClientFacadeImpl.class);
-    private final WebSocketClient client;
-    private CmdChannelAgentSocket socket;
-    
-    WebSocketClientFacadeImpl(SSLConfiguration sslConfig) {
-        this.client = createWebSocketClient(sslConfig);
+    HttpClientFacade(SSLConfiguration sslConfig) {
+        httpsClient = createHttpsClient(sslConfig);
     }
 
-    @Override
-    public void start() {
-        try {
-            client.start();
-        } catch (Exception e) {
-            logger.log(Level.WARNING,
-                    "Failed to start websocket client. Reason: "
-                            + e.getMessage());
-        }
-    }
-
-    @Override
-    public void connect(CmdChannelAgentSocket socket, URI connectURI, ClientUpgradeRequest request) throws IOException {
-        this.socket = socket;
-        client.connect(socket, connectURI, request);
-    }
-
-    @Override
-    public void stop() {
-        if (socket != null) {
-            socket.closeSession();
-        }
-        client.destroy();
-    }
-    
-    private static WebSocketClient createWebSocketClient(SSLConfiguration config) {
+    private static HttpClient createHttpsClient(SSLConfiguration config) {
         try {
             SSLContext context = SSLContextFactory.getClientContext(config);
             SslContextFactory sslFactory = new SslContextFactory();
@@ -101,13 +75,24 @@ class WebSocketClientFacadeImpl implements WebSocketClientFacade {
             } else {
                 sslFactory.setEndpointIdentificationAlgorithm("HTTPS");
             }
-            return new WebSocketClient(sslFactory);
+            HttpClient client = new HttpClient(sslFactory);
+            return client;
         } catch (SslInitException e) {
             logger.log(Level.INFO, "Failed to initialize SSL context.", e);
-            logger.severe("Failed to initialize SSL context. Reason: "
-                    + e.getMessage());
+            logger.severe("Failed to initialize SSL context. Reason: " + e.getMessage());
             throw new RuntimeException(e);
-        }
+        } 
     }
-
+    
+    void start() throws Exception {
+        httpsClient.start();
+    }
+    
+    Request newRequest(URI uri) {
+        return httpsClient.newRequest(uri).timeout(PER_REQUEST_TIMEOUT_SEC, TimeUnit.SECONDS);
+    }
+    
+    Request newRequest(String url) {
+        return httpsClient.newRequest(url).timeout(PER_REQUEST_TIMEOUT_SEC, TimeUnit.SECONDS);
+    }
 }

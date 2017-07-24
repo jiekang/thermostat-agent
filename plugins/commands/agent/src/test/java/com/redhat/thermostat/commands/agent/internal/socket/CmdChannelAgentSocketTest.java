@@ -125,4 +125,19 @@ public class CmdChannelAgentSocketTest {
         socket.closeSession();
         verify(session).close();
     }
+    
+    /**
+     * The commands microservice sets the idle timeout to 10 minutes as well. This
+     * is to ensure the timeouts match up. Otherwise there is a risk of timing out
+     * before the microservice can send a ping for this to NOT happen.
+     */
+    @Test
+    public void verifySetsSocketSessionIdleTimeout() {
+        long expectedSessionTimeout = 600_000;
+        CountDownLatch connectLatch = new CountDownLatch(1);
+        Session session = mock(Session.class);
+        CmdChannelAgentSocket socket = new CmdChannelAgentSocket(null, connectLatch, "foo-agent");
+        socket.onConnect(session);
+        verify(session).setIdleTimeout(expectedSessionTimeout);
+    }
 }

@@ -65,6 +65,7 @@ import com.redhat.thermostat.commands.agent.internal.socket.CmdChannelAgentSocke
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 
 public class CommandsBackendTest {
@@ -84,7 +85,7 @@ public class CommandsBackendTest {
         when(credsCreator.create(any(CommonPaths.class))).thenReturn(creds);
         WsClientCreator creator = mock(WsClientCreator.class);
         client = mock(WebSocketClientFacade.class);
-        when(creator.createClient()).thenReturn(client);
+        when(creator.createClient(any(SSLConfiguration.class))).thenReturn(client);
         ConfigCreator configCreator = mock(ConfigCreator.class);
         PluginConfiguration config = mock(PluginConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GW_URL);
