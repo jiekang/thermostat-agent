@@ -56,7 +56,8 @@ import com.redhat.thermostat.storage.core.WriterID;
 public abstract class VmListenerBackend extends BaseBackend implements VmStatusListener {
     
     private static final Logger logger = LoggingUtils.getLogger(VmListenerBackend.class);
-    
+
+    private final Object activationLock = new Object();
     private WriterID writerId;
     private VmStatusListenerRegistrar registrar;
     private VmMonitor monitor;
@@ -95,11 +96,13 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      */
     @Override
     public boolean activate() {
-        if (!initialized) {
-            logger.warning("Backend not started, initialize must be called before activate");
-        } else if (!started && monitor != null) {
-            registrar.register(this);
-            started = true;
+        synchronized (activationLock) {
+            if (!initialized) {
+                logger.warning("Backend not started, initialize must be called before activate");
+            } else if (!started && monitor != null) {
+                registrar.register(this);
+                started = true;
+            }
         }
         return started;
     }
@@ -114,10 +117,12 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      */
     @Override
     public boolean deactivate() {
-        if (started && monitor != null) {
-            registrar.unregister(this);
-            monitor.removeVmListeners();
-            started = false;
+        synchronized (activationLock) {
+            if (started && monitor != null) {
+                registrar.unregister(this);
+                monitor.removeVmListeners();
+                started = false;
+            }
         }
         return !started;
     }
@@ -163,10 +168,12 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      * @param version version number of this backend
      */
     protected void initialize(WriterID writerId, VmStatusListenerRegistrar registrar, String version) {
-        this.writerId = writerId;
-        this.registrar = registrar;
-        setVersion(version);
-        this.initialized = true;
+        synchronized (activationLock) {
+            this.writerId = writerId;
+            this.registrar = registrar;
+            setVersion(version);
+            this.initialized = true;
+        }
     }
     
     /**
