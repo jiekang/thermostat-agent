@@ -58,16 +58,17 @@ public class ReceiverRegistryTest {
         StubBundleContext context = new StubBundleContext();
         ReceiverRegistry reg = new ReceiverRegistry(context);
         RequestReceiver receiver = mock(RequestReceiver.class);
+        String actionName = "foo-action";
         
-        reg.registerReceiver(receiver);
+        reg.registerReceiver(receiver, actionName);
         
         context.isServiceRegistered(RequestReceiver.class.getName(), receiver.getClass());
-        Collection<?> services = context.getServiceReferences(RequestReceiver.class, String.format(FILTER_FORMAT, receiver.getClass().getName()));
+        Collection<?> services = context.getServiceReferences(RequestReceiver.class, String.format(FILTER_FORMAT, actionName));
         assertEquals(1, services.size());
         @SuppressWarnings("unchecked")
         ServiceReference<RequestReceiver> sr = (ServiceReference<RequestReceiver>)services.iterator().next();
         String serviceName = (String)sr.getProperty("servicename");
-        assertEquals(receiver.getClass().getName(), serviceName);
+        assertEquals(actionName, serviceName);
     }
     
     @Test
@@ -75,10 +76,11 @@ public class ReceiverRegistryTest {
         StubBundleContext context = new StubBundleContext();
         ReceiverRegistry reg = new ReceiverRegistry(context);
         assertNull(reg.getReceiver(String.class.getName()));
+        String actionName = "kill-vm";
         
         RequestReceiver receiver = mock(RequestReceiver.class);
-        reg.registerReceiver(receiver);
-        RequestReceiver actual = reg.getReceiver(receiver.getClass().getName());
+        reg.registerReceiver(receiver, actionName);
+        RequestReceiver actual = reg.getReceiver(actionName);
         assertSame(receiver, actual);
     }
 }

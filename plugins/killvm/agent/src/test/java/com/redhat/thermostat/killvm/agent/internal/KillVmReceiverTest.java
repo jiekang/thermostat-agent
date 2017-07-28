@@ -37,10 +37,8 @@
 package com.redhat.thermostat.killvm.agent.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
-import java.lang.reflect.Method;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -60,7 +58,7 @@ public class KillVmReceiverTest {
         receiver.bindProcessService(proc);
         SortedMap<String, String> params = new TreeMap<>();
         params.put("vm-pid", "12345");
-        AgentRequest req = new AgentRequest(322, params);
+        AgentRequest req = new AgentRequest(322, KillVmReceiver.ACTION_NAME, "some_systemId", "some_jvmId", params);
         WebSocketResponse response = receiver.receive(req);
         assertEquals(ResponseType.OK, response.getResponseType());
         assertEquals(322, response.getSequenceId());
@@ -72,7 +70,7 @@ public class KillVmReceiverTest {
         KillVmReceiver receiver = new KillVmReceiver();
         receiver.bindProcessService(proc);
         SortedMap<String, String> params = new TreeMap<>();
-        AgentRequest req = new AgentRequest(-1, params);
+        AgentRequest req = new AgentRequest(-1, KillVmReceiver.ACTION_NAME, "some_systemId", "some_jvmId", params);
         WebSocketResponse response = receiver.receive(req);
         assertEquals(ResponseType.ERROR, response.getResponseType());
         assertEquals(-1, response.getSequenceId());
@@ -85,7 +83,7 @@ public class KillVmReceiverTest {
         receiver.bindProcessService(proc);
         SortedMap<String, String> params = new TreeMap<>();
         params.put("vm-pid", "hi");
-        AgentRequest req = new AgentRequest(211, params);
+        AgentRequest req = new AgentRequest(211, KillVmReceiver.ACTION_NAME, "some_systemId", "some_jvmId", params);
         WebSocketResponse response = receiver.receive(req);
         assertEquals(ResponseType.ERROR, response.getResponseType());
         assertEquals(211, response.getSequenceId());
@@ -95,44 +93,25 @@ public class KillVmReceiverTest {
     public void receiverReturnsErrorNoProcessHandler() {
         KillVmReceiver receiver = new KillVmReceiver();
         SortedMap<String, String> params = new TreeMap<>();
-        AgentRequest req = new AgentRequest(11, params);
+        AgentRequest req = new AgentRequest(11, KillVmReceiver.ACTION_NAME, "some_systemId", "some_jvmId", params);
         WebSocketResponse response = receiver.receive(req);
         assertEquals(ResponseType.ERROR, response.getResponseType());
         assertEquals(11, response.getSequenceId());
     }
 
     /**
-     * When a request is issued the fully qualified receiver class name is set
-     * via the 'receiver' param name. This test makes sure that this
-     * class is actually where it's supposed to be.
-     * 
-     * @throws Exception
+     * The expected action is kill_vm. If invoked via a different one, we
+     * expect an error response.
      */
     @Test
-    public void killVmReceiverIsInAppropriatePackage() {
-        Class<?> receiver = null;
-        try {
-            // com.redhat.thermostat.client.killvm.internal.KillVMAction uses
-            // this class name.
-            receiver = Class
-                    .forName("com.redhat.thermostat.killvm.agent.internal.KillVmReceiver");
-        } catch (ClassNotFoundException e) {
-            fail("com.redhat.thermostat.agent.killvm.internal.KillVmReceiver class not found, but used by some request!");
-        }
-        try {
-            ProcessHandler service = mock(ProcessHandler.class);
-            Object instance = receiver.newInstance();
-            Method bind = receiver.getDeclaredMethod("bindProcessService", ProcessHandler.class);
-            bind.invoke(instance, service);
-            Method m = receiver.getMethod("receive", AgentRequest.class);
-            SortedMap<String, String> params = new TreeMap<>();
-            params.put("vm-pid", "12345");
-            AgentRequest req = new AgentRequest(322, params);
-            m.invoke(instance, req);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("cannot invoke receiver's receive method");
-        }
+    public void receiverReturnsErrorWhenBadAction() {
+        String unexpectedActionName = "foo-bar";
+        KillVmReceiver receiver = new KillVmReceiver();
+        SortedMap<String, String> params = new TreeMap<>();
+        AgentRequest req = new AgentRequest(13, unexpectedActionName, "some_systemId", "some_jvmId", params);
+        WebSocketResponse response = receiver.receive(req);
+        assertEquals(ResponseType.ERROR, response.getResponseType());
+        assertEquals(13, response.getSequenceId());
     }
 }
 
