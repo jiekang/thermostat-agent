@@ -37,9 +37,9 @@
 package com.redhat.thermostat.host.network.model;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -51,39 +51,16 @@ public class NetworkInfoListTypeAdapterTest {
     @Test
     public void testWrite() throws Exception {
         NetworkInfoListTypeAdapter adapter = new NetworkInfoListTypeAdapter();
-        final String expected = "{\"agentId\":\"some-agent-id\",\"timeStamp\":{\"$numberLong\":\"333\"},\"interfaces\":[{\"interfaceName\":\"lo\",\"ip4Addr\":\"127.0.0.1\","
+        final String expected = "[{\"agentId\":\"some-agent-id\",\"timeStamp\":{\"$numberLong\":\"333\"},\"interfaces\":[{\"interfaceName\":\"lo\",\"ip4Addr\":\"127.0.0.1\","
                 + "\"ip6Addr\":\"0:0:0:0:0:0:0:1%lo\"},{\"interfaceName\":\"if1\","
-                + "\"ip4Addr\":\"1.2.3.4\",\"ip6Addr\":\"1:2:3:4:5:6:7:8%if1\"}]}";
+                + "\"ip4Addr\":\"1.2.3.4\",\"ip6Addr\":\"1:2:3:4:5:6:7:8%if1\"}]}]";
 
         NetworkInterfaceInfo first = createInfo("lo", "127.0.0.1", "0:0:0:0:0:0:0:1%lo");
         NetworkInterfaceInfo second = createInfo("if1", "1.2.3.4", "1:2:3:4:5:6:7:8%if1");
         NetworkInfoList infos = createNetworkInfoList(first, second);
 
-        String json = adapter.toJson(infos);
+        String json = adapter.toJson(Arrays.asList(infos));
         assertEquals(expected, json);
-    }
-
-    @Test
-    public void testRead() throws Exception {
-        NetworkInfoListTypeAdapter adapter = new NetworkInfoListTypeAdapter();
-        final String json = "{\"response\" : {\"agentId\":\"some-agent-id\",\"timeStamp\":{\"$numberLong\":\"333\"},\"interfaces\":[{\"interfaceName\" : \"lo\", "
-                + "\"ip4Addr\" : \"127.0.0.1\", \"ip6Addr\" : \"0:0:0:0:0:0:0:1%lo\"}, "
-                + "{\"interfaceName\" : \"if1\", "
-                + "\"ip4Addr\" : \"1.2.3.4\", \"ip6Addr\" : null}]}, "
-                + "\"time\" : \"500000000\"}";
-
-        NetworkInfoList infos = adapter.fromJson(json);
-        assertEquals(2, infos.size());
-
-        NetworkInterfaceInfo first = infos.get(0);
-        assertEquals("lo", first.getInterfaceName());
-        assertEquals("127.0.0.1", first.getIp4Addr());
-        assertEquals("0:0:0:0:0:0:0:1%lo", first.getIp6Addr());
-
-        NetworkInterfaceInfo second = infos.get(1);
-        assertEquals("if1", second.getInterfaceName());
-        assertEquals("1.2.3.4", second.getIp4Addr());
-        assertNull(second.getIp6Addr());
     }
 
     private NetworkInfoList createNetworkInfoList(String iFace, String ip4Addr, String ip6Addr) {

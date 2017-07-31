@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jetty.http.HttpMethod;
 import org.junit.Before;
@@ -84,7 +85,7 @@ public class NetworkInfoListDAOTest {
         info.setIp6Addr(IPV6_ADDR);
         
         jsonHelper = mock(JsonHelper.class);
-        when(jsonHelper.toJson(any(NetworkInfoList.class))).thenReturn(SOME_JSON);
+        when(jsonHelper.toJson(any(List.class))).thenReturn(SOME_JSON);
 
         cfiSource = mock(ConfigurationInfoSource.class);
         configCreator = mock(ConfigurationCreator.class);

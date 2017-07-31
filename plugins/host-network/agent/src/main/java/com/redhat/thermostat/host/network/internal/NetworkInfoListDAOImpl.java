@@ -38,6 +38,8 @@ package com.redhat.thermostat.host.network.internal;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -92,7 +94,7 @@ public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList, Netwo
 
     @Override
     protected String toJsonString(NetworkInfoList obj) throws IOException {
-        return jsonHelper.toJson(obj);
+        return jsonHelper.toJson(Arrays.asList(obj));
     }
 
     @Override
@@ -137,7 +139,7 @@ public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList, Netwo
             this.typeAdapter = typeAdapter;
         }
 
-        String toJson(NetworkInfoList infos) throws IOException {
+        String toJson(List<NetworkInfoList> infos) throws IOException {
             return typeAdapter.toJson(infos);
         }
     }
