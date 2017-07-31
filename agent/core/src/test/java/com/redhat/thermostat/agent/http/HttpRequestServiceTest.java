@@ -57,7 +57,6 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,9 +66,9 @@ import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.agent.http.HttpRequestService.HttpClientCreator;
 import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import org.eclipse.jetty.http.HttpMethod;
 
 public class HttpRequestServiceTest {
-    private static final String POST_METHOD = HttpRequestService.POST;
     private static final URI GATEWAY_URI = URI.create("http://127.0.0.1:30000/test/");
     private static final URI GET_URI = GATEWAY_URI.resolve("?q=foo&l=3");
     private static final String payload = "{}";
@@ -97,7 +96,7 @@ public class HttpRequestServiceTest {
 
         HttpRequestService service = createAndActivateRequestService(configuration);
 
-        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
@@ -113,7 +112,7 @@ public class HttpRequestServiceTest {
         Request keycloakRequest = mock(Request.class);
         setupKeycloakRequest(keycloakRequest);
 
-        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
@@ -132,7 +131,7 @@ public class HttpRequestServiceTest {
         Request keycloakRequest = mock(Request.class);
         setupKeycloakRequest(keycloakRequest);
 
-        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
@@ -141,12 +140,12 @@ public class HttpRequestServiceTest {
 
         verifyKeycloakAcquire(keycloakRequest);
 
-        service.sendHttpRequest(payload, GATEWAY_URI, POST_METHOD);
+        service.sendHttpRequest(payload, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
 
 
         ArgumentCaptor<StringContentProvider> payloadCaptor = ArgumentCaptor.forClass(StringContentProvider.class);
         verify(keycloakRequest, times(2)).content(payloadCaptor.capture(), eq("application/x-www-form-urlencoded"));
-        verify(keycloakRequest, times(2)).method(eq(HttpMethod.valueOf(POST_METHOD)));
+        verify(keycloakRequest, times(2)).method(eq(HttpMethod.POST));
         verify(keycloakRequest, times(2)).send();
 
         String expected = "grant_type=refresh_token&client_id=client&refresh_token=refresh";
@@ -165,14 +164,14 @@ public class HttpRequestServiceTest {
 
         HttpRequestService service = createAndActivateRequestService(configuration);
 
-        String response = service.sendHttpRequest(null, GATEWAY_URI, POST_METHOD);
+        String response = service.sendHttpRequest(null, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
         assertNull(response);
 
         verify(client).newRequest(GATEWAY_URI);
         verify(configuration).isKeycloakEnabled();
 
         verify(httpRequest, times(0)).content(any(StringContentProvider.class), anyString());
-        verify(httpRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
+        verify(httpRequest).method(eq(HttpMethod.POST));
         verify(httpRequest).send();
     }
     
@@ -192,7 +191,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
         HttpRequestService service = new HttpRequestService(creator, configuration);
         service.activate();
-        String content = service.sendHttpRequest(null, GET_URI, HttpRequestService.GET);
+        String content = service.sendHttpRequest(null, GET_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.GET);
         verify(getClient).newRequest(GET_URI);
         assertEquals(getContent, content);
     }
@@ -210,7 +209,7 @@ public class HttpRequestServiceTest {
         // Add extra slashes to URI
         URI uri = URI.create("http://127.0.0.1:30000//test//?q=bar&l=5");
         URI normalized = URI.create("http://127.0.0.1:30000/test/?q=bar&l=5");
-        String content = service.sendHttpRequest(null, uri, HttpRequestService.GET);
+        String content = service.sendHttpRequest(null, uri, com.redhat.thermostat.agent.http.HttpRequestService.Method.GET);
         verify(getClient).newRequest(normalized);
         assertEquals(getContent, content);
     }
@@ -234,7 +233,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
         doThrow(IOException.class).when(request).send();
         HttpRequestService service = createAndActivateRequestService(configuration);
-        service.sendHttpRequest("foo", GATEWAY_URI, HttpRequestService.DELETE /*any valid method*/);
+        service.sendHttpRequest("foo", GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.DELETE /*any valid method*/);
     }
 
     private AgentStartupConfiguration createNoKeycloakConfig() {
@@ -246,7 +245,7 @@ public class HttpRequestServiceTest {
     private void verifyHttpPostRequest(Request httpRequest) throws InterruptedException, ExecutionException, TimeoutException {
         verify(client).newRequest(GATEWAY_URI);
         verify(httpRequest).content(any(StringContentProvider.class), eq("application/json"));
-        verify(httpRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
+        verify(httpRequest).method(eq(HttpMethod.POST));
         verify(httpRequest).send();
     }
 
@@ -283,7 +282,7 @@ public class HttpRequestServiceTest {
     private void verifyKeycloakAcquire(Request keycloakRequest) throws InterruptedException, ExecutionException, TimeoutException {
         ArgumentCaptor<StringContentProvider> payloadCaptor = ArgumentCaptor.forClass(StringContentProvider.class);
         verify(keycloakRequest).content(payloadCaptor.capture(), eq("application/x-www-form-urlencoded"));
-        verify(keycloakRequest).method(eq(HttpMethod.valueOf(POST_METHOD)));
+        verify(keycloakRequest).method(eq(HttpMethod.POST));
         verify(keycloakRequest).send();
 
         String expected = "grant_type=password&client_id=client&username=username&password=password";

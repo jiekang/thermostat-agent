@@ -98,7 +98,7 @@ public class VmGcStatDAOImplTest {
 
         verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
 
-        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.POST);
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.Method.POST);
     }
 
 }

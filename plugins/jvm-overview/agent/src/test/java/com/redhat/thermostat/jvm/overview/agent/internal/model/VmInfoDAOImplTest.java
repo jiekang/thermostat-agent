@@ -124,7 +124,7 @@ public class VmInfoDAOImplTest {
         dao.putVmInfo(info);
         
         verify(jsonHelper).toJson(eq(Arrays.asList(info)));
-        verify(httpRequestService).sendHttpRequest(SOME_JSON, POST_URI, HttpRequestService.POST);
+        verify(httpRequestService).sendHttpRequest(SOME_JSON, POST_URI, HttpRequestService.Method.POST);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class VmInfoDAOImplTest {
         VmInfoUpdate update = updateCaptor.getValue();
         assertEquals(3L, update.getStoppedTime());
                 
-        verify(httpRequestService).sendHttpRequest(SOME_OTHER_JSON, UPDATE_URI, HttpRequestService.PUT);
+        verify(httpRequestService).sendHttpRequest(SOME_OTHER_JSON, UPDATE_URI, HttpRequestService.Method.PUT);
     }
 
 }

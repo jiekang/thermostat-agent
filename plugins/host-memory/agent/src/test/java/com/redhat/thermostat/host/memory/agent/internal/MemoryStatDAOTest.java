@@ -97,7 +97,7 @@ public class MemoryStatDAOTest {
         dao.activate();
         dao.put(info);
 
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, GATEWAY_URI.resolve("systems/" + HOST_NAME), HttpRequestService.POST);
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, GATEWAY_URI.resolve("systems/" + HOST_NAME), HttpRequestService.Method.POST);
     }
 }
 

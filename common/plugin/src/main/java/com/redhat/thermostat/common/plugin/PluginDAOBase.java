@@ -59,7 +59,7 @@ abstract public class PluginDAOBase<Tobj,Tdao> {
 
             final URI gatewayURI = getConfig().getGatewayURL();
             final URI postURI = getPostURI(gatewayURI);
-            httpRequestService.sendHttpRequest(json, postURI, HttpRequestService.POST);
+            httpRequestService.sendHttpRequest(json, postURI, HttpRequestService.Method.POST);
         } catch (IOException | RequestFailedException e) {
             getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
         }

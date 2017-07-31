@@ -118,7 +118,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             // Encode as JSON and send as POST request
             String json = jsonHelper.toJson(Arrays.asList(info));
             URI uri = getAddURI();
-            httpRequestService.sendHttpRequest(json, uri, HttpRequestService.POST);
+            httpRequestService.sendHttpRequest(json, uri, HttpRequestService.Method.POST);
         } catch (IOException | RequestFailedException e) {
            logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
         }
@@ -131,7 +131,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             VmInfoUpdate update = new VmInfoUpdate(timestamp);
             String json = jsonHelper.toJson(update);
             URI uri = getUpdateURI(vmId);
-            httpRequestService.sendHttpRequest(json, uri, HttpRequestService.PUT);
+            httpRequestService.sendHttpRequest(json, uri, HttpRequestService.Method.PUT);
         } catch (IOException | RequestFailedException e) {
            logger.log(Level.WARNING, "Failed to send JVM information update to web gateway", e);
         }

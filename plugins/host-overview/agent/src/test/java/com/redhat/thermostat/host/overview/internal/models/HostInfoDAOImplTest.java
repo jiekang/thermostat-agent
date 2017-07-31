@@ -102,7 +102,7 @@ public class HostInfoDAOImplTest {
         dao.activate();
         
         dao.put(info);
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, PUT_URI, HttpRequestService.POST);
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, PUT_URI, HttpRequestService.Method.POST);
     }
 
 }

@@ -101,7 +101,7 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     public void putVmGcStat(final VmGcStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.POST);
+            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.Method.POST);
         } catch (RequestFailedException | IOException e) {
             logger.log(Level.WARNING, "Failed to send VmGcStat information to web gateway", e);
         }

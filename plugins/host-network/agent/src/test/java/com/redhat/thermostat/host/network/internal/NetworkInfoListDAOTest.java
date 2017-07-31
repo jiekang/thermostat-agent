@@ -46,7 +46,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jetty.http.HttpMethod;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -110,7 +109,7 @@ public class NetworkInfoListDAOTest {
         NetworkInfoList obj = new NetworkInfoList(AGENT_ID, TIMESTAMP, new ArrayList<NetworkInterfaceInfo>());
         dao.put(obj);
 
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, GATEWAY_URI.resolve("systems/" + HOST_NAME), HttpMethod.POST.asString());
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, GATEWAY_URI.resolve("systems/" + HOST_NAME), HttpRequestService.Method.POST);
     }
 }
 

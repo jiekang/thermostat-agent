@@ -123,7 +123,7 @@ public class VmMemoryStatDAOImplTest {
         dao.putVmMemoryStat(stat);
 
         verify(jsonHelper).toJson(Arrays.asList(stat));
-        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.POST);
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.Method.POST);
     }
     
 }

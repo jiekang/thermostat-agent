@@ -93,7 +93,7 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     public void putVmMemoryStat(final VmMemoryStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.POST);
+            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.Method.POST);
         } catch (RequestFailedException | IOException e) {
             logger.log(Level.WARNING, "Failed to send VmMemoryStat to Web Gateway", e);
         }
