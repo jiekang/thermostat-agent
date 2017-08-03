@@ -61,6 +61,7 @@ import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
@@ -90,6 +91,9 @@ public class CommandsBackend extends BaseBackend {
     private PluginConfiguration config;
     private ReceiverRegistry receiverReg;
 
+    @Reference
+    private SystemID systemId;
+    
     @Reference
     private WriterID agentId;
 
@@ -184,13 +188,9 @@ public class CommandsBackend extends BaseBackend {
         boolean expired = false;
         try {
             URI microserviceURI = config.getGatewayURL();
-            // String agent = agentId.getWriterID();
-            // FIXME: Use reasonable agent/system name to register, not
-            // hard-coded one
-            // Unfortunately, the microservice is currently set up only for
-            // a hard-coded one.
-            String agent = "testAgent";
-            String cmdUriPath = String.format(ENDPOINT_FORMAT, "ignoreMe", agent);
+            String agent = agentId.getWriterID();
+            String sysId = systemId.getSystemID(); 
+            String cmdUriPath = String.format(ENDPOINT_FORMAT, sysId, agent);
             URI agentUri = microserviceURI.resolve(cmdUriPath);
             AgentSocketOnMessageCallback onMsgCallback = new AgentSocketOnMessageCallback(receiverReg);
             CmdChannelAgentSocket agentSocket = new CmdChannelAgentSocket(
@@ -233,8 +233,19 @@ public class CommandsBackend extends BaseBackend {
         return "Basic " + encodedAuthorization;
     }
     
+    // DS bind method
     protected void bindPaths(CommonPaths paths) {
         this.paths = paths;
+    }
+    
+    // DS bind method
+    protected void bindAgentId(WriterID agentId) {
+        this.agentId = agentId;
+    }
+    
+    // DS bind method
+    protected void bindSystemId(SystemID systemId) {
+        this.systemId = systemId;
     }
     
     static class WsClientCreator {

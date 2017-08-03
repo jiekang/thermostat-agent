@@ -64,13 +64,17 @@ import com.redhat.thermostat.commands.agent.internal.CommandsBackend.WsClientCre
 import com.redhat.thermostat.commands.agent.internal.socket.CmdChannelAgentSocket;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.StorageCredentials;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class CommandsBackendTest {
 
     private static final URI GW_URL = URI.create("ws://example.com/commands/v1/");
+    private static final String AGENT_ID = "fooAgent";
+    private static final String SYSTEM_ID = "barSystem";
     private CommandsBackend backend;
     private StorageCredentials creds;
     private BundleContext bundleContext;
@@ -97,6 +101,12 @@ public class CommandsBackendTest {
         when(bundle.getVersion()).thenReturn(mock(Version.class));
         when(bundleContext.getBundle()).thenReturn(bundle);
         backend.componentActivated(bundleContext);
+        WriterID wId = mock(WriterID.class);
+        when(wId.getWriterID()).thenReturn(AGENT_ID);
+        SystemID sId = mock(SystemID.class);
+        when(sId.getSystemID()).thenReturn(SYSTEM_ID);
+        backend.bindAgentId(wId);
+        backend.bindSystemId(sId);
     }
     
     @Test
@@ -146,7 +156,7 @@ public class CommandsBackendTest {
         verify(client).connect(any(CmdChannelAgentSocket.class), uriCaptor.capture(), reqCaptor.capture());
         assertTrue("Expected successful activation", success);
         URI uri = uriCaptor.getValue();
-        URI expectedURI = GW_URL.resolve("systems/ignoreMe/agents/testAgent");
+        URI expectedURI = GW_URL.resolve("systems/" + SYSTEM_ID + "/agents/" + AGENT_ID);
         assertEquals(expectedURI, uri);
         ClientUpgradeRequest req = reqCaptor.getValue();
         String expectedHeader = base64EncodedHeader(username + ":" + password);
