@@ -41,7 +41,7 @@ import org.osgi.framework.BundleContext;
 import com.redhat.thermostat.common.utils.ServiceRegistry;
 
 /**
- * Handles registering {@link RequestReceiver}s into the framework.
+ * Handles retrieving {@link RequestReceiver}s from the framework.
  */
 public class ReceiverRegistry {
 
@@ -51,15 +51,15 @@ public class ReceiverRegistry {
         proxy = new ServiceRegistry<RequestReceiver>(context, RequestReceiver.class.getName());
     }
 
-    public void registerReceiver(RequestReceiver receiver) {
-        proxy.registerService(receiver, receiver.getClass().getName());
+    void registerReceiver(RequestReceiver receiver, String actionName) {
+        proxy.registerService(receiver, actionName);
     }
 
-    public RequestReceiver getReceiver(String clazz) {
-        return proxy.getService(clazz);
+    public RequestReceiver getReceiver(String actionName) {
+        return proxy.getService(actionName);
     }
 
-    public void unregisterReceivers() {
+    void unregisterReceivers() {
         proxy.unregisterAll();
     }
 }

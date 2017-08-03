@@ -37,24 +37,24 @@
 package com.redhat.thermostat.host.cpu.agent.internal;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.http.HttpRequestService;
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugin.PluginConfiguration;
-import com.redhat.thermostat.common.plugin.SystemID;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.plugin.PluginDAOBase;
-import com.redhat.thermostat.host.cpu.model.CpuStat;
-import com.redhat.thermostat.host.cpu.model.CpuStatTypeAdapter;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.util.StringContentProvider;
+
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginDAOBase;
+import com.redhat.thermostat.common.plugin.SystemID;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.host.cpu.model.CpuStat;
+import com.redhat.thermostat.host.cpu.model.CpuStatTypeAdapter;
 
 @Component
 @Service(value = CpuStatDAO.class)
@@ -115,8 +115,8 @@ public class CpuStatDAOImpl extends PluginDAOBase<CpuStat, CpuStatDAOImpl> imple
     }
 
     @Override
-    protected String getURL(String basepath) {
-        return basepath + "/systems/" + systemID.getSystemID();
+    protected URI getPostURI(URI basepath) {
+        return basepath.resolve("systems/" + systemID.getSystemID());
     }
 
     // DS bind method

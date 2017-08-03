@@ -37,24 +37,24 @@
 package com.redhat.thermostat.host.overview.internal.models;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.http.HttpRequestService;
-import com.redhat.thermostat.common.plugin.SystemID;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
+import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.plugin.PluginDAOBase;
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-
-import com.redhat.thermostat.host.overview.model.HostInfoTypeAdapter;
 import com.redhat.thermostat.host.overview.model.HostInfo;
+import com.redhat.thermostat.host.overview.model.HostInfoTypeAdapter;
 
 @Component
 @Service(value = HostInfoDAO.class)
@@ -93,8 +93,8 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
         this.config = configCreator.create(configurationInfoSource);
     }
 
-    public String getURL(final String base) {
-        return base + "/systems/" + systemID.getSystemID();
+    public URI getPostURI(final URI base) {
+        return base.resolve("systems/" + systemID.getSystemID());
     }
 
     public String getPluginId() {

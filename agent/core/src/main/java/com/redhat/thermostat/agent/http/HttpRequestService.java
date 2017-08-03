@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.http;
 
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -65,23 +66,6 @@ import com.redhat.thermostat.shared.config.SSLConfiguration;
 @Component
 @Service(value = HttpRequestService.class)
 public class HttpRequestService {
-    
-    /**
-     * GET request type.
-     */
-    public static final String GET = HttpMethod.GET.asString();
-    /**
-     * PUT request type.
-     */
-    public static final String PUT = HttpMethod.PUT.asString();
-    /**
-     * POST request type.
-     */
-    public static final String POST = HttpMethod.POST.asString();
-    /**
-     * DELETE request type.
-     */
-    public static final String DELETE = HttpMethod.DELETE.asString();
     
     private static final Logger logger = LoggingUtils.getLogger(HttpRequestService.class);
 
@@ -120,18 +104,18 @@ public class HttpRequestService {
     /**
      * Send a HTTP request
      * @param jsonPayload The payload to send, or null if no payload
-     * @param url The complete url to send to
-     * @param requestType The HTTP request type: GET, PUT, POST or DELETE
+     * @param uri The complete URI to send to
+     * @param requestMethod The HTTP request type: GET, PUT, POST or DELETE
      * @return The returned body for GET requests. {@code null} otherwise.
      */
-    public String sendHttpRequest(String jsonPayload, String url, String requestType) throws RequestFailedException {
-        // TODO: refactor agent pass around HttpMethod enum instead of string - it's faster and takes less space.
-        HttpMethod requestMethod = HttpMethod.valueOf(requestType);
-        Request request = client.newRequest(url);
+    public String sendHttpRequest(String jsonPayload, URI uri, Method requestMethod) throws RequestFailedException {
+        // Normalize URI to ensure any duplicate slashes are removed
+        uri = uri.normalize();
+        Request request = client.newRequest(uri);
         if (jsonPayload != null) {
             request.content(new StringContentProvider(jsonPayload), "application/json");
         }
-        request.method(requestMethod);
+        request.method(requestMethod.getHttpMethod());
 
         try {
             if (agentStartupConfiguration.isKeycloakEnabled()) {
@@ -142,7 +126,7 @@ public class HttpRequestService {
             if (status != HttpStatus.OK_200) {
                 throw new RequestFailedException(status, "Request to gateway failed. Reason: " + response.getReason());
             }
-            if (requestMethod == HttpMethod.GET) {
+            if (requestMethod == Method.GET) {
                 return response.getContentAsString();
             } else {
                 return null;
@@ -257,6 +241,27 @@ public class HttpRequestService {
         
         public String getReason() {
             return reasonStr;
+        }
+    }
+
+    /**
+     * HTTP methods for microservice requests.
+     * @author mzezulka
+     */
+    public static enum Method {
+        POST(HttpMethod.POST), 
+        GET(HttpMethod.GET), 
+        DELETE(HttpMethod.DELETE), 
+        PUT(HttpMethod.PUT);
+        
+        private final HttpMethod httpMethod;
+
+        Method(HttpMethod method) {
+            this.httpMethod = method;
+        }
+
+        public HttpMethod getHttpMethod() {
+            return httpMethod;
         }
     }
 }

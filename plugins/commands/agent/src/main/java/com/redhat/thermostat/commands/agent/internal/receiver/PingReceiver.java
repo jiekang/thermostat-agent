@@ -52,9 +52,10 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 
 @Component
 @Service(value = RequestReceiver.class)
-@Property(name = "servicename", value = "com.redhat.thermostat.commands.agent.internal.receiver.PingReceiver")
+@Property(name = "servicename", value = PingReceiver.ACTION_NAME)
 public class PingReceiver implements RequestReceiver {
 
+    public static final String ACTION_NAME = "ping";
     private static Logger logger = LoggingUtils.getLogger(PingReceiver.class);
     
     @Activate
@@ -64,6 +65,11 @@ public class PingReceiver implements RequestReceiver {
     
     @Override
     public WebSocketResponse receive(AgentRequest request) {
+        // Sanity check. We should never get requests outside our action domain.
+        if (!ACTION_NAME.equals(request.getAction())) {
+            logger.severe("Received action '" + request.getAction() + "' for receiver '" + ACTION_NAME + "'");
+            return new WebSocketResponse(request.getSequenceId(), ResponseType.ERROR);
+        }
         return new WebSocketResponse(request.getSequenceId(), ResponseType.OK);
     }
 

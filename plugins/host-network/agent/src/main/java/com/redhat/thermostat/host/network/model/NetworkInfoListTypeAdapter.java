@@ -43,18 +43,16 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-public class NetworkInfoListTypeAdapter extends TypeAdapter<NetworkInfoList> {
+public class NetworkInfoListTypeAdapter extends TypeAdapter<List<NetworkInfoList>> {
 
     private static final String AGENT_ID = "agentId";
     private static final String TIMESTAMP = "timeStamp";
     private static final String INTERFACE_LIST = "interfaces";
-    private static final String RESPONSE_ROOT = "response";
-    private static final String SERVER_TIME = "time";
     private static final String TYPE_LONG = "$numberLong";
 
     private final NetworkInterfaceInfoTypeAdapter infoTypeAdapter = new NetworkInterfaceInfoTypeAdapter();
 
-    public void write(final JsonWriter out, final NetworkInfoList value) throws IOException {
+    private void write(final JsonWriter out, final NetworkInfoList value) throws IOException {
 
         out.beginObject();
 
@@ -64,70 +62,10 @@ public class NetworkInfoListTypeAdapter extends TypeAdapter<NetworkInfoList> {
         out.name(TIMESTAMP);
         writeLong(out, value.getTimeStamp());
 
-        out.name("interfaces");
+        out.name(INTERFACE_LIST);
         infoTypeAdapter.write(out, value.getList());
 
         out.endObject();
-    }
-
-    @Override
-    public NetworkInfoList read(final JsonReader in) throws IOException {
-        NetworkInfoList infos = null;
-
-        try {
-            // Parse root object
-            in.beginObject();
-            while (in.hasNext()) {
-                String name = in.nextName();
-                switch (name) {
-                    case RESPONSE_ROOT:
-                        infos = readResponse(in);
-                        break;
-                    case SERVER_TIME:
-                        in.nextString();
-                        break;
-                    default:
-                        throw new IOException("Unexpected JSON name in gateway response: '" + name + "'");
-                }
-            }
-            in.endObject();
-        } catch (IllegalStateException e) {
-            throw new IOException("Reading JSON response from web gateway failed", e);
-        }
-
-        return infos;
-    }
-
-    private NetworkInfoList readResponse(final JsonReader in) throws IOException {
-
-        String agentId = null;
-        long timeStamp = 0;
-        List<NetworkInterfaceInfo> infos = null;
-
-        // Begin parsing a NetworkInterfaceInfo record
-        in.beginObject();
-
-        while (in.hasNext()) {
-            String name = in.nextName();
-            switch (name) {
-                case AGENT_ID:
-                    agentId = in.nextString();
-                    break;
-                case TIMESTAMP:
-                    timeStamp = readLong(in);
-                    break;
-                case INTERFACE_LIST: {
-                    infos = infoTypeAdapter.readList(in);
-                }
-                break;
-                default:
-                    throw new IOException("Unexpected JSON name in record: '" + name + "'");
-            }
-        }
-
-        in.endObject();
-
-        return new NetworkInfoList(agentId, timeStamp, infos);
     }
 
     private void writeLong(final JsonWriter out, final long input) throws IOException {
@@ -154,4 +92,19 @@ public class NetworkInfoListTypeAdapter extends TypeAdapter<NetworkInfoList> {
         }
     }
 
+    @Override
+    public void write(JsonWriter out, List<NetworkInfoList> list) throws IOException {
+        out.beginArray();
+
+        for (NetworkInfoList info : list) {
+            write(out, info);
+        }
+
+        out.endArray();
+    }
+
+    @Override
+    public List<NetworkInfoList> read(JsonReader jsonReader) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

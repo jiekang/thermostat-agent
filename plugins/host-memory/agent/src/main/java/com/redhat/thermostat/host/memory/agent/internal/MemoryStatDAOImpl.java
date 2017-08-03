@@ -37,9 +37,15 @@
 package com.redhat.thermostat.host.memory.agent.internal;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
@@ -49,11 +55,6 @@ import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.memory.model.MemoryStat;
 import com.redhat.thermostat.host.memory.model.MemoryStatTypeAdapter;
-
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 
 @Component
 @Service(value = MemoryStatDAO.class)
@@ -114,8 +115,8 @@ public class MemoryStatDAOImpl extends PluginDAOBase<MemoryStat, MemoryStatDAOIm
     }
 
     @Override
-    protected String getURL(String basepath) {
-        return basepath + "/systems/" + systemID.getSystemID();
+    protected URI getPostURI(URI basepath) {
+        return basepath.resolve("systems/" + systemID.getSystemID());
     }
 
     // DS bind methods

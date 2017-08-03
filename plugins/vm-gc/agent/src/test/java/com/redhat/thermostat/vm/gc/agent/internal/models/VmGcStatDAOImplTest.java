@@ -42,6 +42,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.Arrays;
 
 import org.junit.Before;
@@ -58,7 +59,7 @@ public class VmGcStatDAOImplTest {
 
     private static final String AGENT_ID = "some-agent";
     private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
-    private static final String GATEWAY_URL = "http://example.com/jvm-gc";
+    private static final URI GATEWAY_URI = URI.create("http://example.com/jvm-gc/");
 
     private VmGcStat stat;
     private JsonHelper jsonHelper;
@@ -81,7 +82,7 @@ public class VmGcStatDAOImplTest {
 
         ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
         PluginConfiguration config = mock(PluginConfiguration.class);
-        when(config.getGatewayURL()).thenReturn(GATEWAY_URL);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URI);
         ConfigurationCreator creator = mock(ConfigurationCreator.class);
         when(creator.create(source)).thenReturn(config);
 
@@ -97,7 +98,7 @@ public class VmGcStatDAOImplTest {
 
         verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
 
-        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URL, HttpRequestService.POST);
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.Method.POST);
     }
 
 }

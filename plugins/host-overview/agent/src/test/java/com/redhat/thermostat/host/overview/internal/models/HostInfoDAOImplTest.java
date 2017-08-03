@@ -37,15 +37,12 @@
 package com.redhat.thermostat.host.overview.internal.models;
 
 import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URI;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -59,17 +56,16 @@ import com.redhat.thermostat.host.overview.model.HostInfo;
 
 public class HostInfoDAOImplTest {
 
-    private static final String URL = "http://localhost:26000/api/systems/v0.0.3";
+    private static final URI GATEWAY_URI = URI.create("http://localhost:26000/api/systems/v0.0.3/");
+    private static final URI PUT_URI = GATEWAY_URI.resolve("systems/aHostName");
+    private static final String HOST_NAME = "aHostName";
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
-    private static final String HOST_NAME = "a host name";
     private static final long TIMESTAMP = 77L;
     private static final String OS_NAME = "some os";
     private static final String OS_KERNEL = "some kernel";
     private static final String CPU_MODEL = "some cpu that runs fast";
     private static final int CPU_NUM = -1;
     private static final long MEMORY_TOTAL = 0xCAFEBABEl;
-
-    private static final String URL_PROP = "gatewayURL";
 
     private HostInfo info;
     private HostInfoDAOImpl.JsonHelper jsonHelper;
@@ -87,11 +83,10 @@ public class HostInfoDAOImplTest {
         when(jsonHelper.toJson(anyListOf(HostInfo.class))).thenReturn(SOME_JSON);
 
         cfiSource = mock(ConfigurationInfoSource.class);
-        Map<String,String> map = new HashMap<>();
-        map.put(URL_PROP, URL);
-        when(cfiSource.getConfiguration(anyString(),anyString())).thenReturn(map);
         configCreator = mock(ConfigurationCreator.class);
-        when(configCreator.create(eq(cfiSource))).thenReturn(new PluginConfiguration(cfiSource, HostInfoDAOImpl.PLUGIN_ID));
+        PluginConfiguration pluginConfig = mock(PluginConfiguration.class);
+        when(pluginConfig.getGatewayURL()).thenReturn(GATEWAY_URI);
+        when(configCreator.create(cfiSource)).thenReturn(pluginConfig);
 
         idservice = mock(SystemID.class);
         when(idservice.getSystemID()).thenReturn(HOST_NAME);
@@ -107,7 +102,7 @@ public class HostInfoDAOImplTest {
         dao.activate();
         
         dao.put(info);
-        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, URL + "/systems/" + HOST_NAME, HttpRequestService.POST);
+        verify(httpRequestService, times(1)).sendHttpRequest(SOME_JSON, PUT_URI, HttpRequestService.Method.POST);
     }
 
 }

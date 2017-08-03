@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.eq;
 
 import java.io.IOException;
 import java.util.SortedMap;
@@ -83,37 +84,63 @@ public class AgentSocketOnMessageCallbackTest {
      */
     @Test
     public void handlesAgentRequestsProperly() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        TestReceiverRegistry reg = new TestReceiverRegistry(latch);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final String jvmId = "jvm_id";
+        final String systemId = "system_id";
+        final long sequenceId = 333L;
+        final String actionName = "foo-action";
+        ReceiverRegistry reg = mock(ReceiverRegistry.class);
+        RequestReceiver receiver = new PingReceiver() {
+            
+            @Override
+            public WebSocketResponse receive(AgentRequest request) {
+                WebSocketResponse resp = super.receive(request);
+                assertEquals(jvmId, request.getJvmId());
+                assertEquals(systemId, request.getSystemId());
+                assertEquals(sequenceId, request.getSequenceId());
+                latch.countDown();
+                return resp;
+            }
+            
+        };
+        when(reg.getReceiver(eq(actionName))).thenReturn(receiver);
         AgentSocketOnMessageCallback cb = new AgentSocketOnMessageCallback(reg);
         Session session = mock(Session.class);
         when(session.getRemote()).thenReturn(mock(RemoteEndpoint.class)); // Prevent spurious NPEs
         SortedMap<String, String> params = new TreeMap<>();
-        String receiverName = "foo-bar";
-        params.put("receiver", receiverName);
-        AgentRequest agentRequest = new AgentRequest(333L, params);
+        AgentRequest agentRequest = new AgentRequest(333L, actionName, systemId, jvmId, params);
         
         // Main method under test
         cb.run(session, agentRequest, gson);
         
-        // wait for request to be handled
+        // wait for request to be handled. Assertions are done in the
+        // receiver.
         latch.await();
-        assertEquals(receiverName, reg.clazz);
-        assertEquals(333L, reg.response.getSequenceId());
     }
     
     @Test
     public void handlerThreadSendsResponseToSession() throws InterruptedException, IOException {
         ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
-        CountDownLatch receiverHandled = new CountDownLatch(1);
-        CountDownLatch sentLatch = new CountDownLatch(1);
-        TestReceiverRegistry reg = new TestReceiverRegistry(receiverHandled);
+        final CountDownLatch receiverHandled = new CountDownLatch(1);
+        final CountDownLatch sentLatch = new CountDownLatch(1);
+        final String actionName = "ping"; // must be ping otherwise receiver will return ERROR
+        ReceiverRegistry reg = mock(ReceiverRegistry.class);
+        RequestReceiver receiver = new PingReceiver() {
+            
+            @Override
+            public WebSocketResponse receive(AgentRequest request) {
+                WebSocketResponse resp = super.receive(request);
+                receiverHandled.countDown();
+                return resp;
+            }
+            
+        };
+        when(reg.getReceiver(eq(actionName))).thenReturn(receiver);
         Session session = mock(Session.class);
         RemoteEndpoint mockEndpoint = mock(RemoteEndpoint.class);
         when(session.getRemote()).thenReturn(mockEndpoint);
         SortedMap<String, String> params = new TreeMap<>();
-        params.put("receiver", "ignored");
-        AgentRequest agentRequest = new AgentRequest(344L, params);
+        AgentRequest agentRequest = new AgentRequest(344L, actionName, "system_id", "jvm_id", params);
         
         CmdChannelRequestHandler handler = new CmdChannelRequestHandler(session, agentRequest, reg, gson, sentLatch);
         handler.start(); // start asynchronously
@@ -141,7 +168,7 @@ public class AgentSocketOnMessageCallbackTest {
         RemoteEndpoint mockEndpoint = mock(RemoteEndpoint.class);
         when(session.getRemote()).thenReturn(mockEndpoint);
         SortedMap<String, String> emptyParams = new TreeMap<>();
-        AgentRequest agentRequest = new AgentRequest(888L, emptyParams);
+        AgentRequest agentRequest = new AgentRequest(888L, "not-exist", "system_id", "jvm_id", emptyParams);
         
         CmdChannelRequestHandler handler = new CmdChannelRequestHandler(session, agentRequest, mock(ReceiverRegistry.class), gson, sentLatch);
         handler.start(); // start asynchronously
@@ -173,31 +200,5 @@ public class AgentSocketOnMessageCallbackTest {
         ClientRequest request = new ClientRequest(212);
         AgentSocketOnMessageCallback cb = new AgentSocketOnMessageCallback(mock(ReceiverRegistry.class));
         cb.run(null, request, gson); // throws exception
-    }
-
-    static class TestReceiverRegistry extends ReceiverRegistry {
-
-        private final CountDownLatch latch;
-        private String clazz;
-        private WebSocketResponse response;
-
-        TestReceiverRegistry(CountDownLatch latch) {
-            super(null);
-            this.latch = latch;
-        }
-
-        @Override
-        public RequestReceiver getReceiver(String clazz) {
-            this.clazz = clazz;
-            return new PingReceiver() {
-                @Override
-                public WebSocketResponse receive(AgentRequest request) {
-                    WebSocketResponse resp = super.receive(request);
-                    response = resp;
-                    latch.countDown();
-                    return resp;
-                }
-            };
-        }
     }
 }

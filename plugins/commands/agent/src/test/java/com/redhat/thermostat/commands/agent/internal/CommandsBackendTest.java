@@ -70,7 +70,7 @@ import com.redhat.thermostat.storage.core.StorageCredentials;
 
 public class CommandsBackendTest {
 
-    private static final String GW_URL = "ws://example.com/commands/v1";
+    private static final URI GW_URL = URI.create("ws://example.com/commands/v1/");
     private CommandsBackend backend;
     private StorageCredentials creds;
     private BundleContext bundleContext;
@@ -146,8 +146,8 @@ public class CommandsBackendTest {
         verify(client).connect(any(CmdChannelAgentSocket.class), uriCaptor.capture(), reqCaptor.capture());
         assertTrue("Expected successful activation", success);
         URI uri = uriCaptor.getValue();
-        String expectedURI = GW_URL + "/systems/ignoreMe/agents/testAgent";
-        assertEquals(expectedURI, uri.toString());
+        URI expectedURI = GW_URL.resolve("systems/ignoreMe/agents/testAgent");
+        assertEquals(expectedURI, uri);
         ClientUpgradeRequest req = reqCaptor.getValue();
         String expectedHeader = base64EncodedHeader(username + ":" + password);
         String actualHeader = req.getHeader(HttpHeader.AUTHORIZATION.asString());

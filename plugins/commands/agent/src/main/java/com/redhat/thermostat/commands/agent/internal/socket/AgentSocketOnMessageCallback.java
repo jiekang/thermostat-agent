@@ -107,14 +107,7 @@ public class AgentSocketOnMessageCallback implements OnMessageCallBack {
 
         @Override
         public void run() {
-            String receiverName = request
-                    .getParam(AgentRequest.RECEIVER_PARAM_NAME);
-            if (receiverName == null) {
-                String msg = "No receiver specified in cmd-channel request with sequence "
-                        + request.getSequenceId();
-                handleError(msg);
-                return;
-            }
+            String receiverName = request.getAction();
             RequestReceiver receiver = receivers.getReceiver(receiverName);
             if (receiver == null) {
                 String msg = "Got cmd-channel request for receiver '"

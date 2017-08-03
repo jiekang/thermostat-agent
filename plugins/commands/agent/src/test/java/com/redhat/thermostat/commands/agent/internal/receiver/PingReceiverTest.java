@@ -51,9 +51,19 @@ public class PingReceiverTest {
     @Test
     public void canReceiveWithProperSequence() {
         PingReceiver receiver = new PingReceiver();
-        AgentRequest req = new AgentRequest(123L, new TreeMap<String, String>());
+        AgentRequest req = new AgentRequest(123L, "ping", "system_id", "jvm_id", new TreeMap<String, String>());
         WebSocketResponse resp = receiver.receive(req);
         assertEquals(ResponseType.OK, resp.getResponseType());
         assertEquals(123L, resp.getSequenceId());
+    }
+    
+    @Test
+    public void badActionReturnsError() {
+        String badAction = "not_ping";
+        PingReceiver receiver = new PingReceiver();
+        AgentRequest req = new AgentRequest(199L, badAction, "system_id", "jvm_id", new TreeMap<String, String>());
+        WebSocketResponse resp = receiver.receive(req);
+        assertEquals(ResponseType.ERROR, resp.getResponseType());
+        assertEquals(199L, resp.getSequenceId());
     }
 }

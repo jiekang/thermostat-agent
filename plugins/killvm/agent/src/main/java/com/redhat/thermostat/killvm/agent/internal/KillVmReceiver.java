@@ -55,9 +55,10 @@ import com.redhat.thermostat.service.process.UNIXSignal;
 
 @Component
 @Service(value = RequestReceiver.class)
-@Property(name = "servicename", value = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver")
+@Property(name = "servicename", value = KillVmReceiver.ACTION_NAME)
 public class KillVmReceiver implements RequestReceiver {
 
+    public static final String ACTION_NAME = "kill_vm";
     private static final Logger log = LoggingUtils.getLogger(KillVmReceiver.class);
     
     @Reference
@@ -70,6 +71,11 @@ public class KillVmReceiver implements RequestReceiver {
     
     @Override
     public WebSocketResponse receive(AgentRequest request) {
+        // Sanity check. We should never get requests outside our action domain.
+        if (!ACTION_NAME.equals(request.getAction())) {
+            log.severe("Received action '" + request.getAction() + "' for receiver '" + ACTION_NAME + "'");
+            return new WebSocketResponse(request.getSequenceId(), ResponseType.ERROR);
+        }
         if (processService == null) {
             // no dice, should have service by now
             log.severe("Process service is null!");

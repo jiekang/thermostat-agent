@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.memory.agent.internal.models;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -64,7 +65,7 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     private final JsonHelper jsonHelper;
     private final ConfigurationCreator configCreator;
 
-    private String gatewayURL;
+    private URI gatewayURL;
 
     @Reference
     private ConfigurationInfoSource configInfoSource;
@@ -92,7 +93,7 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     public void putVmMemoryStat(final VmMemoryStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.POST);
+            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.Method.POST);
         } catch (RequestFailedException | IOException e) {
             logger.log(Level.WARNING, "Failed to send VmMemoryStat to Web Gateway", e);
         }

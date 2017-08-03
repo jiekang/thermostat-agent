@@ -41,6 +41,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,11 +59,22 @@ public class PluginConfigurationTest {
     public void testGetGatewayURL() throws Exception {
         ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
         Map<String, String> props = new HashMap<>();
+        props.put(URL_PROP, "urlToGateway/");
+        when(source.getConfiguration(PLUGIN_ID, CONFIG_FILE)).thenReturn(props);
+        PluginConfiguration config = new PluginConfiguration(source, PLUGIN_ID);
+
+        assertEquals(URI.create("urlToGateway/"), config.getGatewayURL());
+    }
+    
+    @Test
+    public void testGetGatewayURLNoSlash() throws Exception {
+        ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
+        Map<String, String> props = new HashMap<>();
         props.put(URL_PROP, "urlToGateway");
         when(source.getConfiguration(PLUGIN_ID, CONFIG_FILE)).thenReturn(props);
         PluginConfiguration config = new PluginConfiguration(source, PLUGIN_ID);
 
-        assertEquals("urlToGateway", config.getGatewayURL());
+        assertEquals(URI.create("urlToGateway/"), config.getGatewayURL());
     }
 
     @Test(expected=IOException.class)

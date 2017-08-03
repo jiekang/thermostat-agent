@@ -37,22 +37,24 @@
 package com.redhat.thermostat.host.network.internal;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
-
-import com.redhat.thermostat.agent.http.HttpRequestService;
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugin.PluginConfiguration;
-import com.redhat.thermostat.common.plugin.PluginDAOBase;
-import com.redhat.thermostat.common.plugin.SystemID;
-import com.redhat.thermostat.host.network.model.NetworkInfoList;
-import com.redhat.thermostat.host.network.model.NetworkInfoListTypeAdapter;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginDAOBase;
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.host.network.model.NetworkInfoList;
+import com.redhat.thermostat.host.network.model.NetworkInfoListTypeAdapter;
 
 @Component
 @Service(value = NetworkInfoListDAO.class)
@@ -92,7 +94,7 @@ public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList, Netwo
 
     @Override
     protected String toJsonString(NetworkInfoList obj) throws IOException {
-        return jsonHelper.toJson(obj);
+        return jsonHelper.toJson(Arrays.asList(obj));
     }
 
     @Override
@@ -106,13 +108,13 @@ public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList, Netwo
     }
 
     @Override
-    protected String getURL(String basepath) {
-        return basepath + "/systems/" + systemID.getSystemID();
+    protected URI getPostURI(URI basepath) {
+        return basepath.resolve("systems/" + systemID.getSystemID());
     }
 
     @Override
     protected Logger getLogger() {
-        return null;
+        return logger;
     }
 
     // DS bind method
@@ -137,7 +139,7 @@ public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList, Netwo
             this.typeAdapter = typeAdapter;
         }
 
-        String toJson(NetworkInfoList infos) throws IOException {
+        String toJson(List<NetworkInfoList> infos) throws IOException {
             return typeAdapter.toJson(infos);
         }
     }
