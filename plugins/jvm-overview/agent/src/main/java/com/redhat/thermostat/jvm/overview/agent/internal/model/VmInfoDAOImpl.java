@@ -68,7 +68,6 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     private static final String PLUGIN_ID = "jvm-overview";
     private static final String SYSTEM_PATH = "systems/";
     private static final String VM_PATH = "/jvms/";
-    private static final String UPDATE_PREFIX = "update/";
 
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
     
@@ -126,14 +125,14 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmStoppedTime(final String agentId, final String vmId, final long timestamp) {
+        URI uri = getUpdateURI(vmId);
         try {
             // Encode as JSON and send as PUT request
             VmInfoUpdate update = new VmInfoUpdate(timestamp);
             String json = jsonHelper.toJson(update);
-            URI uri = getUpdateURI(vmId);
             httpRequestService.sendHttpRequest(json, uri, HttpRequestService.Method.PUT);
         } catch (IOException | RequestFailedException e) {
-           logger.log(Level.WARNING, "Failed to send JVM information update to web gateway", e);
+           logger.log(Level.WARNING, "Failed to send JVM information update to web gateway at: " + uri, e);
         }
     }
     
@@ -146,7 +145,6 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     private URI getUpdateURI(String vmId) {
         StringBuilder builder = new StringBuilder();
-        builder.append(UPDATE_PREFIX);
         builder.append(SYSTEM_PATH);
         builder.append(systemID.getSystemID());
         builder.append(VM_PATH);
