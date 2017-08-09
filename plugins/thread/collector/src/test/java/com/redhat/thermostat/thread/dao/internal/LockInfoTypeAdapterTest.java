@@ -39,8 +39,9 @@ package com.redhat.thermostat.thread.dao.internal;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.thread.model.LockInfo;
-import org.junit.Assert;
 import org.junit.Test;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class LockInfoTypeAdapterTest {
 
@@ -51,6 +52,6 @@ public class LockInfoTypeAdapterTest {
         Gson gson = builder.create();
         LockInfo info = new LockInfo(100l, "Agent-1", "Vm-1", 123l, 321l, 432l, 5454l, 578l, 678574l, 21349l, 0l,
                 2342342l, 12311l, 13211l, 934l, 8911l, 305934l, 2194l, 892l, 100l, 2321l);
-        Assert.assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"contendedLockAttempts\":{\"$numberLong\":\"123\"},\"deflations\":{\"$numberLong\":\"321\"},\"emptyNotifications\":{\"$numberLong\":\"432\"},\"failedSpins\":{\"$numberLong\":\"5454\"},\"futileWakeups\":{\"$numberLong\":\"578\"},\"inflations\":{\"$numberLong\":\"678574\"},\"monExtant\":{\"$numberLong\":\"21349\"},\"monInCirculation\":{\"$numberLong\":\"0\"},\"monScavenged\":{\"$numberLong\":\"2342342\"},\"notifications\":{\"$numberLong\":\"12311\"},\"parks\":{\"$numberLong\":\"13211\"},\"privateA\":{\"$numberLong\":\"934\"},\"privateB\":{\"$numberLong\":\"8911\"},\"slowEnter\":{\"$numberLong\":\"305934\"},\"slowExit\":{\"$numberLong\":\"2194\"},\"slowNotify\":{\"$numberLong\":\"892\"},\"slowNotifyAll\":{\"$numberLong\":\"100\"},\"successfulSpins\":{\"$numberLong\":\"2321\"}}", gson.toJson(info));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"contendedLockAttempts\":{\"$numberLong\":\"123\"},\"deflations\":{\"$numberLong\":\"321\"},\"emptyNotifications\":{\"$numberLong\":\"432\"},\"failedSpins\":{\"$numberLong\":\"5454\"},\"futileWakeups\":{\"$numberLong\":\"578\"},\"inflations\":{\"$numberLong\":\"678574\"},\"monExtant\":{\"$numberLong\":\"21349\"},\"monInCirculation\":{\"$numberLong\":\"0\"},\"monScavenged\":{\"$numberLong\":\"2342342\"},\"notifications\":{\"$numberLong\":\"12311\"},\"parks\":{\"$numberLong\":\"13211\"},\"privateA\":{\"$numberLong\":\"934\"},\"privateB\":{\"$numberLong\":\"8911\"},\"slowEnter\":{\"$numberLong\":\"305934\"},\"slowExit\":{\"$numberLong\":\"2194\"},\"slowNotify\":{\"$numberLong\":\"892\"},\"slowNotifyAll\":{\"$numberLong\":\"100\"},\"successfulSpins\":{\"$numberLong\":\"2321\"}}", gson.toJson(info));
     }
 }

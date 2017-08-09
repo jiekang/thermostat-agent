@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.gc.agent.internal.models;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 import java.util.Arrays;
 
@@ -56,7 +56,7 @@ public class VmGcStatTypeAdapterTest {
         stat.setCollectorName("Collector");
         stat.setRunCount(10l);
         stat.setWallTime(200l);
-        assertEquals("[{\"agentId\":\"1\",\"jvmId\":\"2\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collectorName\":\"Collector\",\"runCount\":{\"$numberLong\":\"10\"},\"wallTimeInMicros\":{\"$numberLong\":\"200\"}}]",
+        assertJsonEquals("[{\"agentId\":\"1\",\"jvmId\":\"2\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collectorName\":\"Collector\",\"runCount\":{\"$numberLong\":\"10\"},\"wallTimeInMicros\":{\"$numberLong\":\"200\"}}]",
                 typeAdapter.toJson(Arrays.asList(stat)));
     }
 }

@@ -42,7 +42,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class VmClassStatTypeAdapterTest {
 
@@ -60,6 +60,6 @@ public class VmClassStatTypeAdapterTest {
         stat.setLoadedClasses(1l);
         stat.setUnloadedBytes(10l);
         stat.setUnloadedClasses(1l);
-        assertEquals("{\"vmId\":\"1\",\"agentId\":\"2\",\"loadedClasses\":{\"$numberLong\":\"1\"},\"loadedBytes\":{\"$numberLong\":\"10\"},\"unloadedClasses\":{\"$numberLong\":\"1\"},\"unloadedBytes\":{\"$numberLong\":\"10\"},\"classLoadTime\":{\"$numberLong\":\"2000\"},\"timeStamp\":{\"$numberLong\":\"100\"}}", gson.toJson(stat));
+        assertJsonEquals("{\"vmId\":\"1\",\"agentId\":\"2\",\"loadedClasses\":{\"$numberLong\":\"1\"},\"loadedBytes\":{\"$numberLong\":\"10\"},\"unloadedClasses\":{\"$numberLong\":\"1\"},\"unloadedBytes\":{\"$numberLong\":\"10\"},\"classLoadTime\":{\"$numberLong\":\"2000\"},\"timeStamp\":{\"$numberLong\":\"100\"}}", gson.toJson(stat));
     }
 }

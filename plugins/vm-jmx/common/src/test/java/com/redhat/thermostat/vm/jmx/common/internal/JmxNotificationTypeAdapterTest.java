@@ -41,7 +41,7 @@ import com.google.gson.Gson;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class JmxNotificationTypeAdapterTest {
 
@@ -57,7 +57,7 @@ public class JmxNotificationTypeAdapterTest {
         notification.setSourceDetails("Non existent details");
         notification.setVmId("0");
         notification.setAgentId("0");
-        assertEquals("{\"timeStamp\":{\"$numberLong\":\"123456789\"},\"vmId\":\"0\",\"agentId\":\"0\",\"sourceBackend\":\"Non existent Backend\",\"sourceDetails\":\"Non existent details\",\"contents\":\"This is a notification\"}", gson.toJson(notification));
+        assertJsonEquals("{\"timeStamp\":{\"$numberLong\":\"123456789\"},\"vmId\":\"0\",\"agentId\":\"0\",\"sourceBackend\":\"Non existent Backend\",\"sourceDetails\":\"Non existent details\",\"contents\":\"This is a notification\"}", gson.toJson(notification));
     }
 
 }

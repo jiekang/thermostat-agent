@@ -41,6 +41,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import org.junit.Test;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Type;
@@ -61,7 +63,7 @@ public class HeapInfoTypeAdapterTest {
         info.setHeapId("2432a");
         info.setHistogramId("5675n");
         infos.add(info);
-        assertEquals("[{\"agentId\":\"1\",\"vmId\":\"1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"heapId\":\"2432a\",\"heapDumpId\":\"1234f\",\"histogramId\":\"5675n\"}]", gson.toJson(infos, list_type));
+        assertJsonEquals("[{\"agentId\":\"1\",\"vmId\":\"1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"heapId\":\"2432a\",\"heapDumpId\":\"1234f\",\"histogramId\":\"5675n\"}]", gson.toJson(infos, list_type));
     }
 
     @Test

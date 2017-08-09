@@ -41,7 +41,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class NumaHostInfoTypeAdapterTest {
 
@@ -52,7 +52,7 @@ public class NumaHostInfoTypeAdapterTest {
         Gson gson = builder.create();
         NumaHostInfo info = new NumaHostInfo("1");
         info.setNumNumaNodes(4);
-        assertEquals("{" +
+        assertJsonEquals("{" +
                 "\"numNumaNodes\":4," +
                 "\"agentId\":\"1\"" +
                 "}", gson.toJson(info));

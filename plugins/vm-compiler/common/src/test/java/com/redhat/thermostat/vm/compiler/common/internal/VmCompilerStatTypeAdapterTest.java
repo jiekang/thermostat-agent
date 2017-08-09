@@ -40,7 +40,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStat;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class VmCompilerStatTypeAdapterTest {
 
@@ -63,6 +64,6 @@ public class VmCompilerStatTypeAdapterTest {
         stat.setTotalBailouts(30l);
         stat.setTotalCompiles(40l);
         System.out.println(gson.toJson(stat));
-        assertEquals("{\"agentId\":\"1\",\"vmId\":\"1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"totalCompiles\":{\"$numberLong\":\"40\"},\"totalBailouts\":{\"$numberLong\":\"30\"},\"totalInvalidates\":{\"$numberLong\":\"10\"},\"compilationTime\":{\"$numberLong\":\"20\"},\"lastSize\":{\"$numberLong\":\"300\"},\"lastType\":{\"$numberLong\":\"2\"},\"lastMethod\":\"successfulMethod()\",\"lastFailedType\":{\"$numberLong\":\"1\"},\"lastFailedMethod\":\"methodFail()\"}", gson.toJson(stat));
+        assertJsonEquals("{\"agentId\":\"1\",\"vmId\":\"1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"totalCompiles\":{\"$numberLong\":\"40\"},\"totalBailouts\":{\"$numberLong\":\"30\"},\"totalInvalidates\":{\"$numberLong\":\"10\"},\"compilationTime\":{\"$numberLong\":\"20\"},\"lastSize\":{\"$numberLong\":\"300\"},\"lastType\":{\"$numberLong\":\"2\"},\"lastMethod\":\"successfulMethod()\",\"lastFailedType\":{\"$numberLong\":\"1\"},\"lastFailedMethod\":\"methodFail()\"}", gson.toJson(stat));
     }
 }

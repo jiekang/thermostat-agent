@@ -40,7 +40,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
 import com.redhat.thermostat.vm.numa.common.VmNumaNodeStat;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class VmNumaNodeStatTypeAdapterTest {
 
@@ -55,7 +56,7 @@ public class VmNumaNodeStatTypeAdapterTest {
         node.setHeapMemory(1234.55);
         node.setHugeMemory(2423.5555);
         node.setStackMemory(896.1545);
-        assertEquals("{\"node\":1,\"hugeMemory\":2423.5555,\"heapMemory\":1234.55,\"stackMemory\":896.1545,\"privateMemory\":234.5}", gson.toJson(node));
+        assertJsonEquals("{\"node\":1,\"hugeMemory\":2423.5555,\"heapMemory\":1234.55,\"stackMemory\":896.1545,\"privateMemory\":234.5}", gson.toJson(node));
     }
 
 }

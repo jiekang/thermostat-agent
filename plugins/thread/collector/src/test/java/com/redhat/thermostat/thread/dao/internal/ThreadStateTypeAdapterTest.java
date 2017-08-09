@@ -41,7 +41,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.thread.model.ThreadState;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class ThreadStateTypeAdapterTest {
 
@@ -64,6 +64,6 @@ public class ThreadStateTypeAdapterTest {
         state.setName("Thread-1");
         state.setWaitedCount(30l);
         state.setWaitedTime(1003l);
-        assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"name\":\"Thread-1\",\"session\":\"Session\",\"id\":{\"$numberLong\":\"1\"},\"suspended\":true,\"inNative\":true,\"blockedCount\":{\"$numberLong\":\"100\"},\"blockedTime\":{\"$numberLong\":\"200\"},\"waitedCount\":{\"$numberLong\":\"30\"},\"waitedTime\":{\"$numberLong\":\"1003\"},\"stackTrace\":\"foo.bar.baz\"}", gson.toJson(state));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"name\":\"Thread-1\",\"session\":\"Session\",\"id\":{\"$numberLong\":\"1\"},\"suspended\":true,\"inNative\":true,\"blockedCount\":{\"$numberLong\":\"100\"},\"blockedTime\":{\"$numberLong\":\"200\"},\"waitedCount\":{\"$numberLong\":\"30\"},\"waitedTime\":{\"$numberLong\":\"1003\"},\"stackTrace\":\"foo.bar.baz\"}", gson.toJson(state));
     }
 }

@@ -41,7 +41,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class ThreadHarvestingStatusTypeAdapterTest {
 
@@ -55,7 +55,7 @@ public class ThreadHarvestingStatusTypeAdapterTest {
         status.setVmId("Vm-1");
         status.setHarvesting(true);
         status.setTimeStamp(100l);
-        assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collecting\":true}", gson.toJson(status));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"collecting\":true}", gson.toJson(status));
     }
 
 }

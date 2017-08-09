@@ -41,7 +41,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class BytemanMetricWebTypeAdapterTest {
 
@@ -56,6 +56,6 @@ public class BytemanMetricWebTypeAdapterTest {
         metric.setAgentId("Agent-1");
         metric.setMarker("Marker");
         metric.setData("{\"data\":\"This is data\"}");
-        assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"marker\":\"Marker\",\"jsonPayload\":\"{\\\"data\\\":\\\"This is data\\\"}\",\"timeStamp\":{\"$numberLong\":\"100\"}}", gson.toJson(metric));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"marker\":\"Marker\",\"jsonPayload\":\"{\\\"data\\\":\\\"This is data\\\"}\",\"timeStamp\":{\"$numberLong\":\"100\"}}", gson.toJson(metric));
     }
 }

@@ -42,9 +42,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 import static com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Generation;
 import static com.redhat.thermostat.vm.memory.agent.model.VmMemoryStat.Space;
-import static org.junit.Assert.assertEquals;
 
 public class VmMemoryStatTypeAdapterTest {
 
@@ -76,6 +76,6 @@ public class VmMemoryStatTypeAdapterTest {
         gen1.setSpaces(spaces);
         gens[0] = gen1;
         stat.setGenerations(gens);
-        assertEquals("[{\"agentId\":\"AGENT-1\",\"jvmId\":\"VM-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"metaspaceMaxCapacity\":{\"$numberLong\":\"4096\"},\"metaspaceMinCapacity\":{\"$numberLong\":\"2048\"},\"metaspaceCapacity\":{\"$numberLong\":\"2000\"},\"metaspaceUsed\":{\"$numberLong\":\"3000\"},\"generations\":[{\"name\":\"Name\",\"capacity\":{\"$numberLong\":\"1002\"},\"maxCapacity\":{\"$numberLong\":\"2048\"},\"collector\":\"Collector 1\",\"spaces\":[{\"index\":1,\"name\":\"Space Name\",\"capacity\":{\"$numberLong\":\"500\"},\"maxCapacity\":{\"$numberLong\":\"1024\"},\"used\":{\"$numberLong\":\"400\"}}]}]}]", typeAdapter.toJson(Arrays.asList(stat)));
+        assertJsonEquals("[{\"agentId\":\"AGENT-1\",\"jvmId\":\"VM-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"metaspaceMaxCapacity\":{\"$numberLong\":\"4096\"},\"metaspaceMinCapacity\":{\"$numberLong\":\"2048\"},\"metaspaceCapacity\":{\"$numberLong\":\"2000\"},\"metaspaceUsed\":{\"$numberLong\":\"3000\"},\"generations\":[{\"name\":\"Name\",\"capacity\":{\"$numberLong\":\"1002\"},\"maxCapacity\":{\"$numberLong\":\"2048\"},\"collector\":\"Collector 1\",\"spaces\":[{\"index\":1,\"name\":\"Space Name\",\"capacity\":{\"$numberLong\":\"500\"},\"maxCapacity\":{\"$numberLong\":\"1024\"},\"used\":{\"$numberLong\":\"400\"}}]}]}]", typeAdapter.toJson(Arrays.asList(stat)));
     }
 }

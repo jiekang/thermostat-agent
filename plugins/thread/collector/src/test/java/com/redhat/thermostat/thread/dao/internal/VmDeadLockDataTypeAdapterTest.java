@@ -42,6 +42,8 @@ import com.redhat.thermostat.thread.model.VmDeadLockData;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
+
 public class VmDeadLockDataTypeAdapterTest {
 
     @Test
@@ -54,6 +56,6 @@ public class VmDeadLockDataTypeAdapterTest {
         data.setAgentId("Agent-1");
         data.setVmId("Vm-1");
         data.setDeadLockDescription("This is a description");
-        Assert.assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"description\":\"This is a description\"}", gson.toJson(data));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"description\":\"This is a description\"}", gson.toJson(data));
     }
 }

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -88,7 +88,7 @@ public class VmInfoTypeAdapterTest {
         List<VmInfo> infos = Arrays.asList(first, second);
         
         String json = adapter.toJson(infos);
-        assertEquals(expected, json);
+        assertJsonEquals(expected, json);
     }
     
     @Test
@@ -98,7 +98,7 @@ public class VmInfoTypeAdapterTest {
         
         VmInfoUpdate update = new VmInfoUpdate(5000L);
         String json = adapter.toJson(update);
-        assertEquals(expected, json);
+        assertJsonEquals(expected, json);
     }
     
 }

@@ -34,27 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.internal;
+package com.redhat.thermostat.testutils;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import org.junit.Test;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
-import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
+import static org.junit.Assert.assertEquals;
 
-public class ThreadSessionTypeAdapterTest {
+public class JsonUtils {
 
-    @Test
-    public void testWrite() {
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(ThreadSession.class, new ThreadSessionTypeAdapter());
-        Gson gson = builder.create();
-        ThreadSession session = new ThreadSession();
-        session.setAgentId("Agent-1");
-        session.setVmId("Vm-1");
-        session.setTimeStamp(100l);
-        session.setSession("Session");
-        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"session\":\"Session\",\"sessionID\":{\"id\":\"Session\"}}", gson.toJson(session));
+    public static void assertJsonEquals(final String expected, final String actual) {
+        JsonParser parser = new JsonParser();
+        JsonElement expel = parser.parse(expected);
+        JsonElement actel = parser.parse(actual);
+        assertEquals(expel, actel);
     }
 }

@@ -40,7 +40,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class VmIoStatTypeAdapterTest {
 
@@ -57,7 +58,7 @@ public class VmIoStatTypeAdapterTest {
         stat.setCharactersWritten(1000l);
         stat.setReadSyscalls(30l);
         stat.setWriteSyscalls(40l);
-        assertEquals("{\"timeStamp\":{\"$numberLong\":\"100\"},\"vmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"charactersRead\":{\"$numberLong\":\"2000\"},\"charactersWritten\":{\"$numberLong\":\"1000\"},\"readSyscalls\":{\"$numberLong\":\"30\"},\"writeSyscalls\":{\"$numberLong\":\"40\"}}", gson.toJson(stat));
+        assertJsonEquals("{\"timeStamp\":{\"$numberLong\":\"100\"},\"vmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"charactersRead\":{\"$numberLong\":\"2000\"},\"charactersWritten\":{\"$numberLong\":\"1000\"},\"readSyscalls\":{\"$numberLong\":\"30\"},\"writeSyscalls\":{\"$numberLong\":\"40\"}}", gson.toJson(stat));
     }
 
 }
