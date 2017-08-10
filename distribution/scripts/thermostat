@@ -110,8 +110,6 @@ if [ $CYGWIN_MODE -eq 1 ]; then
   export USER_THERMOSTAT_HOME="`cygpath -w $USER_THERMOSTAT_HOME`"
   BOOT_CLASSPATH=$(cygpath -w -p "$BOOT_CLASSPATH")
   ##env
-  # in a VM, jline can cause 100% CPU usage on Windows without this
-  THERMOSTAT_EXT_JAVA_OPTS="$THERMOSTAT_EXT_JAVA_OPTS -Djline.terminal=jline.UnsupportedTerminal"
   # in cygwin, the openJDK uses c:\home\user as java.home. which is unhelpful.
   # pass the cygwin home directory instead
   THERMOSTAT_EXT_JAVA_OPTS="$THERMOSTAT_EXT_JAVA_OPTS -Duser.home=`cygpath -w $HOME`"

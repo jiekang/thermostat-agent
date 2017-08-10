@@ -94,9 +94,6 @@ if not x%1==x (
   goto cmdloop
 )
 
-:: in a VM, jline can cause 100 CPU usage on Windows without this
-set THERMOSTAT_EXT_JAVA_OPTS=%THERMOSTAT_EXT_JAVA_OPTS% -Djline.terminal=jline.UnsupportedTerminal
-
 :: Finally run thermostat (optionally in the background
 if "%RUN_IN_BG%"=="1" (
     :: The thermostat-agent-sysd script uses this.
