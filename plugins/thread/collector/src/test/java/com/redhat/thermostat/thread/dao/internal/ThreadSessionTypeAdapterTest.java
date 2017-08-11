@@ -41,7 +41,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class ThreadSessionTypeAdapterTest {
 
@@ -55,6 +55,6 @@ public class ThreadSessionTypeAdapterTest {
         session.setVmId("Vm-1");
         session.setTimeStamp(100l);
         session.setSession("Session");
-        assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"session\":\"Session\",\"sessionID\":{\"id\":\"Session\"}}", gson.toJson(session));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"session\":\"Session\",\"sessionID\":{\"id\":\"Session\"}}", gson.toJson(session));
     }
 }

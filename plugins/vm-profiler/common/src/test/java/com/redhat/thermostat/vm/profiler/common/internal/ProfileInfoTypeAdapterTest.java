@@ -41,7 +41,7 @@ import com.google.gson.Gson;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class ProfileInfoTypeAdapterTest {
 
@@ -56,7 +56,7 @@ public class ProfileInfoTypeAdapterTest {
         testInfo.setProfileId("3");
         testInfo.setStartTimeStamp(100l);
         testInfo.setStopTimeStamp(200l);
-        assertEquals("{\"vmId\":\"2\",\"profileId\":\"3\",\"startTimeStamp\":{\"$numberLong\":\"100\"},\"stopTimeStamp\":{\"$numberLong\":\"200\"},\"agentId\":\"1\"}",
+        assertJsonEquals("{\"vmId\":\"2\",\"profileId\":\"3\",\"startTimeStamp\":{\"$numberLong\":\"100\"},\"stopTimeStamp\":{\"$numberLong\":\"200\"},\"agentId\":\"1\"}",
                 gson.toJson(testInfo));
     }
 }

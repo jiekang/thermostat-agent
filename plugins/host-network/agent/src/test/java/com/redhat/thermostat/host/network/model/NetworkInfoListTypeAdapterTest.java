@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.host.network.model;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,7 +60,7 @@ public class NetworkInfoListTypeAdapterTest {
         NetworkInfoList infos = createNetworkInfoList(first, second);
 
         String json = adapter.toJson(Arrays.asList(infos));
-        assertEquals(expected, json);
+        assertJsonEquals(expected, json);
     }
 
     private NetworkInfoList createNetworkInfoList(String iFace, String ip4Addr, String ip6Addr) {

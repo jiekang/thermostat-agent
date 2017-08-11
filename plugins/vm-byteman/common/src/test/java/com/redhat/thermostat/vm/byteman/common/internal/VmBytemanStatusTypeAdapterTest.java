@@ -41,7 +41,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class VmBytemanStatusTypeAdapterTest {
 
@@ -56,7 +56,7 @@ public class VmBytemanStatusTypeAdapterTest {
         status.setVmId("Vm-1");
         status.setListenPort(27518);
         status.setRule("Rule");
-        assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"rule\":\"Rule\",\"listenPort\":27518}", gson.toJson(status));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"Vm-1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"rule\":\"Rule\",\"listenPort\":27518}", gson.toJson(status));
     }
 
 }

@@ -42,7 +42,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class VmTlabStatTypeAdapterTest {
 
@@ -65,7 +65,7 @@ public class VmTlabStatTypeAdapterTest {
         stat.setMaxSlowWaste(634l);
         stat.setTotalFastWaste(678l);
         stat.setMaxFastWaste(333l);
-        assertEquals("[{\"vmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"timeStamp\":{\"$numberLong\":\"1000\"},\"allocThreads\":{\"$numberLong\":\"10\"},\"totalAllocations\":{\"$numberLong\":\"1342\"},\"refills\":{\"$numberLong\":\"58\"},\"maxRefills\":{\"$numberLong\":\"90\"},\"slowAllocations\":{\"$numberLong\":\"343\"},\"maxSlowAllocations\":{\"$numberLong\":\"989\"},\"gcWaste\":{\"$numberLong\":\"788\"},\"maxGcWaste\":{\"$numberLong\":\"992\"},\"slowWaste\":{\"$numberLong\":\"899\"},\"maxSlowWaste\":{\"$numberLong\":\"634\"},\"fastWaste\":{\"$numberLong\":\"678\"},\"maxFastWaste\":{\"$numberLong\":\"333\"}}]", typeAdapter.toJson(Arrays.asList(stat)));
+        assertJsonEquals("[{\"vmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"timeStamp\":{\"$numberLong\":\"1000\"},\"allocThreads\":{\"$numberLong\":\"10\"},\"totalAllocations\":{\"$numberLong\":\"1342\"},\"refills\":{\"$numberLong\":\"58\"},\"maxRefills\":{\"$numberLong\":\"90\"},\"slowAllocations\":{\"$numberLong\":\"343\"},\"maxSlowAllocations\":{\"$numberLong\":\"989\"},\"gcWaste\":{\"$numberLong\":\"788\"},\"maxGcWaste\":{\"$numberLong\":\"992\"},\"slowWaste\":{\"$numberLong\":\"899\"},\"maxSlowWaste\":{\"$numberLong\":\"634\"},\"fastWaste\":{\"$numberLong\":\"678\"},\"maxFastWaste\":{\"$numberLong\":\"333\"}}]", typeAdapter.toJson(Arrays.asList(stat)));
     }
 
 }

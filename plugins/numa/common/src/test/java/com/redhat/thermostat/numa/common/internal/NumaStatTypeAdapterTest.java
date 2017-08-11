@@ -38,7 +38,8 @@ package com.redhat.thermostat.numa.common.internal;
 
 import com.google.gson.reflect.TypeToken;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
@@ -73,7 +74,7 @@ public class NumaStatTypeAdapterTest {
         stats[0] = s;
         stat.setNodeStats(stats);
         testStats.add(stat);
-        assertEquals("[{\"timeStamp\":{\"$numberLong\":\"2\"}," +
+        assertJsonEquals("[{\"timeStamp\":{\"$numberLong\":\"2\"}," +
                 "\"nodeStats\":[{\"numaHit\":{\"$numberLong\":\"1\"}," +
                 "\"numaMiss\":{\"$numberLong\":\"2\"}," +
                 "\"numaForeign\":{\"$numberLong\":\"3\"}," +
@@ -118,6 +119,6 @@ public class NumaStatTypeAdapterTest {
         stat2.setNodeStats(stats2);
         testStats.add(stat);
         testStats.add(stat2);
-        assertEquals("[{\"timeStamp\":{\"$numberLong\":\"2\"},\"nodeStats\":[{\"numaHit\":{\"$numberLong\":\"1\"},\"numaMiss\":{\"$numberLong\":\"2\"},\"numaForeign\":{\"$numberLong\":\"3\"},\"interleaveHit\":{\"$numberLong\":\"4\"},\"localNode\":{\"$numberLong\":\"5\"},\"otherNode\":{\"$numberLong\":\"6\"},\"nodeId\":7}],\"agentId\":\"1\"},{\"timeStamp\":{\"$numberLong\":\"-1\"},\"nodeStats\":[{\"numaHit\":{\"$numberLong\":\"10\"},\"numaMiss\":{\"$numberLong\":\"20\"},\"numaForeign\":{\"$numberLong\":\"30\"},\"interleaveHit\":{\"$numberLong\":\"40\"},\"localNode\":{\"$numberLong\":\"50\"},\"otherNode\":{\"$numberLong\":\"60\"},\"nodeId\":70}],\"agentId\":\"2\"}]", gson.toJson(testStats, list_type));
+        assertJsonEquals("[{\"timeStamp\":{\"$numberLong\":\"2\"},\"nodeStats\":[{\"numaHit\":{\"$numberLong\":\"1\"},\"numaMiss\":{\"$numberLong\":\"2\"},\"numaForeign\":{\"$numberLong\":\"3\"},\"interleaveHit\":{\"$numberLong\":\"4\"},\"localNode\":{\"$numberLong\":\"5\"},\"otherNode\":{\"$numberLong\":\"6\"},\"nodeId\":7}],\"agentId\":\"1\"},{\"timeStamp\":{\"$numberLong\":\"-1\"},\"nodeStats\":[{\"numaHit\":{\"$numberLong\":\"10\"},\"numaMiss\":{\"$numberLong\":\"20\"},\"numaForeign\":{\"$numberLong\":\"30\"},\"interleaveHit\":{\"$numberLong\":\"40\"},\"localNode\":{\"$numberLong\":\"50\"},\"otherNode\":{\"$numberLong\":\"60\"},\"nodeId\":70}],\"agentId\":\"2\"}]", gson.toJson(testStats, list_type));
     }
 }

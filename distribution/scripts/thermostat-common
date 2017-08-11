@@ -144,6 +144,3 @@ if [ -f "${USER_LOG_CONFIG_FILE}" ] ; then
     LOGGING_ARGS=( "-Djava.util.logging.config.file=${USER_LOG_CONFIG_FILE}" )
   fi
 fi
-
-LOGGING_ARGS=( "${LOGGING_ARGS[@]}" "-Djline.log.jul=true" )
-

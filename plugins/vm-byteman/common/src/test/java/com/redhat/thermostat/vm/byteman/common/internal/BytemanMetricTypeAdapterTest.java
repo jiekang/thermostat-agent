@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.byteman.common.internal;
 
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -114,7 +115,7 @@ public class BytemanMetricTypeAdapterTest {
                 "    }\n" +
                 "}";
         BytemanMetric metric = gson.fromJson(json, BytemanMetric.class);
-        assertEquals("{\"key\":\"value = 'foo', 'bar', 'baz'\"}", metric.getData());
+        assertJsonEquals("{\"key\":\"value = 'foo', 'bar', 'baz'\"}", metric.getData());
         Map<String, Object> dataAsMap = metric.getDataAsMap();
         assertEquals("value = 'foo', 'bar', 'baz'", dataAsMap.get("key"));
     }

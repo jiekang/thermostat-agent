@@ -75,6 +75,4 @@ if exist %USER_LOG_CONFIG_FILE% (
     set LOGGING_ARGS=-Djava.util.logging.config.file=%USER_LOG_CONFIG_FILE%
 )
 
-set LOGGING_ARGS=%LOGGING_ARGS% -Djline.log.jul=true
-
 exit /b 0

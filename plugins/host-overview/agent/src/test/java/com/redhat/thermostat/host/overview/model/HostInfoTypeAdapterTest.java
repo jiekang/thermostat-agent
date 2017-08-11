@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.host.overview.model;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 import java.util.Arrays;
 import java.util.List;
@@ -69,7 +69,7 @@ public class HostInfoTypeAdapterTest {
         List<HostInfo> infos = Arrays.asList(first, second);
         
         String json = adapter.toJson(infos);
-        assertEquals(expected, json);
+        assertJsonEquals(expected, json);
     }
 
 }

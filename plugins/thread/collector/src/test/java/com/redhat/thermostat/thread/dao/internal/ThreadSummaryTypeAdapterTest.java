@@ -41,7 +41,7 @@ import com.google.gson.Gson;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class ThreadSummaryTypeAdapterTest {
 
@@ -56,7 +56,7 @@ public class ThreadSummaryTypeAdapterTest {
         summary.setVmId("VM-1");
         summary.setCurrentDaemonThreads(3232l);
         summary.setCurrentLiveThreads(2222l);
-        assertEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"VM-1\",\"timeStamp\":{\"$numberLong\":\"10\"},\"currentLiveThreads\":{\"$numberLong\":\"2222\"},\"daemonThreads\":{\"$numberLong\":\"3232\"}}", gson.toJson(summary));
+        assertJsonEquals("{\"agentId\":\"Agent-1\",\"vmId\":\"VM-1\",\"timeStamp\":{\"$numberLong\":\"10\"},\"currentLiveThreads\":{\"$numberLong\":\"2222\"},\"daemonThreads\":{\"$numberLong\":\"3232\"}}", gson.toJson(summary));
     }
 
 }

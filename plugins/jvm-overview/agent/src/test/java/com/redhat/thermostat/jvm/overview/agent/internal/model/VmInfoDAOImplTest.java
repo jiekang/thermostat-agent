@@ -66,7 +66,7 @@ public class VmInfoDAOImplTest {
 
     private static final URI GATEWAY_URI = URI.create("http://localhost:30000/jvms/0.0.1/");
     private static final URI POST_URI = GATEWAY_URI.resolve("systems/foo");
-    private static final URI UPDATE_URI = GATEWAY_URI.resolve("update/systems/foo/jvms/vmId");
+    private static final URI UPDATE_URI = GATEWAY_URI.resolve("systems/foo/jvms/vmId");
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
     

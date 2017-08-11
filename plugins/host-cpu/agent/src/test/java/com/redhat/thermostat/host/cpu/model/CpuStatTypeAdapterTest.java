@@ -40,6 +40,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.junit.Test;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 
@@ -58,7 +60,7 @@ public class CpuStatTypeAdapterTest {
         List<CpuStat> stats = new ArrayList<>();
         stats.add(new CpuStat("1", 1234567890l, new double[]{9.99, 8.88, 3.1415, 7.777}));
         String result = gson.toJson(stats, cpuStatListType);
-        assertEquals("[{\"perProcessorUsage\":[9.99,8.88,3.1415,7.777],\"timeStamp\":{\"$numberLong\":\"1234567890\"},\"agentId\":\"1\"}]", result);
+        assertJsonEquals("[{\"perProcessorUsage\":[9.99,8.88,3.1415,7.777],\"timeStamp\":{\"$numberLong\":\"1234567890\"},\"agentId\":\"1\"}]", result);
     }
 
     @Test
@@ -73,7 +75,7 @@ public class CpuStatTypeAdapterTest {
         stats.add(new CpuStat("3", 10002320101l, new double[]{1.234, 4.567, 7.8910, 10.111213}));
         stats.add(new CpuStat("4", 100023313101l, new double[]{1.3235, 4.4567, 7.78911, 10.10111241}));
         String result = gson.toJson(stats, cpuStatListType);
-        assertEquals("[{\"perProcessorUsage\":[1.23,4.56,7.89,10.1112],\"timeStamp\":{\"$numberLong\":\"1000230101\"},\"agentId\":\"1\"}," +
+        assertJsonEquals("[{\"perProcessorUsage\":[1.23,4.56,7.89,10.1112],\"timeStamp\":{\"$numberLong\":\"1000230101\"},\"agentId\":\"1\"}," +
                 "{\"perProcessorUsage\":[1.323,4.456,7.789,10.101112],\"timeStamp\":{\"$numberLong\":\"10002333101\"},\"agentId\":\"2\"}," +
                 "{\"perProcessorUsage\":[1.234,4.567,7.891,10.111213],\"timeStamp\":{\"$numberLong\":\"10002320101\"},\"agentId\":\"3\"}," +
                 "{\"perProcessorUsage\":[1.3235,4.4567,7.78911,10.10111241],\"timeStamp\":{\"$numberLong\":\"100023313101\"},\"agentId\":\"4\"}]", result);

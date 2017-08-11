@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.host.network.model;
 
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -58,7 +59,7 @@ public class NetworkInterfaceInfoTypeAdapterTest {
         List<NetworkInterfaceInfo> infos = Arrays.asList(first, second);
         
         String json = adapter.toJson(infos);
-        assertEquals(expected, json);
+        assertJsonEquals(expected, json);
     }
     
     @Test

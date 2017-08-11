@@ -42,7 +42,7 @@ import com.redhat.thermostat.vm.numa.common.VmNumaNodeStat;
 import com.redhat.thermostat.vm.numa.common.VmNumaStat;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class VmNumaStatTypeAdapterTest {
 
@@ -68,7 +68,7 @@ public class VmNumaStatTypeAdapterTest {
         stat.setVmId("VM-1");
         stat.setAgentId("AGENT-1");
         stat.setVmNodeStats(new VmNumaNodeStat[]{node, node2});
-        assertEquals("{\"vmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"vmNodeStats\":[{\"node\":2,\"hugeMemory\":52423.5555,\"heapMemory\":31234.55,\"stackMemory\":4896.1545,\"privateMemory\":1234.5},{\"node\":0,\"hugeMemory\":0.0,\"heapMemory\":0.0,\"stackMemory\":0.0,\"privateMemory\":0.0}],\"timeStamp\":{\"$numberLong\":\"100\"}}", gson.toJson(stat));
+        assertJsonEquals("{\"vmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"vmNodeStats\":[{\"node\":2,\"hugeMemory\":52423.5555,\"heapMemory\":31234.55,\"stackMemory\":4896.1545,\"privateMemory\":1234.5},{\"node\":0,\"hugeMemory\":0.0,\"heapMemory\":0.0,\"stackMemory\":0.0,\"privateMemory\":0.0}],\"timeStamp\":{\"$numberLong\":\"100\"}}", gson.toJson(stat));
     }
 
 }

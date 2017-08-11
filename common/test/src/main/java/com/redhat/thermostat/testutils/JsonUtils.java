@@ -34,21 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.testutils;
 
-import jline.UnixTerminal;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
-public class TestTerminal extends UnixTerminal {
+import static org.junit.Assert.assertEquals;
 
-    public TestTerminal() throws Exception {
-        super();
+public class JsonUtils {
+
+    public static void assertJsonEquals(final String expected, final String actual) {
+        JsonParser parser = new JsonParser();
+        JsonElement expel = parser.parse(expected);
+        JsonElement actel = parser.parse(actual);
+        assertEquals(expel, actel);
     }
-
-    @Override
-    public void restore() throws Exception {
-        super.restore();
-        throw new Exception();
-    }
-
 }
-

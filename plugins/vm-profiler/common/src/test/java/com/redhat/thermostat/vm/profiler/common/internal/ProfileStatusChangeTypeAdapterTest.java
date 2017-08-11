@@ -41,7 +41,7 @@ import com.google.gson.Gson;
 import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class ProfileStatusChangeTypeAdapterTest {
 
@@ -55,7 +55,7 @@ public class ProfileStatusChangeTypeAdapterTest {
         change.setVmId("1");
         change.setAgentId("2");
         change.setStarted(true);
-        assertEquals("{\"vmId\":\"1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"started\":true,\"agentId\":\"2\"}", gson.toJson(change));
+        assertJsonEquals("{\"vmId\":\"1\",\"timeStamp\":{\"$numberLong\":\"100\"},\"started\":true,\"agentId\":\"2\"}", gson.toJson(change));
     }
 
 }

@@ -182,5 +182,10 @@
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
+      <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-common-plugin</artifactId>
+          <version>1.99.12-SNAPSHOT</version>
+      </dependency>
   </dependencies>
 </project>

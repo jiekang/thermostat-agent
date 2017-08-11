@@ -37,7 +37,8 @@
 package com.redhat.thermostat.numa.common.internal;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 
@@ -67,7 +68,7 @@ public class NumaNodeStatTypeAdapterTest {
         s.setOtherNode(6l);
         s.setNodeId(7);
         stats.add(s);
-        assertEquals("{" +
+        assertJsonEquals("{" +
                 "\"numaHit\":{\"$numberLong\":\"1\"}," +
                 "\"numaMiss\":{\"$numberLong\":\"2\"}," +
                 "\"numaForeign\":{\"$numberLong\":\"3\"}," +

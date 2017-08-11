@@ -45,7 +45,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 public class MemoryStatTypeAdapterTest {
 
@@ -59,7 +59,7 @@ public class MemoryStatTypeAdapterTest {
         stats.add(new MemoryStat("1", 123l, 456l, 789l, 101112l, 131415l,
                 161718l, 192021l, 222324l));
         System.out.println(gson.toJson(stats, memoryStatListType));
-        assertEquals("[{\"timeStamp\":{\"$numberLong\":\"123\"}," +
+        assertJsonEquals("[{\"timeStamp\":{\"$numberLong\":\"123\"}," +
                 "\"total\":{\"$numberLong\":\"456\"}," +
                 "\"free\":{\"$numberLong\":\"789\"}," +
                 "\"buffers\":{\"$numberLong\":\"101112\"}," +
@@ -85,7 +85,7 @@ public class MemoryStatTypeAdapterTest {
                 689821l, 786711l, 823542l));
         stats.add(new MemoryStat("4", 13332l, 24441l, 37721l, 4321345l, 542131l,
                 64522l, 71232l, 8231321l));
-        assertEquals("[{\"timeStamp\":{\"$numberLong\":\"123\"},\"total\":{\"$numberLong\":\"456\"},\"free\":{\"$numberLong\":\"789\"},\"buffers\":{\"$numberLong\":\"101112\"},\"cached\":{\"$numberLong\":\"131415\"},\"swapTotal\":{\"$numberLong\":\"161718\"},\"swapFree\":{\"$numberLong\":\"192021\"},\"commitLimit\":{\"$numberLong\":\"222324\"},\"agentId\":\"1\"}," +
+        assertJsonEquals("[{\"timeStamp\":{\"$numberLong\":\"123\"},\"total\":{\"$numberLong\":\"456\"},\"free\":{\"$numberLong\":\"789\"},\"buffers\":{\"$numberLong\":\"101112\"},\"cached\":{\"$numberLong\":\"131415\"},\"swapTotal\":{\"$numberLong\":\"161718\"},\"swapFree\":{\"$numberLong\":\"192021\"},\"commitLimit\":{\"$numberLong\":\"222324\"},\"agentId\":\"1\"}," +
                 "{\"timeStamp\":{\"$numberLong\":\"1\"},\"total\":{\"$numberLong\":\"2\"},\"free\":{\"$numberLong\":\"3\"},\"buffers\":{\"$numberLong\":\"4\"},\"cached\":{\"$numberLong\":\"5\"},\"swapTotal\":{\"$numberLong\":\"6\"},\"swapFree\":{\"$numberLong\":\"7\"},\"commitLimit\":{\"$numberLong\":\"8\"},\"agentId\":\"2\"}," +
                 "{\"timeStamp\":{\"$numberLong\":\"17756\"},\"total\":{\"$numberLong\":\"25365323\"},\"free\":{\"$numberLong\":\"3124213\"},\"buffers\":{\"$numberLong\":\"4465434\"},\"cached\":{\"$numberLong\":\"578687\"},\"swapTotal\":{\"$numberLong\":\"689821\"},\"swapFree\":{\"$numberLong\":\"786711\"},\"commitLimit\":{\"$numberLong\":\"823542\"},\"agentId\":\"3\"}," +
                 "{\"timeStamp\":{\"$numberLong\":\"13332\"},\"total\":{\"$numberLong\":\"24441\"},\"free\":{\"$numberLong\":\"37721\"},\"buffers\":{\"$numberLong\":\"4321345\"},\"cached\":{\"$numberLong\":\"542131\"},\"swapTotal\":{\"$numberLong\":\"64522\"},\"swapFree\":{\"$numberLong\":\"71232\"},\"commitLimit\":{\"$numberLong\":\"8231321\"},\"agentId\":\"4\"}]",
