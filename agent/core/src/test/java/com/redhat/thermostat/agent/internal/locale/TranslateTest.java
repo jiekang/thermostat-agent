@@ -34,50 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.internal;
+package com.redhat.thermostat.agent.internal.locale;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.Properties;
 
-import java.io.File;
-
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.dao.AgentInfoDAO;
-import com.redhat.thermostat.agent.dao.BackendInfoDAO;
-import com.redhat.thermostat.agent.internal.Activator.AgentConfigSetter;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.testutils.StubBundleContext;
+public class TranslateTest {
 
-public class ActivatorTest {
-    
-    @Test
-    public void verifyServiceIsRegistered() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        Activator activator = new Activator();
-        activator.start(context);
+    private Locale lang;
 
-        assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
-        assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
-    }
-    
-    @Test
-    public void verifyAgentConfig() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        
-        CommonPaths paths = mock(CommonPaths.class);
-        File sysPropFile = mock(File.class);
-        when(paths.getSystemAgentConfigurationFile()).thenReturn(sysPropFile);
-        File userPropFile = mock(File.class);
-        when(paths.getUserAgentConfigurationFile()).thenReturn(userPropFile);
-        context.registerService(CommonPaths.class.getName(), paths, null);
-        
-        AgentConfigSetter configSetter = mock(AgentConfigSetter.class);
-        Activator activator = new Activator(configSetter);
-        activator.start(context);
-        
-        verify(configSetter).setConfigFiles(sysPropFile, userPropFile);
+    @Before
+    public void setUp() {
+        this.lang = Locale.getDefault();
+        Locale.setDefault(Locale.US);
     }
 
+    @After
+    public void tearDown() {
+        Locale.setDefault(lang);
+    }
+
+    @Test
+    public void testLocalizedStringsArePresent() throws IOException {
+
+        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
+
+        Properties props = new Properties();
+        props.load(getClass().getResourceAsStream(stringsResource));
+
+        Assert.assertEquals(LocaleResources.values().length, props.values().size());
+        for (LocaleResources resource : LocaleResources.values()) {
+            Assert.assertTrue("missing property from resource bound file: " + resource,
+                              props.containsKey(resource.name()));
+        }
+    }
 }
 

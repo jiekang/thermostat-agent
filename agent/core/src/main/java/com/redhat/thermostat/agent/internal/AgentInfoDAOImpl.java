@@ -49,6 +49,9 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.dao.AgentInfoDAO;
 import com.redhat.thermostat.agent.internal.AgentInformationTypeAdapter.AgentInformationUpdateTypeAdapter;
+
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpContentResponse;
 import org.eclipse.jetty.client.HttpRequest;
@@ -62,6 +65,8 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
+@Component
+@Service(value = AgentInfoDAO.class)
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(AgentInfoDAOImpl.class);

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.internal;
+package com.redhat.thermostat.agent.internal;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
@@ -42,8 +42,13 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.dao.AgentInfoDAO;
 import com.redhat.thermostat.agent.dao.BackendInfoDAO;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
@@ -53,13 +58,13 @@ import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.LaunchException;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandRegistry;
+import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
@@ -67,6 +72,8 @@ import com.redhat.thermostat.storage.core.WriterID;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
+@Component(immediate = true)
+@Service(value = Command.class)
 @SuppressWarnings("restriction")
 public final class AgentApplication extends AbstractStateNotifyingCommand {
 
@@ -84,44 +91,72 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private static final String SIGTERM_NAME = "TERM";
 
     private static final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
-    
-    private final BundleContext bundleContext;
+
     private final ConfigurationCreator configurationCreator;
 
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
-    @SuppressWarnings("rawtypes")
-    private ServiceTracker configServerTracker;
-    private MultipleServiceTracker depTracker;
-    private final ExitStatus exitStatus;
-    private final WriterID writerId;
+
+    private BundleContext context;
+
+    @Reference(bind = "bindExitStatus")
+    private ExitStatus exitStatus;
+    @Reference(bind = "bindWriterId")
+    private WriterID writerId;
+    @Reference
+    private AgentInfoDAO agentInfoDAO;
+    @Reference
+    private BackendInfoDAO backendInfoDAO;
+
+    private CommandRegistry reg;
+
     private CountDownLatch shutdownLatch;
 
     private CustomSignalHandler handler;
 
-    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId) {
-        this(bundleContext, exitStatus, writerId, new ConfigurationCreator());
+    private AgentApplication instance;
+
+    public AgentApplication() {
+        this(new ConfigurationCreator());
     }
 
-    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, ConfigurationCreator configurationCreator) {
-        this.bundleContext = bundleContext;
+    AgentApplication(ConfigurationCreator configurationCreator) {
         this.configurationCreator = configurationCreator;
-        this.exitStatus = exitStatus;
-        this.writerId = writerId;
     }
-    
+
+    @Activate
+    public void activate(BundleContext context) {
+        this.context = context;
+        reg = new CommandRegistryImpl(context);
+        instance = this;
+        reg.registerCommand("agent", instance);
+    }
+
+    @Deactivate
+    public void deactivate(BundleContext context) {
+        if (instance != null) {
+            // Bundle may be shut down *before* deps become available and
+            // app is set.
+            instance.shutdown(ExitStatus.EXIT_SUCCESS);
+        }
+        reg.unregisterCommands();
+    }
+
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
         parser = new AgentOptionParser(configuration, args);
         parser.parse();
     }
-    
+
     private void runAgent(CommandContext ctx) throws CommandException {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
 
         shutdownLatch = new CountDownLatch(1);
-        prepareAgent();
-        
+        Agent agent = startAgent(agentInfoDAO, backendInfoDAO);
+        handler = new CustomSignalHandler(agent);
+        Signal.handle(new Signal(SIGINT_NAME), handler);
+        Signal.handle(new Signal(SIGTERM_NAME), handler);
+
         try {
             // Wait for either SIGINT or SIGTERM
             shutdownLatch.await();
@@ -142,18 +177,11 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             runAgent(ctx);
         }
     }
-    
+
     public void shutdown(int shutDownStatus) {
         // Exit application
         if (shutdownLatch != null) {
             shutdownLatch.countDown();
-        }
-        
-        if (depTracker != null) {
-            depTracker.close();
-        }
-        if (configServerTracker != null) {
-            configServerTracker.close();
         }
         this.exitStatus.setExitStatus(shutDownStatus);
         if (shutDownStatus == ExitStatus.EXIT_SUCCESS) {
@@ -162,15 +190,15 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             getNotifier().fireAction(ApplicationState.FAIL);
         }
     }
-    
+
     private class CustomSignalHandler implements SignalHandler {
-        
+
         private Agent agent;
 
         public CustomSignalHandler(Agent agent) {
             this.agent = agent;
         }
-        
+
         @Override
         public void handle(Signal arg0) {
             try {
@@ -188,14 +216,14 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             }
             shutdown(ExitStatus.EXIT_SUCCESS);
         }
-        
+
     }
 
     Agent startAgent(AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
         BackendRegistry backendRegistry = null;
         try {
-            backendRegistry = new BackendRegistry(bundleContext);
-            
+            backendRegistry = new BackendRegistry(context);
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", e);
             shutdown(ExitStatus.EXIT_ERROR);
@@ -208,9 +236,9 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         try {
             logger.fine("Starting agent.");
             agent.start();
-            
-            bundleContext.registerService(BackendService.class, new BackendService(), null);
-            
+
+            context.registerService(BackendService.class, new BackendService(), null);
+
         } catch (LaunchException le) {
             logger.log(Level.SEVERE,
                     "Agent could not start, probably because a configured backend could not be activated.",
@@ -228,37 +256,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         getNotifier().fireAction(ApplicationState.START, agent.getId());
         return agent;
     }
-    
-    private void prepareAgent() {
-        Class<?>[] deps = new Class<?>[] {
-                AgentInfoDAO.class,
-                BackendInfoDAO.class
-        };
-        depTracker = new MultipleServiceTracker(bundleContext, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-                AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
-                BackendInfoDAO backendInfoDAO = services.get(BackendInfoDAO.class);
-
-                Agent agent = startAgent(agentInfoDAO, backendInfoDAO);
-                handler = new CustomSignalHandler(agent);
-                Signal.handle(new Signal(SIGINT_NAME), handler);
-                Signal.handle(new Signal(SIGTERM_NAME), handler);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                if (shutdownLatch.getCount() > 0) {
-                    // In the rare case we lose one of our deps, gracefully shutdown
-                    logger.severe("Dependencies unexpectedly became unavailable");
-                    shutdown(ExitStatus.EXIT_ERROR);
-                }
-            }
-            
-        });
-        depTracker.open();
-    }
 
     static class ConfigurationCreator {
         public AgentStartupConfiguration create() throws InvalidConfigurationException {
@@ -270,6 +267,16 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     public boolean isStorageRequired() {
         return false;
     }
-    
+
+    // DS runtime bind methods
+    protected void bindExitStatus(ExitStatus status) {
+        this.exitStatus = status;
+    }
+
+    protected void bindWriterId(WriterID id) {
+        this.writerId = id;
+    }
+
 }
+
 

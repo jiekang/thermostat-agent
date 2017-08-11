@@ -63,8 +63,10 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.http.HttpRequestService.ConfigCreator;
 import com.redhat.thermostat.agent.http.HttpRequestService.HttpClientCreator;
 import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import org.eclipse.jetty.http.HttpMethod;
 
@@ -75,6 +77,7 @@ public class HttpRequestServiceTest {
     private static final String keycloakUrl = "http://127.0.0.1:31000/keycloak";
 
     private HttpClientCreator clientCreator;
+    private ConfigCreator configCreator;
     private HttpClientFacade client;
     private Request httpRequest;
     
@@ -88,6 +91,7 @@ public class HttpRequestServiceTest {
         when(httpRequest.send()).thenReturn(response);
         clientCreator = mock(HttpClientCreator.class);
         when(clientCreator.create(any(SSLConfiguration.class))).thenReturn(client);
+        configCreator = mock(ConfigCreator.class);
     }
 
     @Test
@@ -176,7 +180,8 @@ public class HttpRequestServiceTest {
     }
     
     private HttpRequestService createAndActivateRequestService(AgentStartupConfiguration configuration) throws Exception {
-        HttpRequestService service = new HttpRequestService(clientCreator, configuration);
+        when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
+        HttpRequestService service = new HttpRequestService(clientCreator, configCreator);
         service.activate();
         verify(client).start();
         return service;
@@ -189,7 +194,9 @@ public class HttpRequestServiceTest {
         HttpClientFacade getClient = setupHttpClient(creator, getContent);
         
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
-        HttpRequestService service = new HttpRequestService(creator, configuration);
+        ConfigCreator configCreator = mock(ConfigCreator.class);
+        when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
+        HttpRequestService service = new HttpRequestService(creator, configCreator);
         service.activate();
         String content = service.sendHttpRequest(null, GET_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.GET);
         verify(getClient).newRequest(GET_URI);
@@ -203,7 +210,9 @@ public class HttpRequestServiceTest {
         HttpClientFacade getClient = setupHttpClient(creator, getContent);
         
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
-        HttpRequestService service = new HttpRequestService(creator, configuration);
+        ConfigCreator configCreator = mock(ConfigCreator.class);
+        when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
+        HttpRequestService service = new HttpRequestService(creator, configCreator);
         service.activate();
         
         // Add extra slashes to URI

@@ -61,6 +61,7 @@ import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.agent.http.internal.keycloak.KeycloakAccessToken;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 @Component
@@ -73,6 +74,7 @@ public class HttpRequestService {
     private static final String KEYCLOAK_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     private final HttpClientCreator httpClientCreator;
+    private final ConfigCreator configCreator;
     private Gson gson = new GsonBuilder().create();
     private HttpClientFacade client;
     private AgentStartupConfiguration agentStartupConfiguration;
@@ -80,19 +82,22 @@ public class HttpRequestService {
     private KeycloakAccessToken keycloakAccessToken;
     @Reference
     private SSLConfiguration sslConfig;
+    @Reference
+    private CommonPaths commonPaths;
 
     public HttpRequestService() {
-        this(new HttpClientCreator(), AgentConfigsUtils.createAgentConfigs());
+        this(new HttpClientCreator(), new ConfigCreator());
     }
 
-    HttpRequestService(HttpClientCreator clientCreator, AgentStartupConfiguration agentStartupConfiguration) {
+    HttpRequestService(HttpClientCreator clientCreator, ConfigCreator configCreator) {
         this.httpClientCreator = clientCreator;
-        this.agentStartupConfiguration = agentStartupConfiguration;
+        this.configCreator = configCreator;
     }
 
     @Activate
     public void activate() {
         try {
+            agentStartupConfiguration = configCreator.create(commonPaths);
             client = httpClientCreator.create(sslConfig);
             client.start();
             logger.log(Level.FINE, "HttpRequestService activated");
@@ -205,13 +210,26 @@ public class HttpRequestService {
         return "grant_type=refresh_token&client_id=" + agentStartupConfiguration.getKeycloakClient() +
                 "&refresh_token=" + keycloakAccessToken.getRefreshToken();
     }
-    
+
+    // Package-private for testing
+   void setConfiguration(AgentStartupConfiguration configuration) {
+        this.agentStartupConfiguration = configuration;
+    }
+
     static class HttpClientCreator {
     
         HttpClientFacade create(SSLConfiguration config) {
             return new HttpClientFacade(config);
         }
 
+    }
+
+    static class ConfigCreator {
+        AgentStartupConfiguration create(CommonPaths commonPaths) {
+            AgentConfigsUtils.setConfigFiles(commonPaths.getSystemAgentConfigurationFile(),
+                    commonPaths.getUserAgentConfigurationFile());
+            return AgentConfigsUtils.createAgentConfigs();
+        }
     }
     
     @SuppressWarnings("serial")

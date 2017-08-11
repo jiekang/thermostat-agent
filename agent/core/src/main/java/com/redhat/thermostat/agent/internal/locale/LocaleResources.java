@@ -34,45 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.internal.locale;
+package com.redhat.thermostat.agent.internal.locale;
 
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Properties;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+public enum LocaleResources {
 
-public class TranslateTest {
+    SERVICE_FAILED_TO_START_DB,
+    LAUNCHER_UNAVAILABLE,
+    UNEXPECTED_RESULT_STORAGE,
+    STARTING_AGENT_FAILED,
+    ;
 
-    private Locale lang;
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.internal.strings";
 
-    @Before
-    public void setUp() {
-        this.lang = Locale.getDefault();
-        Locale.setDefault(Locale.US);
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
-    @After
-    public void tearDown() {
-        Locale.setDefault(lang);
-    }
-
-    @Test
-    public void testLocalizedStringsArePresent() throws IOException {
-
-        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
-
-        Properties props = new Properties();
-        props.load(getClass().getResourceAsStream(stringsResource));
-
-        Assert.assertEquals(LocaleResources.values().length, props.values().size());
-        for (LocaleResources resource : LocaleResources.values()) {
-            Assert.assertTrue("missing property from resource bound file: " + resource,
-                              props.containsKey(resource.name()));
-        }
-    }
 }
 

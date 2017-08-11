@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.internal;
+package com.redhat.thermostat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -43,7 +43,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -61,8 +60,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+
 import com.redhat.thermostat.agent.Agent;
-import com.redhat.thermostat.agent.cli.internal.AgentApplication.ConfigurationCreator;
+import com.redhat.thermostat.agent.internal.AgentApplication.ConfigurationCreator;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.agent.dao.AgentInfoDAO;
 import com.redhat.thermostat.agent.dao.BackendInfoDAO;
@@ -85,12 +86,12 @@ public class AgentApplicationTest {
     private ConfigurationCreator configCreator;
     private ExitStatus exitStatus;
     private WriterID writerId;
-    
+
     @Before
     public void setUp() throws InvalidConfigurationException {
-        
+
         context = new StubBundleContext();
-        
+
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
         when(config.getDBConnectionString()).thenReturn("test string; please ignore");
 
@@ -116,18 +117,21 @@ public class AgentApplicationTest {
     @PrepareForTest({ FrameworkUtil.class, Agent.class })
     @Test
     public void testAgentStartup() throws CommandException, InterruptedException, InvalidSyntaxException {
-        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, configCreator);
+        final AgentApplication agent = new AgentApplication(configCreator);
+        agent.bindExitStatus(exitStatus);
+        agent.bindWriterId(writerId);
+        agent.activate(context);
         final CountDownLatch latch = new CountDownLatch(1);
         final CommandException[] ce = new CommandException[1];
         final long timeoutMillis = 5000L;
-        
+
         Bundle mockBundle = createBundle();
         PowerMockito.mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(Agent.class)).thenReturn(mockBundle);
         when(FrameworkUtil.createFilter(any(String.class))).thenReturn(mock(Filter.class));
-        
+
         startAgentRunThread(timeoutMillis, agent, ce, latch);
-        
+
         boolean ret = latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
         if (ce[0] != null) {
             throw ce[0];
@@ -136,7 +140,7 @@ public class AgentApplicationTest {
             fail("Timeout expired!");
         }
     }
-    
+
     private Bundle createBundle() {
         String qualifier = "201207241700";
         Bundle sysBundle = mock(Bundle.class);
@@ -147,7 +151,7 @@ public class AgentApplicationTest {
         when(sysBundle.getBundleContext()).thenReturn(context);
         return sysBundle;
     }
-    
+
     /*
      * Having the PrepareForTest annotation on method level does not seem to
      * deadlock the test, which seems to be more or less reliably reproducible
@@ -158,17 +162,19 @@ public class AgentApplicationTest {
      * 2. Run the test multiple times. 5-20 times seemed sufficient for me to
      *    make the deadlock show up. This deadlock does not seem to happen
      *    otherwise (can run up to 30 times head-to-head without deadlock).
-     *    
+     *
      */
     @PrepareForTest({ AgentApplication.class })
     @SuppressWarnings("unchecked")
     @Test
     public void verifyBackendRegistryProblemsSetsExitStatus() throws Exception {
-        whenNew(BackendRegistry.class).withParameterTypes(BundleContext.class)
+        PowerMockito.whenNew(BackendRegistry.class).withParameterTypes(BundleContext.class)
                 .withArguments(any(BundleContext.class))
                 .thenThrow(InvalidSyntaxException.class);
-        final AgentApplication agent = new AgentApplication(context,
-                exitStatus, writerId, configCreator);
+        final AgentApplication agent = new AgentApplication(configCreator);
+        agent.bindExitStatus(exitStatus);
+        agent.bindWriterId(writerId);
+        agent.activate(context);
         try {
             agent.startAgent(null, null);
         } catch (RuntimeException e) {
@@ -176,24 +182,26 @@ public class AgentApplicationTest {
         }
         verify(exitStatus).setExitStatus(ExitStatus.EXIT_ERROR);
     }
-    
+
     @PrepareForTest({ AgentApplication.class })
     @Test
     public void verifyAgentLaunchExceptionSetsExitStatus() throws Exception {
-        whenNew(BackendRegistry.class).withParameterTypes(BundleContext.class)
+        PowerMockito.whenNew(BackendRegistry.class).withParameterTypes(BundleContext.class)
                 .withArguments(any(BundleContext.class))
                 .thenReturn(mock(BackendRegistry.class));
         Agent mockAgent = mock(Agent.class);
-        whenNew(Agent.class).withParameterTypes(BackendRegistry.class,
+        PowerMockito.whenNew(Agent.class).withParameterTypes(BackendRegistry.class,
                 AgentStartupConfiguration.class,
                 AgentInfoDAO.class, BackendInfoDAO.class, WriterID.class).withArguments(
                 any(BackendRegistry.class),
                 any(AgentStartupConfiguration.class),
-                any(AgentInfoDAO.class), any(BackendInfoDAO.class), 
+                any(AgentInfoDAO.class), any(BackendInfoDAO.class),
                 any(WriterID.class)).thenReturn(mockAgent);
         doThrow(LaunchException.class).when(mockAgent).start();
-        final AgentApplication agent = new AgentApplication(context,
-                exitStatus, writerId,  configCreator);
+        final AgentApplication agent = new AgentApplication(configCreator);
+        agent.bindExitStatus(exitStatus);
+        agent.bindWriterId(writerId);
+        agent.activate(context);
         try {
             agent.startAgent(null, null);
         } catch (RuntimeException e) {
@@ -206,10 +214,10 @@ public class AgentApplicationTest {
         Arguments args = mock(Arguments.class);
         final CommandContext commandContext = mock(CommandContext.class);
         when(commandContext.getArguments()).thenReturn(args);
-        
+
         // Run agent in a new thread so we can timeout on failure
         Thread t = new Thread(new Runnable() {
-            
+
             @Override
             public void run() {
                 try {
@@ -220,9 +228,18 @@ public class AgentApplicationTest {
                 }
             }
         });
-        
+
         t.start();
     }
 
-}
+    @PrepareForTest({ AgentApplication.class })
+    @Test
+    public void verifyAgentCommandIsRegistered() {
+        final AgentApplication agent = new AgentApplication(configCreator);
+        agent.bindExitStatus(exitStatus);
+        agent.bindWriterId(writerId);
+        agent.activate(context);
+        assertCommandIsRegistered(context, "agent", AgentApplication.class);
+    }
 
+}
