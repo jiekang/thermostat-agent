@@ -51,7 +51,7 @@ public class VmGcStatTypeAdapterTest {
         VmGcStatTypeAdapter typeAdapter = new VmGcStatTypeAdapter();
         VmGcStat stat = new VmGcStat();
         stat.setAgentId("1");
-        stat.setVmId("2");
+        stat.setJvmId("2");
         stat.setTimeStamp(100l);
         stat.setCollectorName("Collector");
         stat.setRunCount(10l);

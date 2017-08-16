@@ -74,7 +74,7 @@ public class VmGcStatDAOImplTest {
         stat.setTimeStamp(1234l);
         stat.setWallTime(4000l);
         stat.setRunCount(1000l);
-        stat.setVmId("Vm-1");
+        stat.setJvmId("Vm-1");
         stat.setCollectorName("Collector");
 
         jsonHelper = mock(JsonHelper.class);

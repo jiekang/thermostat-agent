@@ -180,8 +180,8 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
     }
 
     private Generation[] generations;
-    private long timestamp;
-    private String vmId;
+    private long timeStamp;
+    private String jvmId;
     private long metaspaceMaxCapacity;
     private long metaspaceMinCapacity;
     private long metaspaceCapacity;
@@ -191,11 +191,11 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
         this(null, UNKNOWN, null, null, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN);
     }
 
-    public VmMemoryStat(String writerId, long timestamp, String vmId, Generation[] generations,
-            long metaspaceMaxCapacity, long metaspaceMinCapacity, long metaspaceCapacity, long metaspaceUsed) {
+    public VmMemoryStat(String writerId, long timestamp, String jvmId, Generation[] generations,
+                        long metaspaceMaxCapacity, long metaspaceMinCapacity, long metaspaceCapacity, long metaspaceUsed) {
         super(writerId);
-        this.timestamp = timestamp;
-        this.vmId = vmId;
+        this.timeStamp = timestamp;
+        this.jvmId = jvmId;
         if (generations != null) {
             this.generations = generations;
         }
@@ -207,24 +207,24 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public String getVmId() {
-        return vmId;
+    public String getJvmId() {
+        return jvmId;
     }
 
     @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
+    public void setJvmId(String jvmId) {
+        this.jvmId = jvmId;
     }
 
     @Persist
     @Override
     public long getTimeStamp() {
-        return timestamp;
+        return timeStamp;
     }
 
     @Persist
     public void setTimeStamp(long timeStamp) {
-        this.timestamp = timeStamp;
+        this.timeStamp = timeStamp;
     }
 
     @Persist

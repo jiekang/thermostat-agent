@@ -119,7 +119,7 @@ public class VmTlabStatDAOTest {
 
         VmTlabStat stat = new VmTlabStat();
         stat.setAgentId(AGENT_ID);
-        stat.setVmId(VM_ID);
+        stat.setJvmId(VM_ID);
         stat.setTimeStamp(1000l);
         stat.setTotalAllocatingThreads(10l);
         stat.setTotalAllocations(1342l);

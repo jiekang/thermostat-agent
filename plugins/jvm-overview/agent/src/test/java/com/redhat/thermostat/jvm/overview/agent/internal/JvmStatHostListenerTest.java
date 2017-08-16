@@ -259,17 +259,17 @@ public class JvmStatHostListenerTest {
         final long INFO_STOPTIME = Long.MAX_VALUE;
         VmInfo info = hostListener.createVmInfo(INFO_ID, INFO_PID, INFO_STOPTIME, extractor);
         
-        assertEquals(INFO_PID, info.getVmPid());
+        assertEquals(INFO_PID, info.getJvmPid());
         assertEquals(INFO_STARTTIME, info.getStartTimeStamp());
         assertEquals(INFO_STOPTIME, info.getStopTimeStamp());
         assertEquals(INFO_CMDLINE, info.getJavaCommandLine());
         assertEquals(INFO_JAVAHOME, info.getJavaHome());
         assertEquals(INFO_JAVAVER, info.getJavaVersion());
         assertEquals(INFO_MAINCLASS, info.getMainClass());
-        assertEquals(INFO_VMARGS, info.getVmArguments());
-        assertEquals(INFO_VMINFO, info.getVmInfo());
-        assertEquals(INFO_VMNAME, info.getVmName());
-        assertEquals(INFO_VMVER, info.getVmVersion());
+        assertEquals(INFO_VMARGS, info.getJvmArguments());
+        assertEquals(INFO_VMINFO, info.getJvmInfo());
+        assertEquals(INFO_VMNAME, info.getJvmName());
+        assertEquals(INFO_VMVER, info.getJvmVersion());
         assertEquals(INFO_VMUSERID, info.getUid());
         assertEquals(INFO_VMUSERNAME, info.getUsername());
     }

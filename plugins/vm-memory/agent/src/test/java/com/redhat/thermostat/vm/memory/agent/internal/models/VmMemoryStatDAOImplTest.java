@@ -113,7 +113,7 @@ public class VmMemoryStatDAOImplTest {
             }
             gen.setSpaces(spaces.toArray(new Space[spaces.size()]));
         }
-        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]),
+        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "jvmId", generations.toArray(new Generation[generations.size()]),
                 2, 3, 4, 5);
 
         VmMemoryStatDAOImpl dao = new VmMemoryStatDAOImpl(jsonHelper, creator, source);

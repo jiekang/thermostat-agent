@@ -97,18 +97,18 @@ public class VmInfo extends BasePojo {
         
     }
 
-    private String vmId;
-    private int vmPid = 0;
+    private String jvmId;
+    private int jvmPid = 0;
     private long startTime = System.currentTimeMillis();
     private long stopTime = Long.MIN_VALUE;
     private String javaVersion = "unknown";
     private String javaHome = "unknown";
     private String javaCommandLine = "unknown";
     private String mainClass = "unknown";
-    private String vmName = "unknown";
-    private String vmInfo = "unknown";
-    private String vmVersion = "unknown";
-    private String vmArguments = "unknown";
+    private String jvmName = "unknown";
+    private String jvmInfo = "unknown";
+    private String jvmVersion = "unknown";
+    private String jvmArguments = "unknown";
     private Map<String, String> properties = new HashMap<String, String>();
     private Map<String, String> environment = new HashMap<String, String>();
     private String[] loadedNativeLibraries;
@@ -121,24 +121,24 @@ public class VmInfo extends BasePojo {
     }
 
     public VmInfo(String writerId, String vmId, int vmPid, long startTime, long stopTime,
-            String javaVersion, String javaHome,
-            String mainClass, String commandLine,
-            String vmName, String vmInfo, String vmVersion, String vmArguments,
-            Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries,
-            long uid, String username) {
+                  String javaVersion, String javaHome,
+                  String mainClass, String commandLine,
+                  String jvmName, String vmInfo, String vmVersion, String jvmArguments,
+                  Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries,
+                  long uid, String username) {
         super(writerId);
-        this.vmId = vmId;
-        this.vmPid = vmPid;
+        this.jvmId = vmId;
+        this.jvmPid = vmPid;
         this.startTime = startTime;
         this.stopTime = stopTime;
         this.javaVersion = javaVersion;
         this.javaHome = javaHome;
         this.mainClass = mainClass;
         this.javaCommandLine = commandLine;
-        this.vmName = vmName;
-        this.vmInfo = vmInfo;
-        this.vmVersion = vmVersion;
-        this.vmArguments = vmArguments;
+        this.jvmName = jvmName;
+        this.jvmInfo = vmInfo;
+        this.jvmVersion = vmVersion;
+        this.jvmArguments = jvmArguments;
         this.properties = properties;
         this.environment = environment;
         this.loadedNativeLibraries = loadedNativeLibraries;
@@ -147,23 +147,23 @@ public class VmInfo extends BasePojo {
     }
 
     @Persist
-    public String getVmId() {
-        return vmId;
+    public String getJvmId() {
+        return jvmId;
     }
 
     @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
+    public void setJvmId(String jvmId) {
+        this.jvmId = jvmId;
     }
 
     @Persist
-    public int getVmPid() {
-        return vmPid;
+    public int getJvmPid() {
+        return jvmPid;
     }
 
     @Persist
-    public void setVmPid(int vmPid) {
-        this.vmPid = vmPid;
+    public void setJvmPid(int jvmPid) {
+        this.jvmPid = jvmPid;
     }
 
     @Persist
@@ -231,43 +231,43 @@ public class VmInfo extends BasePojo {
     }
 
     @Persist
-    public String getVmName() {
-        return vmName;
+    public String getJvmName() {
+        return jvmName;
     }
 
     @Persist
-    public void setVmName(String vmName) {
-        this.vmName = vmName;
+    public void setJvmName(String jvmName) {
+        this.jvmName = jvmName;
     }
 
     @Persist
-    public String getVmArguments() {
-        return vmArguments;
+    public String getJvmArguments() {
+        return jvmArguments;
     }
 
     @Persist
-    public void setVmArguments(String vmArguments) {
-        this.vmArguments = vmArguments;
+    public void setJvmArguments(String jvmArguments) {
+        this.jvmArguments = jvmArguments;
     }
 
     @Persist
-    public String getVmInfo() {
-        return vmInfo;
+    public String getJvmInfo() {
+        return jvmInfo;
     }
 
     @Persist
-    public void setVmInfo(String vmInfo) {
-        this.vmInfo = vmInfo;
+    public void setJvmInfo(String jvmInfo) {
+        this.jvmInfo = jvmInfo;
     }
 
     @Persist
-    public String getVmVersion() {
-        return vmVersion;
+    public String getJvmVersion() {
+        return jvmVersion;
     }
 
     @Persist
-    public void setVmVersion(String vmVersion) {
-        this.vmVersion = vmVersion;
+    public void setJvmVersion(String jvmVersion) {
+        this.jvmVersion = jvmVersion;
     }
 
     /**

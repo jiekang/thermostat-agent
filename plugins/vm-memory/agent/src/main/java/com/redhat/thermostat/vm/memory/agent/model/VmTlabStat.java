@@ -49,7 +49,7 @@ public class VmTlabStat extends BasePojo implements TimeStampedPojo {
 
     public static final long UNKNOWN = -1;
 
-    private String vmId;
+    private String jvmId;
     private long timeStamp;
 
     private long allocThreads;
@@ -75,7 +75,7 @@ public class VmTlabStat extends BasePojo implements TimeStampedPojo {
         super(null);
     }
 
-    public VmTlabStat(long timeStamp, String agentId, String vmId,
+    public VmTlabStat(long timeStamp, String agentId, String jvmId,
             long threadCount, long totalAllocations,
             long refills, long maxRefills,
             long slowAllocations, long maxSlowAllocations,
@@ -83,7 +83,7 @@ public class VmTlabStat extends BasePojo implements TimeStampedPojo {
             long slowWaste,    long maxSlowWaste,
             long fastWaste, long maxFastWaste) {
         super(agentId);
-        this.vmId = vmId;
+        this.jvmId = jvmId;
         this.timeStamp = timeStamp;
         this.allocThreads = threadCount;
         this.totalAllocations = totalAllocations;
@@ -100,13 +100,13 @@ public class VmTlabStat extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public String getVmId() {
-        return vmId;
+    public String getJvmId() {
+        return jvmId;
     }
 
     @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
+    public void setJvmId(String jvmId) {
+        this.jvmId = jvmId;
     }
 
     @Persist

@@ -97,7 +97,7 @@ public class VmMemoryVmListenerTest {
         final int numGens = 2;
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         vmTlabStatDAO = mock(VmTlabStatDAO.class);
-        vmListener = new VmMemoryVmListener("foo-agent", vmMemoryStatDAO, vmTlabStatDAO, "vmId");
+        vmListener = new VmMemoryVmListener("foo-agent", vmMemoryStatDAO, vmTlabStatDAO, "jvmId");
         extractor = mock(VmMemoryDataExtractor.class);
 
         mockTotalGenerations(numGens);
