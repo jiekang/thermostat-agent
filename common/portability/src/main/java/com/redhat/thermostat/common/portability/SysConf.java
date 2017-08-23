@@ -54,14 +54,14 @@ public class SysConf {
     }
 
     public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+        return OS.IS_UNIX ? getPosixClockTicksPerSecond() : getWindowsClockTicksPerSecond();
     }
 
     private static long getWindowsClockTicksPerSecond() {
         return PortableHostFactory.getInstance().getClockTicksPerSecond();
     }
 
-    public static long getLinuxClockTicksPerSecond() {
+    public static long getPosixClockTicksPerSecond() {
         String ticks = sysConf("CLK_TCK");
         try {
             return Long.valueOf(ticks);

@@ -122,7 +122,7 @@
         <os><family>mac</family></os>
       </activation>
       <properties>
-        <assemblyfile.suffix>macosx</assemblyfile.suffix>
+        <assemblyfile.suffix>-macosx</assemblyfile.suffix>
         <agent_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
           ${jffi-native.bundle.symbolic.name}=${jffi.version}</agent_extra_bundles>
         <service_extra_bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
