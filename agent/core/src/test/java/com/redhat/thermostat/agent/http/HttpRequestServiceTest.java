@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.http;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -64,10 +65,14 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.agent.http.HttpRequestService.ConfigCreator;
+import com.redhat.thermostat.agent.http.HttpRequestService.CredentialsCreator;
 import com.redhat.thermostat.agent.http.HttpRequestService.HttpClientCreator;
 import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.storage.core.StorageCredentials;
+
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 
 public class HttpRequestServiceTest {
@@ -75,9 +80,12 @@ public class HttpRequestServiceTest {
     private static final URI GET_URI = GATEWAY_URI.resolve("?q=foo&l=3");
     private static final String payload = "{}";
     private static final String keycloakUrl = "http://127.0.0.1:31000/keycloak";
+    private static final char[] BASIC_PASSWORD = new char[] { 'p', 'a', 's', 's' };
+    private static final String BASIC_USERNAME = "testing";
 
     private HttpClientCreator clientCreator;
     private ConfigCreator configCreator;
+    private CredentialsCreator credsCreator;
     private HttpClientFacade client;
     private Request httpRequest;
     
@@ -92,6 +100,11 @@ public class HttpRequestServiceTest {
         clientCreator = mock(HttpClientCreator.class);
         when(clientCreator.create(any(SSLConfiguration.class))).thenReturn(client);
         configCreator = mock(ConfigCreator.class);
+        credsCreator = mock(CredentialsCreator.class);
+        StorageCredentials creds = mock(StorageCredentials.class);
+        when(creds.getPassword()).thenReturn(BASIC_PASSWORD);
+        when(creds.getUsername()).thenReturn(BASIC_USERNAME);
+        when(credsCreator.create(any(CommonPaths.class))).thenReturn(creds);
     }
 
     @Test
@@ -179,9 +192,38 @@ public class HttpRequestServiceTest {
         verify(httpRequest).send();
     }
     
+    @Test
+    public void verifyNoKeycloakDefaultsToAuthBasic() throws Exception {
+        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+
+        HttpRequestService service = createAndActivateRequestService(configuration);
+
+        service.sendHttpRequest(null, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.GET);
+
+        verify(client).newRequest(GATEWAY_URI);
+        verify(configuration).isKeycloakEnabled();
+
+        ArgumentCaptor<String> authValueCaptor = ArgumentCaptor.forClass(String.class);
+        verify(httpRequest).header(eq(HttpHeader.AUTHORIZATION.asString()), authValueCaptor.capture());
+        String authValueEncoded = authValueCaptor.getValue();
+        assertTrue(authValueEncoded.startsWith("Basic "));
+        String userPassEncoded = authValueEncoded.substring("Basic ".length());
+        String decodedUserPass = getDecodedUserPass(userPassEncoded);
+        String expectedCreds = BASIC_USERNAME + ":" + new String(BASIC_PASSWORD);
+        assertEquals(expectedCreds, decodedUserPass);
+        verify(httpRequest).method(eq(HttpMethod.GET));
+        verify(httpRequest).send();
+    }
+    
+    private String getDecodedUserPass(String userPassEncoded) throws IOException {
+        @SuppressWarnings("restriction")
+        byte[] decodedBytes = new sun.misc.BASE64Decoder().decodeBuffer(userPassEncoded);
+        return new String(decodedBytes);
+    }
+
     private HttpRequestService createAndActivateRequestService(AgentStartupConfiguration configuration) throws Exception {
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
-        HttpRequestService service = new HttpRequestService(clientCreator, configCreator);
+        HttpRequestService service = new HttpRequestService(clientCreator, configCreator, credsCreator);
         service.activate();
         verify(client).start();
         return service;
@@ -196,7 +238,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
         ConfigCreator configCreator = mock(ConfigCreator.class);
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
-        HttpRequestService service = new HttpRequestService(creator, configCreator);
+        HttpRequestService service = new HttpRequestService(creator, configCreator, credsCreator);
         service.activate();
         String content = service.sendHttpRequest(null, GET_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.GET);
         verify(getClient).newRequest(GET_URI);
@@ -212,7 +254,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = createNoKeycloakConfig();
         ConfigCreator configCreator = mock(ConfigCreator.class);
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
-        HttpRequestService service = new HttpRequestService(creator, configCreator);
+        HttpRequestService service = new HttpRequestService(creator, configCreator, credsCreator);
         service.activate();
         
         // Add extra slashes to URI

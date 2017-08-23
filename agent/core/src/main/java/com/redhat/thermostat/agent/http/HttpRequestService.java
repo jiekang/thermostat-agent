@@ -52,6 +52,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -63,6 +64,8 @@ import com.redhat.thermostat.agent.http.internal.keycloak.KeycloakAccessToken;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.storage.config.FileStorageCredentials;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
 @Component
 @Service(value = HttpRequestService.class)
@@ -70,28 +73,32 @@ public class HttpRequestService {
     
     private static final Logger logger = LoggingUtils.getLogger(HttpRequestService.class);
 
+    private static final String UNKNOWN_CREDS = "UNKNOWN:UNKNOWN";
     private static final String KEYCLOAK_TOKEN_SERVICE = "/auth/realms/__REALM__/protocol/openid-connect/token";
     private static final String KEYCLOAK_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
+    private final CredentialsCreator credsCreator; // Used for BASIC auth
     private final HttpClientCreator httpClientCreator;
     private final ConfigCreator configCreator;
     private Gson gson = new GsonBuilder().create();
     private HttpClientFacade client;
     private AgentStartupConfiguration agentStartupConfiguration;
-
+    private StorageCredentials creds; // Used for BASIC auth
     private KeycloakAccessToken keycloakAccessToken;
+    
     @Reference
     private SSLConfiguration sslConfig;
     @Reference
     private CommonPaths commonPaths;
 
     public HttpRequestService() {
-        this(new HttpClientCreator(), new ConfigCreator());
+        this(new HttpClientCreator(), new ConfigCreator(), new CredentialsCreator());
     }
 
-    HttpRequestService(HttpClientCreator clientCreator, ConfigCreator configCreator) {
+    HttpRequestService(HttpClientCreator clientCreator, ConfigCreator configCreator, CredentialsCreator credsCreator) {
         this.httpClientCreator = clientCreator;
         this.configCreator = configCreator;
+        this.credsCreator = credsCreator;
     }
 
     @Activate
@@ -99,6 +106,7 @@ public class HttpRequestService {
         try {
             agentStartupConfiguration = configCreator.create(commonPaths);
             client = httpClientCreator.create(sslConfig);
+            creds = credsCreator.create(commonPaths);
             client.start();
             logger.log(Level.FINE, "HttpRequestService activated");
         } catch (Exception e) {
@@ -124,7 +132,10 @@ public class HttpRequestService {
 
         try {
             if (agentStartupConfiguration.isKeycloakEnabled()) {
-                request.header("Authorization", "Bearer " + getAccessToken());
+                request.header(HttpHeader.AUTHORIZATION.asString(), "Bearer " + getAccessToken());
+            } else {
+                request.header(HttpHeader.AUTHORIZATION.asString(),
+                               getBasicAuthHeaderValue());
             }
             ContentResponse response =  request.send();
             int status = response.getStatus();
@@ -210,9 +221,27 @@ public class HttpRequestService {
         return "grant_type=refresh_token&client_id=" + agentStartupConfiguration.getKeycloakClient() +
                 "&refresh_token=" + keycloakAccessToken.getRefreshToken();
     }
+    
+    String getBasicAuthHeaderValue() {
+        String username = creds.getUsername();
+        char[] pwdChar = creds.getPassword();
+        String userpassword;
+        if (username == null || username.isEmpty() || pwdChar == null) {
+            logger.warning("No credentials specified in " + commonPaths.getUserAgentAuthConfigFile() + ". The connection will fail.");
+            userpassword = UNKNOWN_CREDS;
+        } else {
+            String pwd = new String(pwdChar);
+            userpassword = username + ":" + pwd;
+        }
+        
+        @SuppressWarnings("restriction")
+        String encodedAuthorization = new sun.misc.BASE64Encoder()
+                .encode(userpassword.getBytes());
+        return "Basic " + encodedAuthorization;
+    }
 
     // Package-private for testing
-   void setConfiguration(AgentStartupConfiguration configuration) {
+    void setConfiguration(AgentStartupConfiguration configuration) {
         this.agentStartupConfiguration = configuration;
     }
 
@@ -229,6 +258,12 @@ public class HttpRequestService {
             AgentConfigsUtils.setConfigFiles(commonPaths.getSystemAgentConfigurationFile(),
                     commonPaths.getUserAgentConfigurationFile());
             return AgentConfigsUtils.createAgentConfigs();
+        }
+    }
+    
+    static class CredentialsCreator {
+        StorageCredentials create(CommonPaths paths) {
+            return new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
         }
     }
     
