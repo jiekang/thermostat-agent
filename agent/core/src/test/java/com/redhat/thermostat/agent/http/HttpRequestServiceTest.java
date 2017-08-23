@@ -80,8 +80,8 @@ public class HttpRequestServiceTest {
     private static final URI GET_URI = GATEWAY_URI.resolve("?q=foo&l=3");
     private static final String payload = "{}";
     private static final String keycloakUrl = "http://127.0.0.1:31000/keycloak";
-    private static final char[] BASIC_PASSWORD = new char[] { 'p', 'a', 's', 's' };
-    private static final String BASIC_USERNAME = "testing";
+    private static final char[] PASSWORD = new char[] { 'p', 'a', 's', 's' };
+    private static final String USERNAME = "testing";
 
     private HttpClientCreator clientCreator;
     private ConfigCreator configCreator;
@@ -102,8 +102,8 @@ public class HttpRequestServiceTest {
         configCreator = mock(ConfigCreator.class);
         credsCreator = mock(CredentialsCreator.class);
         StorageCredentials creds = mock(StorageCredentials.class);
-        when(creds.getPassword()).thenReturn(BASIC_PASSWORD);
-        when(creds.getUsername()).thenReturn(BASIC_USERNAME);
+        when(creds.getPassword()).thenReturn(PASSWORD);
+        when(creds.getUsername()).thenReturn(USERNAME);
         when(credsCreator.create(any(CommonPaths.class))).thenReturn(creds);
     }
 
@@ -209,7 +209,7 @@ public class HttpRequestServiceTest {
         assertTrue(authValueEncoded.startsWith("Basic "));
         String userPassEncoded = authValueEncoded.substring("Basic ".length());
         String decodedUserPass = getDecodedUserPass(userPassEncoded);
-        String expectedCreds = BASIC_USERNAME + ":" + new String(BASIC_PASSWORD);
+        String expectedCreds = USERNAME + ":" + new String(PASSWORD);
         assertEquals(expectedCreds, decodedUserPass);
         verify(httpRequest).method(eq(HttpMethod.GET));
         verify(httpRequest).send();
@@ -305,8 +305,6 @@ public class HttpRequestServiceTest {
         when(configuration.getKeycloakUrl()).thenReturn(keycloakUrl);
         when(configuration.getKeycloakClient()).thenReturn("client");
         when(configuration.getKeycloakRealm()).thenReturn("realm");
-        when(configuration.getKeycloakUsername()).thenReturn("username");
-        when(configuration.getKeycloakPassword()).thenReturn("password");
     }
 
     private void setupKeycloakRequest(Request keycloakRequest) throws InterruptedException, ExecutionException, TimeoutException {
@@ -336,7 +334,7 @@ public class HttpRequestServiceTest {
         verify(keycloakRequest).method(eq(HttpMethod.POST));
         verify(keycloakRequest).send();
 
-        String expected = "grant_type=password&client_id=client&username=username&password=password";
+        String expected = "grant_type=password&client_id=client&username=" + USERNAME + "&password=" + new String(PASSWORD);
 
         StringContentProvider provider = payloadCaptor.getValue();
         for (ByteBuffer buffer : provider) {

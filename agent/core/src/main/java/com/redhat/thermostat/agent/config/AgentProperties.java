@@ -45,7 +45,5 @@ public enum AgentProperties {
     KEYCLOAK_URL,
     KEYCLOAK_REALM,
     KEYCLOAK_CLIENT,
-    KEYCLOAK_USERNAME,
-    KEYCLOAK_PASSWORD
 }
 

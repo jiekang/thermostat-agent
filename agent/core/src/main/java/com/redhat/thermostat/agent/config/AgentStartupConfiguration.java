@@ -48,8 +48,6 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     private String keycloakUrl;
     private String keycloakRealm;
     private String keycloakClient;
-    private String keycloakUsername;
-    private String keycloakPassword;
     
     AgentStartupConfiguration() {
     }
@@ -94,22 +92,6 @@ public class AgentStartupConfiguration implements StartupConfiguration {
 
     public void setKeycloakClient(String keycloakClient) {
         this.keycloakClient = keycloakClient;
-    }
-
-    public String getKeycloakUsername() {
-        return keycloakUsername;
-    }
-
-    public void setKeycloakUsername(String keycloakUsername) {
-        this.keycloakUsername = keycloakUsername;
-    }
-
-    public String getKeycloakPassword() {
-        return keycloakPassword;
-    }
-
-    public void setKeycloakPassword(String keycloakPassword) {
-        this.keycloakPassword = keycloakPassword;
     }
 
     public boolean isKeycloakEnabled() {

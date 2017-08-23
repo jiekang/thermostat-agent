@@ -212,9 +212,11 @@ public class HttpRequestService {
     }
 
     private String getKeycloakAccessPayload() {
+        String username = creds.getUsername();
+        String password = new String(creds.getPassword());
         return "grant_type=password&client_id=" + agentStartupConfiguration.getKeycloakClient() +
-                "&username=" + agentStartupConfiguration.getKeycloakUsername() +
-                "&password=" + agentStartupConfiguration.getKeycloakPassword();
+                "&username=" + username +
+                "&password=" + password;
     }
 
     private String getKeycloakRefreshPayload() {
@@ -222,7 +224,7 @@ public class HttpRequestService {
                 "&refresh_token=" + keycloakAccessToken.getRefreshToken();
     }
     
-    String getBasicAuthHeaderValue() {
+    private String getBasicAuthHeaderValue() {
         String username = creds.getUsername();
         char[] pwdChar = creds.getPassword();
         String userpassword;

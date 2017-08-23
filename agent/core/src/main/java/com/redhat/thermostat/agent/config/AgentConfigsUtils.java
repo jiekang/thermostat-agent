@@ -99,8 +99,6 @@ public class AgentConfigsUtils {
             configuration.setKeycloakRealm(properties.getProperty(AgentProperties.KEYCLOAK_REALM.name()));
             configuration.setKeycloakUrl(properties.getProperty(AgentProperties.KEYCLOAK_URL.name()));
             configuration.setKeycloakClient(properties.getProperty(AgentProperties.KEYCLOAK_CLIENT.name()));
-            configuration.setKeycloakUsername(properties.getProperty(AgentProperties.KEYCLOAK_USERNAME.name()));
-            configuration.setKeycloakPassword(properties.getProperty(AgentProperties.KEYCLOAK_PASSWORD.name()));
         } else {
             configuration.setKeycloakEnabled(false);
         }
