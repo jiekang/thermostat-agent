@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.plugin.SystemID;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -73,6 +74,9 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     @Reference
     private HttpRequestService httpRequestService;
 
+    @Reference
+    private SystemID systemID;
+
     public VmMemoryStatDAOImpl() {
         this(new JsonHelper(new VmMemoryStatTypeAdapter()), new ConfigurationCreator(), null);
     }
@@ -89,14 +93,22 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
         this.gatewayURL = config.getGatewayURL();
     }
 
+    void bindSystemID(final SystemID id) {
+        this.systemID = id;
+    }
+
     @Override
     public void putVmMemoryStat(final VmMemoryStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.Method.POST);
+            httpRequestService.sendHttpRequest(json, getPostURI(stat.getJvmId()), HttpRequestService.Method.POST);
         } catch (RequestFailedException | IOException e) {
             logger.log(Level.WARNING, "Failed to send VmMemoryStat to Web Gateway", e);
         }
+    }
+
+    protected URI getPostURI(final String jvmID) {
+        return gatewayURL.resolve("systems/" + systemID.getSystemID() + "/jvms/" + jvmID);
     }
 
     protected Logger getLogger() {
