@@ -86,7 +86,7 @@ public class CommonPathsImpl implements CommonPaths {
     private static final String THERMOSTAT_SYSTEM_USER = "THERMOSTAT_SYSTEM_USER";
 
 
-    private static final String THERMOSTAT_USER_DIR = ".thermostat";
+    private static final String THERMOSTAT_USER_DIR = ".thermostat-ng";
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
