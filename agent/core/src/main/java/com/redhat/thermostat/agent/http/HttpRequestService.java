@@ -133,9 +133,11 @@ public class HttpRequestService {
         try {
             if (agentStartupConfiguration.isKeycloakEnabled()) {
                 request.header(HttpHeader.AUTHORIZATION.asString(), "Bearer " + getAccessToken());
-            } else {
+            } else if (agentStartupConfiguration.isBasicAuthEnabled()) {
                 request.header(HttpHeader.AUTHORIZATION.asString(),
                                getBasicAuthHeaderValue());
+            } else {
+                logger.warning("Neither KEYCLOAK_ENABLED=true nor BASIC_AUTH_ENABLED=true. Requests will probably fail.");
             }
             ContentResponse response =  request.send();
             int status = response.getStatus();

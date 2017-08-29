@@ -93,15 +93,14 @@ public class AgentConfigsUtils {
         }
 
         Boolean keycloakEnabled = Boolean.valueOf(properties.getProperty(AgentProperties.KEYCLOAK_ENABLED.name()));
-        if (keycloakEnabled != null) {
-            configuration.setKeycloakEnabled(keycloakEnabled);
-
+        configuration.setKeycloakEnabled(keycloakEnabled);
+        if (keycloakEnabled) {
             configuration.setKeycloakRealm(properties.getProperty(AgentProperties.KEYCLOAK_REALM.name()));
             configuration.setKeycloakUrl(properties.getProperty(AgentProperties.KEYCLOAK_URL.name()));
             configuration.setKeycloakClient(properties.getProperty(AgentProperties.KEYCLOAK_CLIENT.name()));
-        } else {
-            configuration.setKeycloakEnabled(false);
         }
+        Boolean basicAuthEnabled = Boolean.valueOf(properties.getProperty(AgentProperties.BASIC_AUTH_ENABLED.name()));
+        configuration.setBasicAuthEnabled(basicAuthEnabled);
     }
 }
 

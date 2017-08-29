@@ -109,7 +109,7 @@ public class HttpRequestServiceTest {
 
     @Test
     public void testRequestWithoutKeycloak() throws Exception {
-        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        AgentStartupConfiguration configuration = createBasicAuthConfig();
 
         HttpRequestService service = createAndActivateRequestService(configuration);
 
@@ -177,7 +177,7 @@ public class HttpRequestServiceTest {
 
     @Test
     public void testRequestWithNullPayload() throws Exception {
-        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        AgentStartupConfiguration configuration = createBasicAuthConfig();
 
         HttpRequestService service = createAndActivateRequestService(configuration);
 
@@ -193,8 +193,8 @@ public class HttpRequestServiceTest {
     }
     
     @Test
-    public void verifyNoKeycloakDefaultsToAuthBasic() throws Exception {
-        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+    public void verifyBasicAuthConfig() throws Exception {
+        AgentStartupConfiguration configuration = createBasicAuthConfig();
 
         HttpRequestService service = createAndActivateRequestService(configuration);
 
@@ -211,6 +211,29 @@ public class HttpRequestServiceTest {
         String decodedUserPass = getDecodedUserPass(userPassEncoded);
         String expectedCreds = USERNAME + ":" + new String(PASSWORD);
         assertEquals(expectedCreds, decodedUserPass);
+        verify(httpRequest).method(eq(HttpMethod.GET));
+        verify(httpRequest).send();
+    }
+    
+    /**
+     * If no authentication settings are done, no authorization headers should
+     * get added.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void verifyNoAuthConfig() throws Exception {
+        AgentStartupConfiguration configuration = createNoAuthConfig();
+
+        HttpRequestService service = createAndActivateRequestService(configuration);
+
+        service.sendHttpRequest(null, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.GET);
+
+        verify(client).newRequest(GATEWAY_URI);
+        verify(configuration).isKeycloakEnabled();
+        verify(configuration).isBasicAuthEnabled();
+
+        verify(httpRequest, times(0)).header(eq(HttpHeader.AUTHORIZATION.asString()), anyString());
         verify(httpRequest).method(eq(HttpMethod.GET));
         verify(httpRequest).send();
     }
@@ -235,7 +258,7 @@ public class HttpRequestServiceTest {
         HttpClientCreator creator = mock(HttpClientCreator.class);
         HttpClientFacade getClient = setupHttpClient(creator, getContent);
         
-        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        AgentStartupConfiguration configuration = createBasicAuthConfig();
         ConfigCreator configCreator = mock(ConfigCreator.class);
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
         HttpRequestService service = new HttpRequestService(creator, configCreator, credsCreator);
@@ -251,7 +274,7 @@ public class HttpRequestServiceTest {
         HttpClientCreator creator = mock(HttpClientCreator.class);
         HttpClientFacade getClient = setupHttpClient(creator, getContent);
         
-        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        AgentStartupConfiguration configuration = createBasicAuthConfig();
         ConfigCreator configCreator = mock(ConfigCreator.class);
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
         HttpRequestService service = new HttpRequestService(creator, configCreator, credsCreator);
@@ -281,15 +304,24 @@ public class HttpRequestServiceTest {
     public void failureThrowsRequestFailedException() throws Exception {
         Request request = mock(Request.class);
         when(client.newRequest(any(URI.class))).thenReturn(request);
-        AgentStartupConfiguration configuration = createNoKeycloakConfig();
+        AgentStartupConfiguration configuration = createBasicAuthConfig();
         doThrow(IOException.class).when(request).send();
         HttpRequestService service = createAndActivateRequestService(configuration);
         service.sendHttpRequest("foo", GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.DELETE /*any valid method*/);
     }
 
-    private AgentStartupConfiguration createNoKeycloakConfig() {
+    private AgentStartupConfiguration createBasicAuthConfig() {
+        return createAuthConfig(true, false);
+    }
+    
+    private AgentStartupConfiguration createNoAuthConfig() {
+        return createAuthConfig(false, false);
+    }
+    
+    private AgentStartupConfiguration createAuthConfig(boolean isBasicAuthEnabled, boolean isKeycloakEnabled) {
         AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
-        when(configuration.isKeycloakEnabled()).thenReturn(false);
+        when(configuration.isKeycloakEnabled()).thenReturn(isKeycloakEnabled);
+        when(configuration.isBasicAuthEnabled()).thenReturn(isBasicAuthEnabled);
         return configuration;
     }
 

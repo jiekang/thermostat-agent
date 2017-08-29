@@ -48,6 +48,7 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     private String keycloakUrl;
     private String keycloakRealm;
     private String keycloakClient;
+    private boolean basicAuthEnabled;
     
     AgentStartupConfiguration() {
     }
@@ -108,6 +109,14 @@ public class AgentStartupConfiguration implements StartupConfiguration {
 
     public void setKeycloakRealm(String keycloakRealm) {
         this.keycloakRealm = keycloakRealm;
+    }
+
+    public boolean isBasicAuthEnabled() {
+        return basicAuthEnabled;
+    }
+
+    public void setBasicAuthEnabled(boolean basicAuthEnabled) {
+        this.basicAuthEnabled = basicAuthEnabled;
     }
 }
 
