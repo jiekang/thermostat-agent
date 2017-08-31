@@ -34,45 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.common.internal;
+package com.redhat.thermostat.vm.io.agent.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
+import org.junit.Before;
 
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
+import com.redhat.thermostat.vm.io.model.VmIoStat;
 
-public class Activator implements BundleActivator {
+public class VmIoStatDAOImplTest {
 
-    private ServiceTracker<Storage, VmIoStatDAO> tracker;
-    private ServiceRegistration<VmIoStatDAO> reg;
+    private static final long SOME_TIMESTAMP = 1234;
+    private static final String SOME_VM_ID = "321";
+    private static final long SOME_CHARACTERS_READ = 123456;
+    private static final long SOME_CHARACTERS_WRITTEN = 67798;
+    private static final long SOME_READ_SYSCALLS = 123456;
+    private static final long SOME_WRITE_SYSCALLS = 67798;
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        tracker = new ServiceTracker<Storage, VmIoStatDAO>(context, Storage.class, null) {
-            @Override
-            public VmIoStatDAO addingService(ServiceReference<Storage> reference) {
-                Storage storage = context.getService(reference);
-                VmIoStatDAO vmIoStatDao = new VmIoStatDAOImpl(storage);
-                reg = context.registerService(VmIoStatDAO.class, vmIoStatDao, null);
-                return vmIoStatDao;
-            }
+    private VmIoStat ioStat;
 
-            @Override
-            public void removedService(ServiceReference<Storage> reference, VmIoStatDAO service) {
-                reg.unregister();
-                context.ungetService(reference);
-            }
-        };
-        tracker.open();
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+    @Before
+    public void setUp() {
+        this.ioStat = new VmIoStat("foo-agent", SOME_VM_ID, SOME_TIMESTAMP,
+                SOME_CHARACTERS_READ, SOME_CHARACTERS_WRITTEN,
+                SOME_READ_SYSCALLS, SOME_WRITE_SYSCALLS);
     }
 
 }

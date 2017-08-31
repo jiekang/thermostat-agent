@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.common;
+package com.redhat.thermostat.vm.io.model;
 
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
@@ -45,7 +45,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class VmIoStat extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
-    private String vmId;
+    private String jvmId;
 
     private long charactersRead;
     private long charactersWritten;
@@ -56,10 +56,10 @@ public class VmIoStat extends BasePojo implements TimeStampedPojo {
         super(null);
     }
 
-    public VmIoStat(String writerId, String vmId, long timeStamp,
-            long charactersRead, long charactersWritten, long readSyscalls, long writeSyscalls) {
+    public VmIoStat(String writerId, String jvmId, long timeStamp,
+                    long charactersRead, long charactersWritten, long readSyscalls, long writeSyscalls) {
         super(writerId);
-        this.vmId = vmId;
+        this.jvmId = jvmId;
         this.timeStamp = timeStamp;
         this.charactersRead = charactersRead;
         this.charactersWritten = charactersWritten;
@@ -79,13 +79,13 @@ public class VmIoStat extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public String getVmId() {
-        return vmId;
+    public String getJvmId() {
+        return jvmId;
     }
 
     @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
+    public void setJvmId(String jvmId) {
+        this.jvmId = jvmId;
     }
 
     @Persist

@@ -34,27 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.common.internal;
+package com.redhat.thermostat.vm.io.agent.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.vm.io.model.VmIoStat;
 
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
+@Service
+public interface VmIoStatDAO {
 
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
- */
-public class VmIoStatCategoryRegistration implements CategoryRegistration {
-
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(1);
-        categories.add(VmIoStatDAOImpl.CATEGORY.getName());
-        return categories;
-    }
-
+    void put(VmIoStat stat);
 }
 

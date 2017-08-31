@@ -34,15 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.common;
+package com.redhat.thermostat.vm.io.agent.internal;
 
-import com.redhat.thermostat.testutils.DataObjectTest;
+import com.redhat.thermostat.common.Ordered;
 
-public class VmIoStatTest extends DataObjectTest {
+public class Constants {
 
-    @Override
-    public Class<?>[] getDataClasses() {
-        return new Class[] { VmIoStat.class };
-   }
+    public static final int ORDER_VALUE = Ordered.ORDER_IO_GROUP + 50;
 }
-

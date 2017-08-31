@@ -34,31 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.common.internal;
+package com.redhat.thermostat.vm.io.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import com.redhat.thermostat.testutils.DataObjectTest;
 
-import java.util.Set;
+public class VmIoStatTest extends DataObjectTest {
 
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
-
-public class VmIoStatDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public VmIoStatDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, VmIoStatDAOImplStatementDescriptorRegistration.class);
-    }
-
-    @Test
-    public void registersAllDescriptors() {
-        VmIoStatDAOImplStatementDescriptorRegistration reg = new VmIoStatDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(5, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
-    }
-
+    @Override
+    public Class<?>[] getDataClasses() {
+        return new Class[] { com.redhat.thermostat.vm.io.model.VmIoStat.class };
+   }
 }
 

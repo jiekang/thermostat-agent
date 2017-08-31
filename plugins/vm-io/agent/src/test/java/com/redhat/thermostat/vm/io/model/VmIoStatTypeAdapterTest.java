@@ -34,42 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.common.internal;
+package com.redhat.thermostat.vm.io.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.vm.io.model.VmIoStat;
+import com.redhat.thermostat.vm.io.model.VmIoStatTypeAdapter;
+import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
-import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import java.io.IOException;
+import java.util.Arrays;
 
-/**
- * Registers the prepared query issued by this maven module via
- * {@link VmLatestPojoListGetter}.
- *
- */
-public class VmIoStatDAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
+import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
-    static final String latestDescriptor = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
-            VmIoStatDAOImpl.CATEGORY.getName());
-    static final String rangeDescriptor = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
-            VmIoStatDAOImpl.CATEGORY.getName());
-    static final String latestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_NEWEST_VM_STAT,
-            VmIoStatDAOImpl.CATEGORY.getName());
-    static final String oldestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_OLDEST_VM_STAT,
-            VmIoStatDAOImpl.CATEGORY.getName());
+public class VmIoStatTypeAdapterTest {
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> descs = new HashSet<>();
-        descs.add(VmIoStatDAOImpl.DESC_ADD_VM_IO_STAT);
-        descs.add(latestStatDescriptor);
-        descs.add(oldestStatDescriptor);
-        descs.add(latestDescriptor);
-        descs.add(rangeDescriptor);
-        return descs;
+    @Test
+    public void testWrite() throws IOException {
+        VmIoStatTypeAdapter typeAdapter = new VmIoStatTypeAdapter();
+        VmIoStat stat = new VmIoStat();
+        stat.setTimeStamp(100l);
+        stat.setAgentId("AGENT-1");
+        stat.setJvmId("VM-1");
+        stat.setCharactersRead(2000l);
+        stat.setCharactersWritten(1000l);
+        stat.setReadSyscalls(30l);
+        stat.setWriteSyscalls(40l);
+        final String expected = "[{\"timeStamp\":{\"$numberLong\":\"100\"},\"jvmId\":\"VM-1\",\"agentId\":\"AGENT-1\",\"charactersRead\":{\"$numberLong\":\"2000\"},\"charactersWritten\":{\"$numberLong\":\"1000\"},\"readSyscalls\":{\"$numberLong\":\"30\"},\"writeSyscalls\":{\"$numberLong\":\"40\"}}]";
+        assertJsonEquals(expected, typeAdapter.toJson(Arrays.asList(stat)));
     }
 
 }

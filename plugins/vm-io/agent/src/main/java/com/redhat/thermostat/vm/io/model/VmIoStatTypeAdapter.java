@@ -34,38 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.common.internal;
+package com.redhat.thermostat.vm.io.model;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.redhat.thermostat.vm.io.common.VmIoStat;
 
 import java.io.IOException;
+import java.util.List;
 
-public class VmIoStatTypeAdapter extends TypeAdapter<VmIoStat> {
+public class VmIoStatTypeAdapter extends TypeAdapter<List<com.redhat.thermostat.vm.io.model.VmIoStat>> {
 
-    private static final String TIMESTAMP = "timeStamp";
-    private static final String VM_ID = "vmId";
+    private static final String TYPE_LONG = "$numberLong";
     private static final String AGENT_ID = "agentId";
+    private static final String JVM_ID = "jvmId";
+    private static final String TIMESTAMP = "timeStamp";
     private static final String CHARACTERS_READ = "charactersRead";
     private static final String CHARACTERS_WRITTEN = "charactersWritten";
     private static final String READ_SYSCALLS = "readSyscalls";
     private static final String WRITE_SYSCALLS = "writeSyscalls";
-    private static final String TYPE_LONG = "$numberLong";
 
     @Override
-    public VmIoStat read(JsonReader in) throws IOException {
+    public List<com.redhat.thermostat.vm.io.model.VmIoStat> read(JsonReader in) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void write(JsonWriter out, VmIoStat stat) throws IOException {
+    public void write(JsonWriter out, List<com.redhat.thermostat.vm.io.model.VmIoStat> stats) throws IOException {
+        out.beginArray();
+        for (com.redhat.thermostat.vm.io.model.VmIoStat stat : stats) {
+            writeVmIoStat(out, stat);
+        }
+        out.endArray();
+    }
+
+    private void writeVmIoStat(JsonWriter out, com.redhat.thermostat.vm.io.model.VmIoStat stat) throws IOException {
         out.beginObject();
         out.name(TIMESTAMP);
         writeLong(out, stat.getTimeStamp());
-        out.name(VM_ID);
-        out.value(stat.getVmId());
+        out.name(JVM_ID);
+        out.value(stat.getJvmId());
         out.name(AGENT_ID);
         out.value(stat.getAgentId());
         out.name(CHARACTERS_READ);
@@ -79,11 +87,10 @@ public class VmIoStatTypeAdapter extends TypeAdapter<VmIoStat> {
         out.endObject();
     }
 
-    public void writeLong(JsonWriter out, long value) throws IOException {
+    private void writeLong(JsonWriter out, long value) throws IOException {
         out.beginObject();
         out.name(TYPE_LONG);
         out.value(String.valueOf(value));
         out.endObject();
     }
-
 }
