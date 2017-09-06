@@ -53,7 +53,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.io.agent.internal.VmIoBackend.ListenerCreator;
 
@@ -106,12 +105,6 @@ public class VmIoBackendTest {
         backend.createVmListener(writerId, vmId, pid);
 
         verify(listenerCreator).create(eq(dao), any(VmIoStatBuilder.class), eq(vmId), eq(pid));
-    }
-
-    @Test
-    public void testOrderValue() {
-        int order = backend.getOrderValue();
-        assertTrue(order >= Ordered.ORDER_IO_GROUP);
     }
 
     static class TestVmIoBackend extends VmIoBackend {

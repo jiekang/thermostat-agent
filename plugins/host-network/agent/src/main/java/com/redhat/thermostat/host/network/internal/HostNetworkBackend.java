@@ -126,10 +126,5 @@ public class HostNetworkBackend extends HostPollingBackend {
         }
 
     }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_DEFAULT_GROUP;
-    }
 }
 

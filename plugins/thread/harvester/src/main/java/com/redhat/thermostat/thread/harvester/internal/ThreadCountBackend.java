@@ -58,11 +58,6 @@ public class ThreadCountBackend extends VmListenerBackend {
     }
 
     @Override
-    public int getOrderValue() {
-        return ORDER_THREAD_GROUP;
-    }
-
-    @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
         Objects.requireNonNull(threadDao);
         return new ThreadCountUpdater(threadDao, writerId, vmId);

@@ -69,11 +69,6 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
     }
 
     @Override
-    public int getOrderValue() {
-        return ORDER_THREAD_GROUP;
-    }
-
-    @Override
     public boolean activate() {
         if (active) {
             return true;

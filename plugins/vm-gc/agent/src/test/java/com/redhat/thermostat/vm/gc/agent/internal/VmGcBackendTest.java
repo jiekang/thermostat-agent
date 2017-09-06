@@ -51,7 +51,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.agent.internal.VmGcBackend.ListenerCreator;
 import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAO;
@@ -105,13 +104,6 @@ public class VmGcBackendTest {
         backend.createVmListener(writerId, vmId, pid);
         
         verify(listenerCreator).create(writerId, dao, vmId);
-    }
-    
-    @Test
-    public void testOrderValue() {
-        int order = backend.getOrderValue();
-        assertTrue(order >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(order < Ordered.ORDER_NETWORK_GROUP);
     }
     
     static class TestVmGcBackend extends VmGcBackend {

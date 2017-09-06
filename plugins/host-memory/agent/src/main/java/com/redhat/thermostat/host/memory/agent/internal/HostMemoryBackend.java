@@ -116,10 +116,5 @@ public class HostMemoryBackend extends HostPollingBackend {
         this.writerID = id;
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER_MEMORY_GROUP;
-    }
-
 }
 

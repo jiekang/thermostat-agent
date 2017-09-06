@@ -121,11 +121,6 @@ public class JmxBackend extends BaseBackend {
     }
 
     @Override
-    public int getOrderValue() {
-        return ORDER_USER_GROUP + 99;
-    }
-
-    @Override
     public boolean activate() {
         if (isActive) {
             return true;

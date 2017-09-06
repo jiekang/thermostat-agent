@@ -55,7 +55,7 @@ import org.osgi.framework.BundleContext;
 @Component
 @Service(value = Backend.class)
 public class VmIoBackend extends VmListenerBackend {
-
+    
     private final ListenerCreator listenerCreator;
 
     @Reference
@@ -130,12 +130,7 @@ public class VmIoBackend extends VmListenerBackend {
             }
         }
     }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
-    }
-
+    
     // For testing purposes
     static class ListenerCreator {
         VmIoBackendListener create(VmIoStatDAO dao, VmIoStatBuilder builder,  String jvmId, int pid) {

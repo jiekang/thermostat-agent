@@ -48,13 +48,12 @@ import org.osgi.framework.BundleContext;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.gc.agent.Constants;
 import com.redhat.thermostat.vm.gc.agent.internal.models.VmGcStatDAO;
 
 @Component
 @Service(value = Backend.class)
 public class VmGcBackend extends VmListenerBackend {
-
+    
     private final ListenerCreator listenerCreator;
     
     @Reference
@@ -69,11 +68,6 @@ public class VmGcBackend extends VmListenerBackend {
     VmGcBackend(ListenerCreator creator) {
         super("VM GC Backend", "Gathers garbage collection statistics about a JVM", "Red Hat, Inc.", true);
         this.listenerCreator = creator;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
     }
 
     @Override

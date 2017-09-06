@@ -58,9 +58,9 @@ public class BackendInformationTypeAdapterTest {
     @Test
     public void testWrite() throws Exception {
         final String expected = "[{\"agentId\":\"agent1\",\"name\":\"First Backend\",\"description\":\"Gathers something\","
-                + "\"observeNewJvm\":true,\"pids\":[8000,9000],\"active\":true,\"orderValue\":280},"
+                + "\"observeNewJvm\":true,\"pids\":[8000,9000],\"active\":true},"
                 + "{\"agentId\":\"agent2\",\"name\":\"Second Backend\",\"description\":\"Gathers something else\","
-                + "\"observeNewJvm\":false,\"pids\":[],\"active\":false,\"orderValue\":200}]";
+                + "\"observeNewJvm\":false,\"pids\":[],\"active\":false}]";
         
         BackendInformation first = createBackendInformation("agent1", "First Backend", "Gathers something", true, 
                 new int[] { 8000, 9000 }, true, 280);
@@ -80,7 +80,6 @@ public class BackendInformationTypeAdapterTest {
         info.setObserveNewJvm(observeNewJvm);
         info.setPids(pids);
         info.setActive(active);
-        info.setOrderValue(orderValue);
         return info;
     }
 

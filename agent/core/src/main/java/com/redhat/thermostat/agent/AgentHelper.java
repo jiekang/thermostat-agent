@@ -48,7 +48,6 @@ class AgentHelper {
         backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
         backendInfo.setActive(backend.isActive());
         backendInfo.setPids(new int[0]);
-        backendInfo.setOrderValue(backend.getOrderValue());
 
         return backendInfo;
     }

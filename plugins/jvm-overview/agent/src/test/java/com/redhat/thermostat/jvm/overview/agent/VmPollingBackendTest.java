@@ -69,10 +69,6 @@ public class VmPollingBackendTest {
         mockRegistrar = mock(VmStatusListenerRegistrar.class);
         backend = new VmPollingBackend("backend-name", "backend-description",
                   "backend-vendor", mockVersion, mockExecutor, mockRegistrar) {
-                    @Override
-                    public int getOrderValue() {
-                        return 0; // Doesn't matter, not being tested.
-                    }
         };
         if (!backend.getObserveNewJvm()) {
             /* At time of writing, default is true.  This is

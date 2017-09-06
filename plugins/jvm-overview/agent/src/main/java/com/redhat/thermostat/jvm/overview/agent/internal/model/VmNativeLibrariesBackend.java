@@ -37,7 +37,6 @@
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -48,9 +47,8 @@ import org.apache.felix.scr.annotations.Service;
 @Component
 @Service(value = Backend.class)
 public class VmNativeLibrariesBackend extends VmListenerBackend {
-
+    
     private final ListenerCreator listenerCreator;
-    public static final int ORDER = Ordered.ORDER_MEMORY_GROUP + 60;
 
     public VmNativeLibrariesBackend() {
         this(new ListenerCreator());
@@ -69,11 +67,6 @@ public class VmNativeLibrariesBackend extends VmListenerBackend {
     @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
         return listenerCreator.create(vmInfoDao, vmId, pid);
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
     }
 
     // DS bind method

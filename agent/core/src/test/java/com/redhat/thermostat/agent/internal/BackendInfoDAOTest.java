@@ -81,7 +81,6 @@ public class BackendInfoDAOTest {
         backendInfo1.setActive(true);
         backendInfo1.setObserveNewJvm(true);
         backendInfo1.setPids(new int[] { -1, 0, 1});
-        backendInfo1.setOrderValue(100);
 
         httpHelper = mock(HttpHelper.class);
         contentProvider = mock(StringContentProvider.class);

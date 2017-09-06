@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
@@ -64,13 +63,6 @@ public class LockInfoBackendTest {
 
         WriterID id = mock(WriterID.class);
         backend = new LockInfoBackend(lockInfoDao, version, registrar, id);
-    }
-
-    @Test
-    public void testOrderValue() {
-        int order = backend.getOrderValue();
-        assertTrue(order >= Ordered.ORDER_THREAD_GROUP);
-        assertTrue(order < Ordered.ORDER_USER_GROUP);
     }
 
 }

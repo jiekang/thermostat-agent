@@ -158,11 +158,6 @@ public class BaseBackendTest {
         public boolean isActive() {
             return false;
         }
-
-        @Override
-        public int getOrderValue() {
-            return 0;
-        }
         
     }
 }

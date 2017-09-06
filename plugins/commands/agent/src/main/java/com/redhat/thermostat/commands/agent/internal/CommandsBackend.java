@@ -61,7 +61,6 @@ import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.commands.agent.internal.socket.AgentSocketOnMessageCallback;
 import com.redhat.thermostat.commands.agent.internal.socket.CmdChannelAgentSocket;
 import com.redhat.thermostat.commands.agent.receiver.ReceiverRegistry;
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
@@ -158,12 +157,7 @@ public class CommandsBackend extends BaseBackend {
     public boolean isActive() {
         return isActive;
     }
-
-    @Override
-    public int getOrderValue() {
-        return Ordered.ORDER_FIRST + 32;
-    }
-
+    
     @Activate
     protected void componentActivated(BundleContext ctx) {
         Version version = new Version(ctx.getBundle());

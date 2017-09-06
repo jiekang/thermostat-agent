@@ -82,8 +82,6 @@ public class BackendInformationTypeAdapter extends TypeAdapter<List<BackendInfor
         writePidArray(out, info.getPids());
         out.name(ACTIVE);
         out.value(info.isActive());
-        out.name(ORDER_VALUE);
-        out.value(info.getOrderValue());
         
         out.endObject();
     }

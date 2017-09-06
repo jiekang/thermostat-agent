@@ -41,19 +41,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 
 @Entity
-public class BackendInformation extends BasePojo implements Ordered {
+public class BackendInformation extends BasePojo {
 
     private String name;
     private String description;
     private boolean isActive;
     private boolean observeNewJvm;
     private int[] pids;
-    private int orderValue;
     private Map<String, String> configuration = new HashMap<String,String>();
 
     public BackendInformation() {
@@ -117,17 +115,6 @@ public class BackendInformation extends BasePojo implements Ordered {
     public void setActive(boolean active) {
         this.isActive = active;
     }
-    
-    @Override
-    @Persist
-    public int getOrderValue() {
-        return orderValue;
-    }
-    
-    @Persist
-    public void setOrderValue(int orderValue) {
-        this.orderValue = orderValue;
-    }
 
     @Override
     public boolean equals(Object obj) {
@@ -146,13 +133,12 @@ public class BackendInformation extends BasePojo implements Ordered {
                 Objects.equals(this.configuration, other.configuration) &&
                 Objects.equals(this.isActive, other.isActive) &&
                 Objects.equals(this.observeNewJvm, other.observeNewJvm) &&
-                Arrays.equals(this.pids, other.pids) &&
-                Objects.equals(this.orderValue, other.orderValue);
+                Arrays.equals(this.pids, other.pids);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, configuration, isActive, observeNewJvm, pids, orderValue);
+        return Objects.hash(name, description, configuration, isActive, observeNewJvm, pids);
     }
 
 }

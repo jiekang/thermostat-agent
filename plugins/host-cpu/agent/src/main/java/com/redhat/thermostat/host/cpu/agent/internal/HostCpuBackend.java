@@ -118,10 +118,5 @@ public class HostCpuBackend extends HostPollingBackend {
         this.writerID = id;
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER_CPU_GROUP;
-    }
-
 }
 

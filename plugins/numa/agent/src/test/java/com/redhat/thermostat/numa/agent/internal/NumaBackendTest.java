@@ -163,10 +163,5 @@ public class NumaBackendTest {
         assertTrue(deactivated);
         verify(timer).stop();
     }
-
-    @Test
-    public void testOrderValue() {
-        assertEquals(Ordered.ORDER_MEMORY_GROUP + 80, backend.getOrderValue());
-    }
 }
 

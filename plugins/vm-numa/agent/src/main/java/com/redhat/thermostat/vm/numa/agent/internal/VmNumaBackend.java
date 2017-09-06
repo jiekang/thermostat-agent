@@ -50,7 +50,6 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.numa.common.Constants;
 import com.redhat.thermostat.vm.numa.common.VmNumaDAO;
 import com.redhat.thermostat.vm.numa.common.VmNumaStat;
 
@@ -67,11 +66,6 @@ public class VmNumaBackend extends VmPollingBackend {
                 version, executor, registrar);
         this.action = new VmNumaBackendAction(id, clock, readerProvider, pageSizeProvider, vmNumaDAO);
         registerAction(action);
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
     }
 
     private static class VmNumaBackendAction implements VmPollingAction {

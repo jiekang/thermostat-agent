@@ -132,10 +132,5 @@ public class NumaBackend extends BaseBackend {
         return started;
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER_MEMORY_GROUP + 80;
-    }
-
 }
 

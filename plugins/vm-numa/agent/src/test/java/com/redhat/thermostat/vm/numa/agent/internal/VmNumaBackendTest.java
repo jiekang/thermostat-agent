@@ -172,11 +172,4 @@ public class VmNumaBackendTest {
         when(collector.collect()).thenReturn(mock(VmNumaStat.class));
         backend.setVmNumaBackendCollector(pid, collector);
     }
-
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-
-        assertTrue(orderValue == Ordered.ORDER_MEMORY_GROUP);
-    }
 }

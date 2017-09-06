@@ -45,7 +45,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.memory.agent.internal.VmMemoryBackend.ListenerCreator;
@@ -125,14 +124,6 @@ public class VmMemoryBackendTest {
         backend.createVmListener(writerId, vmId, pid);
 
         verify(listenerCreator).create(writerId, dao, tlabDao, vmId);
-    }
-
-    @Test
-    public void testOrderValue() {
-        TestVmMemoryBackend backend = new TestVmMemoryBackend(listenerCreator);
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
     }
 
     static class TestVmMemoryBackend extends VmMemoryBackend {
