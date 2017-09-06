@@ -34,34 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.plugin;
+package com.redhat.thermostat.agent.http;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.agent.http.HttpRequestService;
-import com.redhat.thermostat.agent.http.RequestFailedException;
-
-abstract public class PluginDAOBase<Tobj> {
-
-    protected abstract String toJsonString(Tobj obj) throws IOException;
-    protected abstract HttpRequestService getHttpRequestService();
-    protected abstract PluginConfiguration getConfig();
-    protected abstract URI getPostURI(final URI basepath, final Tobj obj);
-    protected abstract Logger getLogger();
-
-    public void put(final Tobj obj) {
-        try {
-            HttpRequestService httpRequestService = getHttpRequestService();
-            String json = toJsonString(obj);
-            final URI gatewayURI = getConfig().getGatewayURL();
-            final URI postURI = getPostURI(gatewayURI, obj);
-            httpRequestService.sendHttpRequest(json, postURI, HttpRequestService.Method.POST);
-        } catch (IOException | RequestFailedException e) {
-            getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
-        }
+@SuppressWarnings("serial")
+public class RequestFailedException extends Exception {
+    
+    public static final int UNKNOWN_RESPONSE_CODE = -1;
+    private final int responseCode;
+    private final String reasonStr;
+    
+    public RequestFailedException(Throwable e) {
+        this(UNKNOWN_RESPONSE_CODE, e.getMessage(), e);
+    }
+    
+    public RequestFailedException(String message) {
+        this(UNKNOWN_RESPONSE_CODE, message);
+    }
+    
+    public RequestFailedException(int responseCode, String reason) {
+        this(responseCode, reason, null);
+    }
+    
+    public RequestFailedException(int responseCode, String reason, Throwable cause) {
+        super(reason, cause);
+        this.reasonStr = reason;
+        this.responseCode = responseCode;
+    }
+    
+    public int getResponseCode() {
+        return responseCode;
+    }
+    
+    public String getReason() {
+        return reasonStr;
     }
 }
-

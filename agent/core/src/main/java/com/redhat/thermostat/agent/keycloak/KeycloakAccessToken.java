@@ -34,34 +34,65 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.plugin;
+package com.redhat.thermostat.agent.keycloak;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.agent.http.HttpRequestService;
-import com.redhat.thermostat.agent.http.RequestFailedException;
+import com.google.gson.annotations.SerializedName;
 
-abstract public class PluginDAOBase<Tobj> {
+public class KeycloakAccessToken {
+    
+    @SerializedName("access_token")
+    private String accessToken;
 
-    protected abstract String toJsonString(Tobj obj) throws IOException;
-    protected abstract HttpRequestService getHttpRequestService();
-    protected abstract PluginConfiguration getConfig();
-    protected abstract URI getPostURI(final URI basepath, final Tobj obj);
-    protected abstract Logger getLogger();
+    // In seconds
+    @SerializedName("expires_in")
+    private long expiresIn;
 
-    public void put(final Tobj obj) {
-        try {
-            HttpRequestService httpRequestService = getHttpRequestService();
-            String json = toJsonString(obj);
-            final URI gatewayURI = getConfig().getGatewayURL();
-            final URI postURI = getPostURI(gatewayURI, obj);
-            httpRequestService.sendHttpRequest(json, postURI, HttpRequestService.Method.POST);
-        } catch (IOException | RequestFailedException e) {
-            getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
-        }
+    // In seconds
+    @SerializedName("refresh_expires_in")
+    private long refreshExpiresIn;
+
+    @SerializedName("refresh_token")
+    private String refreshToken;
+
+    // In nanoseconds
+    private transient long acquireTime;
+
+    public KeycloakAccessToken() {
+        // default constructor
+    }
+    
+    // for testing
+    KeycloakAccessToken(Long expiresIn) {
+        this.expiresIn = expiresIn;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public Long getExpiresIn() {
+        return expiresIn;
+    }
+
+    public Long getRefreshExpiresIn() {
+        return refreshExpiresIn;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public long getAcquireTime() {
+        return acquireTime;
+    }
+
+    public void setAcquireTime(long acquireTime) {
+        this.acquireTime = acquireTime;
+    }
+    
+    public boolean isKeycloakTokenExpired() {
+        return System.nanoTime() > TimeUnit.NANOSECONDS.convert(getExpiresIn(), TimeUnit.SECONDS) + getAcquireTime();
     }
 }
-

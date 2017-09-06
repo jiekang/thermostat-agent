@@ -34,34 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.plugin;
+package com.redhat.thermostat.agent.keycloak;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.agent.http.RequestFailedException;
+import com.redhat.thermostat.annotations.Service;
 
-abstract public class PluginDAOBase<Tobj> {
+/**
+ * Service for retrieving a Keycloak access token.
+ */
+@Service
+public interface KeycloakAccessTokenService {
 
-    protected abstract String toJsonString(Tobj obj) throws IOException;
-    protected abstract HttpRequestService getHttpRequestService();
-    protected abstract PluginConfiguration getConfig();
-    protected abstract URI getPostURI(final URI basepath, final Tobj obj);
-    protected abstract Logger getLogger();
+    KeycloakAccessToken getAccessToken() throws RequestFailedException;
 
-    public void put(final Tobj obj) {
-        try {
-            HttpRequestService httpRequestService = getHttpRequestService();
-            String json = toJsonString(obj);
-            final URI gatewayURI = getConfig().getGatewayURL();
-            final URI postURI = getPostURI(gatewayURI, obj);
-            httpRequestService.sendHttpRequest(json, postURI, HttpRequestService.Method.POST);
-        } catch (IOException | RequestFailedException e) {
-            getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);
-        }
-    }
 }
-

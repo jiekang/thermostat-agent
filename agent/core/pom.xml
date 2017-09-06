@@ -130,7 +130,7 @@
             <Export-Package>
                 com.redhat.thermostat.agent,
                 com.redhat.thermostat.agent.http,
-                com.redhat.thermostat.agent.http.internal.keycloak,
+                com.redhat.thermostat.agent.keycloak,
                 com.redhat.thermostat.agent.config,
                 com.redhat.thermostat.agent.dao,
                 com.redhat.thermostat.agent.utils,
@@ -139,6 +139,8 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.internal,
+              com.redhat.thermostat.agent.internal.http,
+              com.redhat.thermostat.agent.internal.locale,
               com.redhat.thermostat.backend.internal,
               com.redhat.thermostat.utils.management.internal
             </Private-Package>

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.http;
+package com.redhat.thermostat.agent.internal.http;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -50,47 +50,48 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.agent.http.HttpRequestService.ConfigCreator;
-import com.redhat.thermostat.agent.http.HttpRequestService.CredentialsCreator;
-import com.redhat.thermostat.agent.http.HttpRequestService.HttpClientCreator;
-import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.agent.http.RequestFailedException;
+import com.redhat.thermostat.agent.internal.http.BasicHttpService.ConfigCreator;
+import com.redhat.thermostat.agent.internal.http.BasicHttpService.CredentialsCreator;
+import com.redhat.thermostat.agent.internal.http.BasicHttpService.HttpClientCreator;
+import com.redhat.thermostat.agent.keycloak.KeycloakAccessToken;
+import com.redhat.thermostat.agent.keycloak.KeycloakAccessTokenService;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 
-import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http.HttpMethod;
-
-public class HttpRequestServiceTest {
+public class HttpRequestServiceImplTest {
     private static final URI GATEWAY_URI = URI.create("http://127.0.0.1:30000/test/");
     private static final URI GET_URI = GATEWAY_URI.resolve("?q=foo&l=3");
     private static final String payload = "{}";
-    private static final String keycloakUrl = "http://127.0.0.1:31000/keycloak";
     private static final char[] PASSWORD = new char[] { 'p', 'a', 's', 's' };
     private static final String USERNAME = "testing";
+    private static final String KEYCLOAK_ACCESS_TOKEN_STRING = "keycloak-bearer-token-value";
 
     private HttpClientCreator clientCreator;
     private ConfigCreator configCreator;
     private CredentialsCreator credsCreator;
     private HttpClientFacade client;
     private Request httpRequest;
+    private KeycloakAccessTokenService tokenService;
     
     @Before
-    public void setup() throws InterruptedException, ExecutionException, TimeoutException {
+    public void setup() throws InterruptedException, ExecutionException, TimeoutException, RequestFailedException {
         client = mock(HttpClientFacade.class);
         httpRequest = mock(Request.class);
         when(client.newRequest(eq(GATEWAY_URI))).thenReturn(httpRequest);
@@ -105,10 +106,14 @@ public class HttpRequestServiceTest {
         when(creds.getPassword()).thenReturn(PASSWORD);
         when(creds.getUsername()).thenReturn(USERNAME);
         when(credsCreator.create(any(CommonPaths.class))).thenReturn(creds);
+        tokenService = mock(KeycloakAccessTokenService.class);
+        KeycloakAccessToken keycloakAccessToken = mock(KeycloakAccessToken.class);
+        when(keycloakAccessToken.getAccessToken()).thenReturn(KEYCLOAK_ACCESS_TOKEN_STRING);
+        when(tokenService.getAccessToken()).thenReturn(keycloakAccessToken);
     }
 
     @Test
-    public void testRequestWithoutKeycloak() throws Exception {
+    public void testRequestWithBasicAuth() throws Exception {
         AgentStartupConfiguration configuration = createBasicAuthConfig();
 
         HttpRequestService service = createAndActivateRequestService(configuration);
@@ -117,62 +122,23 @@ public class HttpRequestServiceTest {
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
+        verify(tokenService, times(0)).getAccessToken();
     }
 
     @Test
-    public void testRequestWithKeycloak() throws Exception {
+    public void testRequestWithKeycloakAuth() throws Exception {
         AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
-        setupKeycloakConfig(configuration);
+        when(configuration.isKeycloakEnabled()).thenReturn(true);
 
         HttpRequestService service = createAndActivateRequestService(configuration);
-
-        Request keycloakRequest = mock(Request.class);
-        setupKeycloakRequest(keycloakRequest);
 
         service.sendHttpRequest(payload, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
 
         verify(configuration).isKeycloakEnabled();
         verifyHttpPostRequest(httpRequest);
 
-        verify(httpRequest).header(eq("Authorization"), eq("Bearer access"));
-        verifyKeycloakAcquire(keycloakRequest);
-    }
-
-    @Test
-    public void testRequestWithKeycloakRefresh() throws Exception {
-        AgentStartupConfiguration configuration = mock(AgentStartupConfiguration.class);
-        setupKeycloakConfig(configuration);
-
-        HttpRequestService service = createAndActivateRequestService(configuration);
-
-        Request keycloakRequest = mock(Request.class);
-        setupKeycloakRequest(keycloakRequest);
-
-        service.sendHttpRequest(payload, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
-
-        verify(configuration).isKeycloakEnabled();
-        verifyHttpPostRequest(httpRequest);
-
-        verify(httpRequest).header(eq("Authorization"), eq("Bearer access"));
-
-        verifyKeycloakAcquire(keycloakRequest);
-
-        service.sendHttpRequest(payload, GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.POST);
-
-
-        ArgumentCaptor<StringContentProvider> payloadCaptor = ArgumentCaptor.forClass(StringContentProvider.class);
-        verify(keycloakRequest, times(2)).content(payloadCaptor.capture(), eq("application/x-www-form-urlencoded"));
-        verify(keycloakRequest, times(2)).method(eq(HttpMethod.POST));
-        verify(keycloakRequest, times(2)).send();
-
-        String expected = "grant_type=refresh_token&client_id=client&refresh_token=refresh";
-
-        StringContentProvider provider = payloadCaptor.getValue();
-        for (ByteBuffer buffer : provider) {
-            byte[] bytes = buffer.array();
-            String content = new String(bytes, StandardCharsets.UTF_8);
-            assertEquals(expected, content);
-        }
+        verify(httpRequest).header(eq("Authorization"), eq("Bearer " + KEYCLOAK_ACCESS_TOKEN_STRING));
+        verify(tokenService).getAccessToken();
     }
 
     @Test
@@ -246,7 +212,8 @@ public class HttpRequestServiceTest {
 
     private HttpRequestService createAndActivateRequestService(AgentStartupConfiguration configuration) throws Exception {
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
-        HttpRequestService service = new HttpRequestService(clientCreator, configCreator, credsCreator);
+        HttpRequestServiceImpl service = new HttpRequestServiceImpl(clientCreator, configCreator, credsCreator);
+        service.bindTokenService(tokenService);
         service.activate();
         verify(client).start();
         return service;
@@ -261,7 +228,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = createBasicAuthConfig();
         ConfigCreator configCreator = mock(ConfigCreator.class);
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
-        HttpRequestService service = new HttpRequestService(creator, configCreator, credsCreator);
+        HttpRequestServiceImpl service = new HttpRequestServiceImpl(creator, configCreator, credsCreator);
         service.activate();
         String content = service.sendHttpRequest(null, GET_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.GET);
         verify(getClient).newRequest(GET_URI);
@@ -277,7 +244,7 @@ public class HttpRequestServiceTest {
         AgentStartupConfiguration configuration = createBasicAuthConfig();
         ConfigCreator configCreator = mock(ConfigCreator.class);
         when(configCreator.create(any(CommonPaths.class))).thenReturn(configuration);
-        HttpRequestService service = new HttpRequestService(creator, configCreator, credsCreator);
+        HttpRequestServiceImpl service = new HttpRequestServiceImpl(creator, configCreator, credsCreator);
         service.activate();
         
         // Add extra slashes to URI
@@ -305,7 +272,7 @@ public class HttpRequestServiceTest {
         Request request = mock(Request.class);
         when(client.newRequest(any(URI.class))).thenReturn(request);
         AgentStartupConfiguration configuration = createBasicAuthConfig();
-        doThrow(IOException.class).when(request).send();
+        doThrow(RequestFailedException.class).when(request).send();
         HttpRequestService service = createAndActivateRequestService(configuration);
         service.sendHttpRequest("foo", GATEWAY_URI, com.redhat.thermostat.agent.http.HttpRequestService.Method.DELETE /*any valid method*/);
     }
@@ -330,50 +297,5 @@ public class HttpRequestServiceTest {
         verify(httpRequest).content(any(StringContentProvider.class), eq("application/json"));
         verify(httpRequest).method(eq(HttpMethod.POST));
         verify(httpRequest).send();
-    }
-
-    private void setupKeycloakConfig(AgentStartupConfiguration configuration) {
-        when(configuration.isKeycloakEnabled()).thenReturn(true);
-        when(configuration.getKeycloakUrl()).thenReturn(keycloakUrl);
-        when(configuration.getKeycloakClient()).thenReturn("client");
-        when(configuration.getKeycloakRealm()).thenReturn("realm");
-    }
-
-    private void setupKeycloakRequest(Request keycloakRequest) throws InterruptedException, ExecutionException, TimeoutException {
-        when(client.newRequest(keycloakUrl + "/auth/realms/realm/protocol/openid-connect/token")).thenReturn(keycloakRequest);
-
-        ContentResponse response = mock(ContentResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
-
-        String keycloakToken = "{" +
-                "\"access_token\": \"access\"," +
-                "\"expires_in\": 0," +
-                "\"refresh_expires_in\": 2," +
-                "\"refresh_token\": \"refresh\"," +
-                "\"token_type\": \"bearer\"," +
-                "\"id_token\": \"id\"," +
-                "\"not-before-policy\": 3," +
-                "\"session_state\": \"state\"" +
-                "}";
-
-        when(response.getContentAsString()).thenReturn(keycloakToken);
-        when(keycloakRequest.send()).thenReturn(response);
-    }
-
-    private void verifyKeycloakAcquire(Request keycloakRequest) throws InterruptedException, ExecutionException, TimeoutException {
-        ArgumentCaptor<StringContentProvider> payloadCaptor = ArgumentCaptor.forClass(StringContentProvider.class);
-        verify(keycloakRequest).content(payloadCaptor.capture(), eq("application/x-www-form-urlencoded"));
-        verify(keycloakRequest).method(eq(HttpMethod.POST));
-        verify(keycloakRequest).send();
-
-        String expected = "grant_type=password&client_id=client&username=" + USERNAME + "&password=" + new String(PASSWORD);
-
-        StringContentProvider provider = payloadCaptor.getValue();
-        for (ByteBuffer buffer : provider) {
-            byte[] bytes = buffer.array();
-            String content = new String(bytes, StandardCharsets.UTF_8);
-            assertEquals(expected, content);
-        }
-
     }
 }

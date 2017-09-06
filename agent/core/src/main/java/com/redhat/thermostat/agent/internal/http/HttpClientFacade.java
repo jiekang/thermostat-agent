@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.http;
+package com.redhat.thermostat.agent.internal.http;
 
 import java.net.URI;
 import java.util.concurrent.TimeUnit;

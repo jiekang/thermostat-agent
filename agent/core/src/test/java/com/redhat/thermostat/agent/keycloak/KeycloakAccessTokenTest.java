@@ -34,50 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.http.internal.keycloak;
+package com.redhat.thermostat.agent.keycloak;
 
-import com.google.gson.annotations.SerializedName;
+import java.util.concurrent.TimeUnit;
 
-public class KeycloakAccessToken {
-    @SerializedName("access_token")
-    private String accessToken;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
+import org.junit.Test;
 
-    // In seconds
-    @SerializedName("expires_in")
-    private long expiresIn;
+public class KeycloakAccessTokenTest {
 
-    // In seconds
-    @SerializedName("refresh_expires_in")
-    private long refreshExpiresIn;
+    private static final int MINUTES = 60;
 
-    @SerializedName("refresh_token")
-    private String refreshToken;
-
-    // In nanoseconds
-    private transient long acquireTime;
-
-
-    public String getAccessToken() {
-        return accessToken;
+    @Test
+    public void verifyExpiredToken() {
+        Long expiresIn = 3L;
+        Long acquireTime = 3L;
+        KeycloakAccessToken token = new KeycloakAccessToken(expiresIn);
+        token.setAcquireTime(acquireTime);
+        assumeTrue(System.nanoTime() > TimeUnit.NANOSECONDS.convert(expiresIn, TimeUnit.SECONDS) + acquireTime);
+        assertEquals("token is expired", true, token.isKeycloakTokenExpired());
     }
-
-    public Long getExpiresIn() {
-        return expiresIn;
-    }
-
-    public Long getRefreshExpiresIn() {
-        return refreshExpiresIn;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public long getAcquireTime() {
-        return acquireTime;
-    }
-
-    public void setAcquireTime(long acquireTime) {
-        this.acquireTime = acquireTime;
+    
+    @Test
+    public void verifyValidToken() {
+        Long expiresIn = 10L * MINUTES;
+        Long acquireTime = System.nanoTime();
+        KeycloakAccessToken token = new KeycloakAccessToken(expiresIn);
+        token.setAcquireTime(acquireTime);
+        assumeTrue(System.nanoTime() <= TimeUnit.NANOSECONDS.convert(expiresIn, TimeUnit.SECONDS) + acquireTime);
+        assertEquals("token should still be valid", false, token.isKeycloakTokenExpired());
     }
 }
