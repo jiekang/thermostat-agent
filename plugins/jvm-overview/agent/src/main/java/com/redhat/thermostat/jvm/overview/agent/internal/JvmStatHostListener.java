@@ -52,6 +52,7 @@ import com.redhat.thermostat.jvm.overview.agent.VmBlacklist;
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListener.Status;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.InfoBuilderFactory;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAO;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmNativeLibsExtractorFactory;
 import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
 import com.redhat.thermostat.storage.core.WriterID;
 
@@ -149,8 +150,7 @@ class JvmStatHostListener implements HostListener {
             JvmStatDataExtractor extractor) throws MonitorException {
         Map<String, String> properties = new HashMap<String, String>();
         Map<String, String> environment = InfoBuilderFactory.INSTANCE.createProcessEnvironmentBuilder().build(vmPid);
-        // TODO actually figure out the loaded libraries.
-        String[] loadedNativeLibraries = new String[0];
+        String[] loadedNativeLibraries = VmNativeLibsExtractorFactory.getInstance(vmPid).getNativeLibs();
         ProcessUserInfo userInfo = userInfoBuilder.build(vmPid);
         VmInfo info = new VmInfo(writerId.getWriterID(), vmId, vmPid, extractor.getVmStartTime(), stopTime,
                                  extractor.getJavaVersion(), extractor.getJavaHome(),

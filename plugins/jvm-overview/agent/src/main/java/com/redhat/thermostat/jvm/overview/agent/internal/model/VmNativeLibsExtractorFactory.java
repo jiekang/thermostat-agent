@@ -36,30 +36,15 @@
 
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
-import java.util.Set;
+import com.redhat.thermostat.shared.config.OS;
 
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.jvm.overview.agent.model.VmId;
-import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
-import com.redhat.thermostat.storage.core.AgentId;
+public final class VmNativeLibsExtractorFactory {
 
-@Service
-public interface VmInfoDAO {
-
-    /** @return {@code null} if no information can be found */
-    VmInfo getVmInfo(VmId id);
-
-    /**
-     *
-     * @param agentId The id of host to get the VM(s) for.
-     * @return A set of the VmId(s).
-     */
-    Set<VmId> getVmIds(AgentId agentId);
-
-    void putVmInfo(VmInfo info);
-
-    void putVmStoppedTime(String agentId, String vmId, long since);
-
-    void updateVmNativeLibs(String vmId, String[] newLibs);
+    public static VmNativeLibsExtractor getInstance(Integer pid) {
+        if (OS.IS_LINUX) {
+            return new VmLinuxNativeLibsExtractor(pid);
+        } else {
+            throw new UnsupportedOperationException("Extractor for the given OS not supported yet.");
+        }
+    }
 }
-

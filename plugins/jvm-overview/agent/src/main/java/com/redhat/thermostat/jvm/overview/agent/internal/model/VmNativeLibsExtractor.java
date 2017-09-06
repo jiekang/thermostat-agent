@@ -36,30 +36,12 @@
 
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
-import java.util.Set;
-
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.jvm.overview.agent.model.VmId;
-import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
-import com.redhat.thermostat.storage.core.AgentId;
-
-@Service
-public interface VmInfoDAO {
-
-    /** @return {@code null} if no information can be found */
-    VmInfo getVmInfo(VmId id);
+public interface VmNativeLibsExtractor {
 
     /**
-     *
-     * @param agentId The id of host to get the VM(s) for.
-     * @return A set of the VmId(s).
+     * Returns an array of native libraries names loaded by the JVM. Extracting
+     * native libraries is OS specific and it is suggested that each
+     * implementation contains name of the OS the implementation is related to.
      */
-    Set<VmId> getVmIds(AgentId agentId);
-
-    void putVmInfo(VmInfo info);
-
-    void putVmStoppedTime(String agentId, String vmId, long since);
-
-    void updateVmNativeLibs(String vmId, String[] newLibs);
+    String[] getNativeLibs();
 }
-

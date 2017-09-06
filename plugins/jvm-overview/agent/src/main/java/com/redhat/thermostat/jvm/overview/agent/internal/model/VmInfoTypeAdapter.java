@@ -45,11 +45,13 @@ import java.util.Set;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoLongUpdate;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoStringArrayUpdate;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoUpdate;
 import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
 
 public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
-    
+
     private static final String AGENT_ID = "agentId";
     private static final String JVM_ID = "jvmId";
     private static final String JVM_PID = "jvmPid";
@@ -76,11 +78,11 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
     public void write(JsonWriter out, List<VmInfo> value) throws IOException {
         // Request is an array of VmInfo objects
         out.beginArray();
-        
+
         for (VmInfo info : value) {
             writeVmInfo(out, info);
         }
-        
+
         out.endArray();
     }
 
@@ -124,14 +126,14 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
         writeLong(out, info.getUid());
         out.name(USERNAME);
         out.value(info.getUsername());
-        
+
         out.endObject();
     }
-    
+
     private void writeStringMap(JsonWriter out, Map<String, String> map) throws IOException {
         // Write contents of Map as an array of JSON objects
         out.beginArray();
-        
+
         Set<Entry<String, String>> entries = map.entrySet();
         for (Map.Entry<String, String> entry : entries) {
             // Create JSON object with key and value labeled as JSON names
@@ -142,21 +144,21 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
             out.value(entry.getValue());
             out.endObject();
         }
-        
+
         out.endArray();
     }
-    
-    private void writeStringArray(JsonWriter out, String[] array) throws IOException {
+
+    private static void writeStringArray(JsonWriter out, String[] array) throws IOException {
         // Write String[] as JSON array
         out.beginArray();
-        
+
         for (String item : array) {
             out.value(item);
         }
-        
+
         out.endArray();
     }
-    
+
     private static void writeLong(JsonWriter out, long value) throws IOException {
         // Write MongoDB representation of a Long
         out.beginObject();
@@ -169,22 +171,31 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
     public List<VmInfo> read(JsonReader in) throws IOException {
         throw new UnsupportedOperationException();
     }
-    
+
     static class VmInfoUpdateTypeAdapter extends TypeAdapter<VmInfoUpdate> {
 
         private static final String SET = "set";
-        
+
         @Override
         public void write(JsonWriter out, VmInfoUpdate value) throws IOException {
             // List fields to update as part of a JSON object with name "set"
             out.beginObject();
             out.name(SET);
-            
+
             out.beginObject();
-            out.name(STOP_TIME_STAMP);
-            writeLong(out, value.getStoppedTime());
+            if (value instanceof VmInfoLongUpdate) {
+                VmInfoLongUpdate castVal = (VmInfoLongUpdate) value;
+                out.name(STOP_TIME_STAMP);
+                writeLong(out, castVal.getParam());
+            } else if (value instanceof VmInfoStringArrayUpdate) {
+                VmInfoStringArrayUpdate castVal = (VmInfoStringArrayUpdate) value;
+                out.name(LOADED_NATIVE_LIBRARIES);
+                writeStringArray(out, castVal.getParam());
+            } else {
+                throw new IllegalArgumentException("illegal update data type");
+            }
             out.endObject();
-            
+
             out.endObject();
         }
 
@@ -192,7 +203,7 @@ public class VmInfoTypeAdapter extends TypeAdapter<List<VmInfo>> {
         public VmInfoUpdate read(JsonReader in) throws IOException {
             throw new UnsupportedOperationException();
         }
-        
+
     }
-    
+
 }

@@ -70,7 +70,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     private static final String VM_PATH = "/jvms/";
 
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
-    
+
     private final JsonHelper jsonHelper;
     private final ConfigurationCreator configCreator;
 
@@ -119,7 +119,8 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             URI uri = getAddURI();
             httpRequestService.sendHttpRequest(json, uri, HttpRequestService.Method.POST);
         } catch (IOException | RequestFailedException e) {
-           logger.log(Level.WARNING, "Failed to send JVM information to web gateway", e);
+            logger.log(Level.WARNING, "Failed to send JVM information to web gateway");
+            logger.log(Level.INFO, e.getMessage());
         }
     }
 
@@ -128,14 +129,29 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         URI uri = getUpdateURI(vmId);
         try {
             // Encode as JSON and send as PUT request
-            VmInfoUpdate update = new VmInfoUpdate(timestamp);
+            VmInfoUpdate update = new VmInfoLongUpdate(timestamp);
             String json = jsonHelper.toJson(update);
             httpRequestService.sendHttpRequest(json, uri, HttpRequestService.Method.PUT);
         } catch (IOException | RequestFailedException e) {
-           logger.log(Level.WARNING, "Failed to send JVM information update to web gateway at: " + uri, e);
+            logger.log(Level.WARNING, "Failed to send JVM information update to web gateway at: " + uri);
+            logger.log(Level.INFO, e.getMessage());
         }
     }
-    
+
+    @Override
+    public void updateVmNativeLibs(String vmId, String[] newLibs) {
+        URI uri = getUpdateURI(vmId);
+        try {
+            // Encode as JSON and send as PUT request
+            VmInfoUpdate update = new VmInfoStringArrayUpdate(newLibs);
+            String json = jsonHelper.toJson(update);
+            httpRequestService.sendHttpRequest(json, uri, HttpRequestService.Method.PUT);
+        } catch (IOException | RequestFailedException e) {
+            logger.log(Level.WARNING, "Failed to send JVM information update to web gateway at: " + uri);
+            logger.log(Level.INFO, e.getMessage());
+        }
+    }
+
     private URI getAddURI() {
         StringBuilder builder = new StringBuilder();
         builder.append(SYSTEM_PATH);
@@ -151,7 +167,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         builder.append(vmId);
         return gatewayURL.resolve(builder.toString());
     }
-    
+
     protected void bindHttpRequestService(HttpRequestService httpRequestService) {
         this.httpRequestService = httpRequestService;
     }
@@ -168,39 +184,53 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     protected void unbindSystemId(SystemID id) {
         this.systemID = null;
     }
-    
-    static class VmInfoUpdate {
-        
-        private final long stoppedTime;
-        
-        VmInfoUpdate(long stoppedTime) {
-           this.stoppedTime = stoppedTime;
+
+    static abstract class VmInfoUpdate<T> {
+
+        private final T param;
+
+        VmInfoUpdate(T param) {
+            this.param = param;
         }
-        
-        long getStoppedTime() {
-            return stoppedTime;
+
+        T getParam() {
+            return param;
         }
     }
-    
+
+    static class VmInfoLongUpdate extends VmInfoUpdate<Long>  {
+
+        public VmInfoLongUpdate(Long param) {
+            super(param);
+        }
+    }
+
+    static class VmInfoStringArrayUpdate extends VmInfoUpdate<String[]>  {
+
+        public VmInfoStringArrayUpdate(String[] param) {
+            super(param);
+        }
+    }
+
     // For testing purposes
     static class JsonHelper {
-        
+
         private final VmInfoTypeAdapter typeAdapter;
         private final VmInfoUpdateTypeAdapter updateTypeAdapter;
-        
+
         public JsonHelper(VmInfoTypeAdapter typeAdapter, VmInfoUpdateTypeAdapter updateTypeAdapter) {
             this.typeAdapter = typeAdapter;
             this.updateTypeAdapter = updateTypeAdapter;
         }
-        
+
         String toJson(List<VmInfo> infos) throws IOException {
             return typeAdapter.toJson(infos);
         }
-        
-        String toJson(VmInfoUpdate update) throws IOException {
+
+        String toJson(VmInfoUpdate<?> update) throws IOException {
             return updateTypeAdapter.toJson(update);
         }
-        
+
     }
 
     // For Testing purposes
@@ -212,4 +242,3 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     }
 }
-
