@@ -58,7 +58,7 @@ import com.redhat.thermostat.host.overview.model.HostInfoTypeAdapter;
 
 @Component
 @Service(value = HostInfoDAO.class)
-public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> implements HostInfoDAO {
+public class HostInfoDAOImpl extends PluginDAOBase<HostInfo> implements HostInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(HostInfoDAOImpl.class);
     
@@ -93,7 +93,7 @@ public class HostInfoDAOImpl extends PluginDAOBase<HostInfo, HostInfoDAOImpl> im
         this.config = configCreator.create(configurationInfoSource);
     }
 
-    public URI getPostURI(final URI base) {
+    public URI getPostURI(final URI base, HostInfo obj) {
         return base.resolve("systems/" + systemID.getSystemID());
     }
 

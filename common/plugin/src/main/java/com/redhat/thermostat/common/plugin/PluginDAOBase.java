@@ -44,21 +44,20 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.agent.http.HttpRequestService;
 import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
 
-abstract public class PluginDAOBase<Tobj,Tdao> {
+abstract public class PluginDAOBase<Tobj> {
 
     protected abstract String toJsonString(Tobj obj) throws IOException;
     protected abstract HttpRequestService getHttpRequestService();
     protected abstract PluginConfiguration getConfig();
-    protected abstract URI getPostURI(final URI basepath);
+    protected abstract URI getPostURI(final URI basepath, final Tobj obj);
     protected abstract Logger getLogger();
 
     public void put(final Tobj obj) {
         try {
             HttpRequestService httpRequestService = getHttpRequestService();
             String json = toJsonString(obj);
-
             final URI gatewayURI = getConfig().getGatewayURL();
-            final URI postURI = getPostURI(gatewayURI);
+            final URI postURI = getPostURI(gatewayURI, obj);
             httpRequestService.sendHttpRequest(json, postURI, HttpRequestService.Method.POST);
         } catch (IOException | RequestFailedException e) {
             getLogger().log(Level.WARNING, "Failed to send " + obj.getClass().getName() + " to web gateway", e);

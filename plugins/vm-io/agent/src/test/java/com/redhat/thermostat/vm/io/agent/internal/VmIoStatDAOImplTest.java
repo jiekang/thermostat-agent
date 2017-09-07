@@ -36,26 +36,81 @@
 
 package com.redhat.thermostat.vm.io.agent.internal;
 
-import org.junit.Before;
 
 import com.redhat.thermostat.vm.io.model.VmIoStat;
+import com.redhat.thermostat.vm.io.agent.internal.VmIoStatDAOImpl.ConfigurationCreator;
+import com.redhat.thermostat.vm.io.agent.internal.VmIoStatDAOImpl.JsonHelper;
+
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.SystemID;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class VmIoStatDAOImplTest {
 
     private static final long SOME_TIMESTAMP = 1234;
+    private static final String SOME_SYSTEM_ID = "somesystemid";
     private static final String SOME_VM_ID = "321";
     private static final long SOME_CHARACTERS_READ = 123456;
     private static final long SOME_CHARACTERS_WRITTEN = 67798;
     private static final long SOME_READ_SYSCALLS = 123456;
     private static final long SOME_WRITE_SYSCALLS = 67798;
 
+    private static final String AGENT_ID = "some-agent";
+    private static final String JSON = "{\"this\":\"is\",\"also\":\"JSON\"}";
+
+    private static final URI GATEWAY_URI = URI.create("http://example.com/jvm-io/");
+
     private VmIoStat ioStat;
+    private JsonHelper jsonHelper;
+    private VmIoStatDAOImpl dao;
+    private HttpRequestService httpRequestService;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         this.ioStat = new VmIoStat("foo-agent", SOME_VM_ID, SOME_TIMESTAMP,
                 SOME_CHARACTERS_READ, SOME_CHARACTERS_WRITTEN,
                 SOME_READ_SYSCALLS, SOME_WRITE_SYSCALLS);
+
+        jsonHelper = mock(JsonHelper.class);
+        when(jsonHelper.toJson(anyListOf(VmIoStat.class))).thenReturn(JSON);
+
+        ConfigurationInfoSource source = mock(ConfigurationInfoSource.class);
+        PluginConfiguration config = mock(PluginConfiguration.class);
+        when(config.getGatewayURL()).thenReturn(GATEWAY_URI);
+        ConfigurationCreator creator = mock(ConfigurationCreator.class);
+        when(creator.create(source)).thenReturn(config);
+
+        httpRequestService = mock(HttpRequestService.class);
+        dao = new VmIoStatDAOImpl(jsonHelper, creator);
+        dao.bindHttpRequestService(httpRequestService);
+        dao.bindConfigurationInfoSource(source);
     }
+
+    @Test
+    public void verifyPut() throws Exception {
+        SystemID id = mock(SystemID.class);
+        when(id.getSystemID()).thenReturn(SOME_SYSTEM_ID);
+        dao.bindSystemID(id);
+        dao.activate();
+        dao.put(ioStat);
+
+        verify(jsonHelper).toJson(eq(Arrays.asList(ioStat)));
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI.resolve("systems/" + SOME_SYSTEM_ID + "/jvms/" + SOME_VM_ID), HttpRequestService.Method.POST);
+    }
+
 
 }

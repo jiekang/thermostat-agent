@@ -57,10 +57,9 @@ import org.apache.felix.scr.annotations.Service;
 
 @Component
 @Service(value = VmIoStatDAO.class)
-public class VmIoStatDAOImpl extends PluginDAOBase<VmIoStat, VmIoStatDAOImpl> implements VmIoStatDAO {
+public class VmIoStatDAOImpl extends PluginDAOBase<VmIoStat> implements VmIoStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmIoStatDAOImpl.class);
-
     public static final String PLUGIN_ID = "vm-io";
 
     private final JsonHelper jsonHelper;
@@ -114,8 +113,8 @@ public class VmIoStatDAOImpl extends PluginDAOBase<VmIoStat, VmIoStatDAOImpl> im
     }
 
     @Override
-    protected URI getPostURI(URI basepath) {
-        return basepath.resolve("systems/" + systemID.getSystemID() + "/jvms/" + "ssss");
+    protected URI getPostURI(final URI basepath, final VmIoStat iostat) {
+        return basepath.resolve("systems/" + systemID.getSystemID() + "/jvms/" + iostat.getJvmId());
     }
 
     // DS bind methods

@@ -58,7 +58,7 @@ import com.redhat.thermostat.host.network.model.NetworkInfoListTypeAdapter;
 
 @Component
 @Service(value = NetworkInfoListDAO.class)
-public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList, NetworkInfoListDAOImpl> implements NetworkInfoListDAO {
+public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList> implements NetworkInfoListDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NetworkInfoListDAOImpl.class);
 
@@ -108,7 +108,7 @@ public class NetworkInfoListDAOImpl extends PluginDAOBase<NetworkInfoList, Netwo
     }
 
     @Override
-    protected URI getPostURI(URI basepath) {
+    protected URI getPostURI(URI basepath, NetworkInfoList obj) {
         return basepath.resolve("systems/" + systemID.getSystemID());
     }
 
