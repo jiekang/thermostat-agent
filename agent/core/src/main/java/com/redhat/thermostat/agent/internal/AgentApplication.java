@@ -40,9 +40,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.dao.AgentInfoDAO;
-import com.redhat.thermostat.agent.dao.BackendInfoDAO;
-
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -54,6 +51,9 @@ import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.config.AuthenticationProviderConfig;
+import com.redhat.thermostat.agent.dao.AgentInfoDAO;
+import com.redhat.thermostat.agent.dao.BackendInfoDAO;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.ExitStatus;
@@ -70,6 +70,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.WriterID;
+
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
@@ -110,7 +111,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private BackendInfoDAO backendInfoDAO;
     @Reference
     private CommonPaths commonPaths;
-    
+
     private CommandRegistry reg;
 
     private CountDownLatch shutdownLatch;
@@ -174,6 +175,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         configuration = configurationCreator.create(commonPaths);
+        context.registerService(AuthenticationProviderConfig.class, configuration, null);
 
         parseArguments(ctx.getArguments());
         if (!parser.isHelp()) {

@@ -36,77 +36,30 @@
 
 package com.redhat.thermostat.agent.config;
 
-public class AgentStartupConfiguration implements AuthenticationProviderConfig {
+import com.redhat.thermostat.annotations.Service;
 
-    private boolean purge;
-    private long startTime;
+/**
+ *
+ * Configuration service informing plugins which authentication
+ * scheme is to be used.
+ *
+ */
+@Service
+public interface AuthenticationProviderConfig {
 
-    private boolean keycloakEnabled;
-    private String keycloakUrl;
-    private String keycloakRealm;
-    private String keycloakClient;
-    private boolean basicAuthEnabled;
+    /**
+     *
+     * @return {@code true} if and only if Keycloak is being used as the
+     *         authentication provider.
+     */
+    boolean isKeycloakEnabled();
 
-    AgentStartupConfiguration() {
-    }
+    /**
+     *
+     * @return {@code true} if basic authentication should be used. If
+     *         {@link AuthenticationProviderConfig#isKeycloakEnabled()} also
+     *         returns true Keycloak authentication should be preferred.
+     */
+    boolean isBasicAuthEnabled();
 
-    // TODO: that should be a friend, we only want the Service to set this value
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    void setPurge(boolean purge) {
-        this.purge = purge;
-    }
-
-    public boolean purge() {
-        return purge;
-    }
-
-    public String getKeycloakUrl() {
-        return keycloakUrl;
-    }
-
-    public void setKeycloakUrl(String keycloakUrl) {
-        this.keycloakUrl = keycloakUrl;
-    }
-
-    public String getKeycloakClient() {
-        return keycloakClient;
-    }
-
-    public void setKeycloakClient(String keycloakClient) {
-        this.keycloakClient = keycloakClient;
-    }
-
-    @Override
-    public boolean isKeycloakEnabled() {
-        return keycloakEnabled;
-    }
-
-    public void setKeycloakEnabled(boolean keycloakEnabled) {
-        this.keycloakEnabled = keycloakEnabled;
-    }
-
-    public String getKeycloakRealm() {
-        return keycloakRealm;
-    }
-
-    public void setKeycloakRealm(String keycloakRealm) {
-        this.keycloakRealm = keycloakRealm;
-    }
-
-    @Override
-    public boolean isBasicAuthEnabled() {
-        return basicAuthEnabled;
-    }
-
-    public void setBasicAuthEnabled(boolean basicAuthEnabled) {
-        this.basicAuthEnabled = basicAuthEnabled;
-    }
 }
-

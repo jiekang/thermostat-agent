@@ -58,6 +58,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 
+import com.redhat.thermostat.agent.config.AuthenticationProviderConfig;
 import com.redhat.thermostat.commands.agent.internal.CommandsBackend.ConfigCreator;
 import com.redhat.thermostat.commands.agent.internal.CommandsBackend.CredentialsCreator;
 import com.redhat.thermostat.commands.agent.internal.CommandsBackend.WsClientCreator;
@@ -80,7 +81,7 @@ public class CommandsBackendTest {
     private BundleContext bundleContext;
     private WebSocketClientFacade client;
     private CountDownLatch socketConnect;
-    
+
     @Before
     public void setup() throws IOException {
         socketConnect = new CountDownLatch(1);
@@ -107,25 +108,28 @@ public class CommandsBackendTest {
         when(sId.getSystemID()).thenReturn(SYSTEM_ID);
         backend.bindAgentId(wId);
         backend.bindSystemId(sId);
+        AuthenticationProviderConfig authConfig = mock(AuthenticationProviderConfig.class);
+        when(authConfig.isBasicAuthEnabled()).thenReturn(true);
+        backend.bindAuthConfig(authConfig);
     }
-    
+
     @Test
     public void testGetBasicAuthHeaderValueNoCreds() {
         doUnknownCredsTest(backend);
     }
-    
+
     @Test
     public void testGetBasicAuthHeaderValueWithNoUsername() {
         when(creds.getPassword()).thenReturn(new char[] { 'a', 'b', 'c' });
         doUnknownCredsTest(backend);
     }
-    
+
     @Test
     public void testGetBasicAuthHeaderValueWithNoPassword() {
         when(creds.getUsername()).thenReturn("foo-user");
         doUnknownCredsTest(backend);
     }
-    
+
     @Test
     public void canGetBasicAuthHeaderValueWithUsernamePwd() {
         String password = "foo";
@@ -135,13 +139,13 @@ public class CommandsBackendTest {
         String expected = base64EncodedHeader(username + ":" + password);
         assertEquals(expected, backend.getBasicAuthHeaderValue());
     }
-    
+
     @Test
     public void testComponentActivated() {
         // setup invokes it. only do verification here
         verify(client).start();
     }
-    
+
     @Test
     public void testActivateSuccess() throws IOException {
         String password = "foo";
@@ -164,17 +168,17 @@ public class CommandsBackendTest {
         assertEquals(expectedHeader, actualHeader);
         assertTrue("Expected backend to be active", backend.isActive());
     }
-    
+
     @Test
     public void testActivateFail() throws IOException {
         // set up for failure
         doThrow(IOException.class).when(client).connect(any(CmdChannelAgentSocket.class), any(URI.class), any(ClientUpgradeRequest.class));
-        
+
         boolean success = backend.activate();
         assertFalse("Expected unsuccessful activation", success);
         assertFalse(backend.isActive());
     }
-    
+
     @Test
     public void testDeactivate() throws IOException {
         // release connect latch
