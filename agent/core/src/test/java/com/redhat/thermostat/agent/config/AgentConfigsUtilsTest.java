@@ -72,6 +72,11 @@ public class AgentConfigsUtilsTest {
         Assert.assertFalse(config.purge());
     }
     
+    @Test(expected = InvalidConfigurationException.class)
+    public void testNoConfiSet() throws InvalidConfigurationException {
+        AgentConfigsUtils.createAgentConfigs();
+    }
+    
     @Test
     public void testUserPurgeProp() throws InvalidConfigurationException, IOException {
         Properties sysProps = createSystemProperties();

@@ -37,13 +37,20 @@
 package com.redhat.thermostat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -74,6 +81,7 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -86,6 +94,7 @@ public class AgentApplicationTest {
     private ConfigurationCreator configCreator;
     private ExitStatus exitStatus;
     private WriterID writerId;
+    private CommonPaths commonPaths;
 
     @Before
     public void setUp() throws InvalidConfigurationException {
@@ -95,7 +104,8 @@ public class AgentApplicationTest {
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
 
         configCreator = mock(ConfigurationCreator.class);
-        when(configCreator.create()).thenReturn(config);
+        commonPaths = mock(CommonPaths.class);
+        when(configCreator.create(eq(commonPaths))).thenReturn(config);
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         context.registerService(AgentInfoDAO.class.getName(), agentInfoDAO, null);
@@ -137,6 +147,31 @@ public class AgentApplicationTest {
         }
         if (!ret) {
             fail("Timeout expired!");
+        }
+    }
+    
+    @Test
+    public void verifyConfigCreator() {
+        ConfigurationCreator configCreator = new ConfigurationCreator();
+        File testFile = getTestFile("/test_agent.properties");
+        assertNotNull("Precondition", testFile);
+        when(commonPaths.getSystemAgentConfigurationFile()).thenReturn(testFile);
+        AgentStartupConfiguration config = configCreator.create(commonPaths);
+        assertTrue(config.isBasicAuthEnabled());
+    }
+
+    private File getTestFile(String string) {
+        URL fileUrl = getClass().getResource(string);
+        return new File(decodeFilePath(fileUrl));
+    }
+    
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
         }
     }
 

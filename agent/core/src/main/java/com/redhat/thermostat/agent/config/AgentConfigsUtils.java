@@ -60,8 +60,10 @@ public class AgentConfigsUtils {
     }
     
     private static void readAndSetProperties(File systemConfigFile, File userConfigFile, AgentStartupConfiguration configuration)
-            throws InvalidConfigurationException
-    {
+            throws InvalidConfigurationException {
+        if (systemConfigFile == null && userConfigFile == null) {
+            throw new InvalidConfigurationException("No agent configuration files set!");
+        }
         Properties systemConfig = new Properties();
         if (systemConfigFile != null) {
             try {

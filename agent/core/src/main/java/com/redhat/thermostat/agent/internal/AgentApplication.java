@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.WriterID;
 import sun.misc.Signal;
@@ -107,7 +108,9 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private AgentInfoDAO agentInfoDAO;
     @Reference
     private BackendInfoDAO backendInfoDAO;
-
+    @Reference
+    private CommonPaths commonPaths;
+    
     private CommandRegistry reg;
 
     private CountDownLatch shutdownLatch;
@@ -170,7 +173,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        configuration = configurationCreator.create();
+        configuration = configurationCreator.create(commonPaths);
 
         parseArguments(ctx.getArguments());
         if (!parser.isHelp()) {
@@ -258,7 +261,9 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     }
 
     static class ConfigurationCreator {
-        public AgentStartupConfiguration create() throws InvalidConfigurationException {
+        public AgentStartupConfiguration create(CommonPaths commonPaths) throws InvalidConfigurationException {
+            AgentConfigsUtils.setConfigFiles(commonPaths.getSystemAgentConfigurationFile(),
+                                             commonPaths.getUserAgentConfigurationFile());
             return AgentConfigsUtils.createAgentConfigs();
         }
     }
