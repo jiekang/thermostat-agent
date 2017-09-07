@@ -38,7 +38,6 @@ package com.redhat.thermostat.agent.config;
 
 public enum AgentProperties {
 
-    DB_URL,
     SAVE_ON_EXIT,
 
     KEYCLOAK_ENABLED,

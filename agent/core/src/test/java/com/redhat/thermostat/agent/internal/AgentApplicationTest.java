@@ -93,7 +93,6 @@ public class AgentApplicationTest {
         context = new StubBundleContext();
 
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
-        when(config.getDBConnectionString()).thenReturn("test string; please ignore");
 
         configCreator = mock(ConfigurationCreator.class);
         when(configCreator.create()).thenReturn(config);

@@ -64,31 +64,12 @@ public class AgentConfigsUtilsTest {
     }
     
     @Test
-    public void testSystemDbUrl() throws InvalidConfigurationException, IOException {
-        Properties sysProps = createSystemProperties();
-        setConfigs(sysProps, new Properties());
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
-
-        Assert.assertEquals("http://1.2.3.4:9001/hello", config.getDBConnectionString());
-    }
-    
-    @Test
     public void testSystemPurgeProp() throws InvalidConfigurationException, IOException {
         Properties sysProps = createSystemProperties();
         setConfigs(sysProps, new Properties());
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
 
         Assert.assertFalse(config.purge());
-    }
-    
-    @Test
-    public void testUserDbUrl() throws InvalidConfigurationException, IOException {
-        Properties sysProps = createSystemProperties();
-        Properties userProps = createUserProperties();
-        setConfigs(sysProps, userProps);
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
-
-        Assert.assertEquals("http://5.6.7.8:9002/world", config.getDBConnectionString());
     }
     
     @Test

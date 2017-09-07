@@ -36,12 +36,9 @@
 
 package com.redhat.thermostat.agent.config;
 
-import com.redhat.thermostat.storage.config.StartupConfiguration;
-
-public class AgentStartupConfiguration implements StartupConfiguration {
+public class AgentStartupConfiguration {
 
     private boolean purge;
-    private String dbUrl;
     private long startTime;
 
     private boolean keycloakEnabled;
@@ -51,15 +48,6 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     private boolean basicAuthEnabled;
     
     AgentStartupConfiguration() {
-    }
-    
-    @Override
-    public String getDBConnectionString() {
-        return dbUrl;
-    }
-
-    public void setDatabaseURL(String url) {
-        this.dbUrl = url;
     }
     
     // TODO: that should be a friend, we only want the Service to set this value

@@ -80,11 +80,6 @@ public class AgentConfigsUtils {
             }
         }
 
-        String db = properties.getProperty(AgentProperties.DB_URL.name());
-        if (db != null) {
-            configuration.setDatabaseURL(db);
-        }
-        
         String saveOnExit = properties.getProperty(AgentProperties.SAVE_ON_EXIT.name());
         if (saveOnExit != null) {
             configuration.setPurge(!Boolean.parseBoolean(saveOnExit));
