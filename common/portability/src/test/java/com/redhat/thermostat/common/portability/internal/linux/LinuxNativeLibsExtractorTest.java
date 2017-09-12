@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.jvm.overview.agent.internal.model;
+package com.redhat.thermostat.common.portability.internal.linux;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -45,14 +45,10 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.HashSet;
-import org.junit.Before;
+
 import org.junit.Test;
 
-public class VmLinuxNativeLibsExtractorTest {
-
-    private VmLinuxNativeLibsExtractor extractor;
-
-    private static final Integer VM_PID = 0;
+public class LinuxNativeLibsExtractorTest {
 
     private final File THREE_LIBS = getFileFromTestSources("native_lib_three_libs");
     private final File NO_LIBS = getFileFromTestSources("native_lib_no_libs");
@@ -71,11 +67,6 @@ public class VmLinuxNativeLibsExtractorTest {
         }
     }
 
-    @Before
-    public void setup() {
-        extractor = new VmLinuxNativeLibsExtractor(VM_PID);
-    }
-
     @Test
     public void threeLibs() {
         HashSet<String> expectedLibs = new HashSet<>(Arrays.asList("/usr/foo/libhello.so",
@@ -83,12 +74,12 @@ public class VmLinuxNativeLibsExtractorTest {
 
         // Cannot compare arrays directly since the implementation internally gathers libs
         // to a Set, which might yield a different ordering of items in the collection in the end
-        assertEquals(expectedLibs, new HashSet<>(Arrays.asList(extractor.getNativeLibs(THREE_LIBS))));
+        assertEquals(expectedLibs, new HashSet<>(Arrays.asList(LinuxNativeLibsExtractor.getNativeLibs(THREE_LIBS))));
     }
 
     @Test
     public void noLibs() {
-        String[] result = extractor.getNativeLibs(NO_LIBS);
+        String[] result = LinuxNativeLibsExtractor.getNativeLibs(NO_LIBS);
         int numExpectedLibs = 0;
 
         assertNotNull(result);
@@ -98,7 +89,7 @@ public class VmLinuxNativeLibsExtractorTest {
 
     @Test
     public void empty() {
-        String[] result = extractor.getNativeLibs(EMPTY);
+        String[] result = LinuxNativeLibsExtractor.getNativeLibs(EMPTY);
         int numExpectedLibs = 0;
 
         assertNotNull(result);

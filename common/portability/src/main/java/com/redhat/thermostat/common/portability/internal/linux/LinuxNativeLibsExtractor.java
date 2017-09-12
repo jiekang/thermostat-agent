@@ -34,13 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.jvm.overview.agent.internal.model;
+package com.redhat.thermostat.common.portability.internal.linux;
 
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public final class VmNativeLibsExtractorFactory {
+public class LinuxNativeLibsExtractor {
 
-    public static VmNativeLibsExtractor getInstance(Integer pid) {
-        return new VmNativeLibsExtractorImpl(pid);
+    private static final Logger LOGGER
+            = LoggingUtils.getLogger(LinuxNativeLibsExtractor.class);
+
+    public static String[] getNativeLibs(int pid) {
+        return getNativeLibsFromReader(new File(String.format("/proc/%d/maps", pid)));
+    }
+
+    // for testing purposes only
+    static String[] getNativeLibs(File testFile) {
+        return getNativeLibsFromReader(testFile);
+    }
+
+    private static String[] getNativeLibsFromReader(File nativeLibFile) {
+        final String soGrep = ".+\\.so.*";
+        Set<String> result = new HashSet<>();
+        try (BufferedReader br
+                     = new BufferedReader(new FileReader(nativeLibFile))) {
+            String next = br.readLine();
+            while (next != null) {
+                next = next.trim();
+                if (next.matches(soGrep)) {
+                    String candidate = next.substring(next.lastIndexOf(' ') + 1);
+                    result.add(candidate);
+                }
+                next = br.readLine();
+            }
+            return result.toArray(new String[0]);
+        } catch (IOException ex) {
+            LOGGER.log(Level.WARNING, "Unable to retrieve native libraries.");
+            LOGGER.log(Level.INFO, ex.getMessage());
+            return new String[0];
+        }
     }
 }

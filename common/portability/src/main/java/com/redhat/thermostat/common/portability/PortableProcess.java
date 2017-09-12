@@ -61,4 +61,6 @@ public interface PortableProcess {
     boolean terminateProcess(int pid, int exitcode, int waitMillis);
 
     int getCurrentProcessPid();
+
+    String[] getNativeLibs(int pid);
 }

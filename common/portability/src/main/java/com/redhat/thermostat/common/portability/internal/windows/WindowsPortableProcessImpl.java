@@ -106,4 +106,9 @@ public class WindowsPortableProcessImpl implements PortableProcess {
     public int getCurrentProcessPid() {
         return helper.getCurrentProcessPid();
     }
+
+    @Override
+    public String[] getNativeLibs(int pid) {
+        return helper.getProcessModules(pid);
+    }
 }

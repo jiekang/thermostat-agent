@@ -119,4 +119,9 @@ public class LinuxPortableProcessImpl implements PortableProcess {
     public int getCurrentProcessPid() {
         return posixHelper.getCurrentProcessPid();
     }
+
+    @Override
+    public String[] getNativeLibs(int pid) {
+        return LinuxNativeLibsExtractor.getNativeLibs(pid);
+    }
 }

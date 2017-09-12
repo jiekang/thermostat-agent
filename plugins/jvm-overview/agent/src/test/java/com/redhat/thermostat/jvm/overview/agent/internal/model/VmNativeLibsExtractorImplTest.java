@@ -36,11 +36,48 @@
 
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
+import com.redhat.thermostat.common.portability.PortableProcess;
+import com.redhat.thermostat.common.portability.PortableProcessFactory;
 import com.redhat.thermostat.shared.config.OS;
+import org.junit.Before;
+import org.junit.Test;
 
-public final class VmNativeLibsExtractorFactory {
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
-    public static VmNativeLibsExtractor getInstance(Integer pid) {
-        return new VmNativeLibsExtractorImpl(pid);
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+public class VmNativeLibsExtractorImplTest {
+
+    private PortableProcess procHelper = PortableProcessFactory.getInstance();
+
+    @Before
+    public void setup() {
+        procHelper = PortableProcessFactory.getInstance();
+    }
+
+    @Test
+    public void currentProcessTest() {
+        final int pid = procHelper.getCurrentProcessPid();
+        VmNativeLibsExtractorImpl extractor = new VmNativeLibsExtractorImpl(pid);
+        checkLibs(extractor.getNativeLibs());
+    }
+
+    private void checkLibs(final String[] libArray) {
+        assertNotNull(libArray);
+        Set<String> libs = new HashSet<String>();
+        for (String s : libArray) {
+            File f = new File(s);
+            libs.add(f.getName().toLowerCase());
+        }
+        if (OS.IS_WINDOWS) {
+            assertTrue(libs.contains("jvm.dll"));
+        } else if (OS.IS_MACOS) {
+            assertTrue(libs.contains("libjvm.dylib"));
+        } else {
+            assertTrue(libs.contains("libjvm.so"));
+        }
     }
 }

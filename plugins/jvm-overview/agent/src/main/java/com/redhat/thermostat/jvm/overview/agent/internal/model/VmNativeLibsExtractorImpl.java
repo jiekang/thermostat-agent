@@ -36,58 +36,23 @@
 
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashSet;
+import com.redhat.thermostat.common.portability.PortableProcess;
+import com.redhat.thermostat.common.portability.PortableProcessFactory;
+
 import java.util.Objects;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-public class VmLinuxNativeLibsExtractor implements VmNativeLibsExtractor {
-
-    private static final Logger LOGGER
-            = LoggingUtils.getLogger(VmInfoDAOImpl.class);
+public class VmNativeLibsExtractorImpl implements VmNativeLibsExtractor {
 
     private final Integer pid;
+    private final PortableProcess helper = PortableProcessFactory.getInstance();
 
-    public VmLinuxNativeLibsExtractor(Integer pid) {
+    public VmNativeLibsExtractorImpl(Integer pid) {
         Objects.requireNonNull(pid);
         this.pid = pid;
     }
 
-    private String[] getNativeLibsFromReader(File nativeLibFile) {
-        final String soGrep = ".+\\.so.*";
-        Set<String> result = new HashSet<>();
-        try (BufferedReader br
-                = new BufferedReader(new FileReader(nativeLibFile))) {
-            String next = br.readLine();
-            while (next != null) {
-                next = next.trim();
-                if (next.matches(soGrep)) {
-                    String candidate = next.substring(next.lastIndexOf(' ') + 1);
-                    result.add(candidate);
-                }
-                next = br.readLine();
-            }
-            return result.toArray(new String[0]);
-        } catch (IOException ex) {
-            LOGGER.log(Level.WARNING, "Unable to retrieve native libraries.");
-            LOGGER.log(Level.INFO, ex.getMessage());
-            return new String[0];
-        }
-    }
-
     @Override
     public String[] getNativeLibs() {
-        return getNativeLibsFromReader(new File(String.format("/proc/%d/maps", pid)));
-    }
-
-    // for testing purposes only
-    String[] getNativeLibs(File testFile) {
-        return getNativeLibsFromReader(testFile);
+        return helper.getNativeLibs(pid);
     }
 }
