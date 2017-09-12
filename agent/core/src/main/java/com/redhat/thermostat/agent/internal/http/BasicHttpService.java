@@ -56,7 +56,7 @@ class BasicHttpService {
     protected HttpClientFacade client;
     protected AgentStartupConfiguration agentStartupConfiguration;
     protected StorageCredentials creds;
-    
+
     BasicHttpService() {
         this(new HttpClientCreator(), new ConfigCreator(), new CredentialsCreator());
     }
@@ -66,19 +66,19 @@ class BasicHttpService {
         this.configCreator = configCreator;
         this.credsCreator = credsCreator;
     }
-    
-    protected void doActivate(CommonPaths commonPaths, SSLConfiguration sslConfig) {
+
+    protected void doActivate(CommonPaths commonPaths, SSLConfiguration sslConfig, final String serviceName) {
         try {
             agentStartupConfiguration = configCreator.create(commonPaths);
             client = httpClientCreator.create(sslConfig);
             creds = credsCreator.create(commonPaths);
             client.start();
-            logger.log(Level.FINE, "HttpRequestService activated");
+            logger.log(Level.FINE, serviceName + " activated");
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "HttpRequestService failed to start correctly. Behaviour undefined.", e);
+            logger.log(Level.SEVERE, serviceName + " failed to start correctly. Behaviour undefined.", e);
         }
     }
-    
+
     static class ConfigCreator {
         AgentStartupConfiguration create(CommonPaths commonPaths) {
             AgentConfigsUtils.setConfigFiles(commonPaths.getSystemAgentConfigurationFile(),
@@ -86,17 +86,17 @@ class BasicHttpService {
             return AgentConfigsUtils.createAgentConfigs();
         }
     }
-    
+
     static class CredentialsCreator {
         StorageCredentials create(CommonPaths paths) {
             return new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
         }
     }
-    
+
     static class HttpClientCreator {
 
         HttpClientFacade create(SSLConfiguration config) {
-            return new HttpClientFacade(config);
+            return HttpClientFacadeFactory.getInstance(config);
         }
 
     }

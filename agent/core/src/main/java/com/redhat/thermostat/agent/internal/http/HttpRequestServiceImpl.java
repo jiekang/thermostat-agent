@@ -63,7 +63,7 @@ import com.redhat.thermostat.shared.config.SSLConfiguration;
 @Component
 @Service(value = HttpRequestService.class)
 public class HttpRequestServiceImpl extends BasicHttpService implements HttpRequestService {
-    
+
     private static final Logger logger = LoggingUtils.getLogger(HttpRequestServiceImpl.class);
 
     private static final String UNKNOWN_CREDS = "UNKNOWN:UNKNOWN";
@@ -86,7 +86,7 @@ public class HttpRequestServiceImpl extends BasicHttpService implements HttpRequ
 
     @Activate
     public void activate() {
-        super.doActivate(commonPaths, sslConfig);
+        super.doActivate(commonPaths, sslConfig, HttpRequestService.class.getSimpleName());
     }
 
     /**
@@ -96,6 +96,7 @@ public class HttpRequestServiceImpl extends BasicHttpService implements HttpRequ
      * @param requestMethod The HTTP request type: GET, PUT, POST or DELETE
      * @return The returned body for GET requests. {@code null} otherwise.
      */
+    @Override
     public String sendHttpRequest(String jsonPayload, URI uri, Method requestMethod) throws RequestFailedException {
         // Normalize URI to ensure any duplicate slashes are removed
         uri = uri.normalize();
@@ -129,7 +130,7 @@ public class HttpRequestServiceImpl extends BasicHttpService implements HttpRequ
             throw new RequestFailedException(e);
         }
     }
-    
+
     private String getBasicAuthHeaderValue() {
         String username = creds.getUsername();
         char[] pwdChar = creds.getPassword();
@@ -141,15 +142,15 @@ public class HttpRequestServiceImpl extends BasicHttpService implements HttpRequ
             String pwd = new String(pwdChar);
             userpassword = username + ":" + pwd;
         }
-        
+
         @SuppressWarnings("restriction")
         String encodedAuthorization = new sun.misc.BASE64Encoder()
                 .encode(userpassword.getBytes());
         return "Basic " + encodedAuthorization;
     }
-    
+
     // DS bind methods
-    
+
     protected void bindTokenService(KeycloakAccessTokenService tokenService) {
         this.tokenService = tokenService;
     }

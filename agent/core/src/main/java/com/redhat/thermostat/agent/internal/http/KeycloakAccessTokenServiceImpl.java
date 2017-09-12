@@ -65,15 +65,15 @@ public class KeycloakAccessTokenServiceImpl extends BasicHttpService implements 
     private static final Logger logger = LoggingUtils.getLogger(KeycloakAccessTokenServiceImpl.class);
     private static final String KEYCLOAK_TOKEN_SERVICE = "/auth/realms/__REALM__/protocol/openid-connect/token";
     private static final String KEYCLOAK_CONTENT_TYPE = "application/x-www-form-urlencoded";
-    private final Object accessTokenLock = new Object(); 
+    private final Object accessTokenLock = new Object();
     private final Gson gson = new GsonBuilder().create();
     private KeycloakAccessToken keycloakAccessToken;
-    
+
     @Reference
     private SSLConfiguration sslConfig;
     @Reference
     private CommonPaths commonPaths;
-    
+
     public KeycloakAccessTokenServiceImpl() {
         this(new HttpClientCreator(), new ConfigCreator(), new CredentialsCreator());
     }
@@ -82,12 +82,12 @@ public class KeycloakAccessTokenServiceImpl extends BasicHttpService implements 
     KeycloakAccessTokenServiceImpl(HttpClientCreator clientCreator, ConfigCreator configCreator, CredentialsCreator credsCreator) {
         super(clientCreator, configCreator, credsCreator);
     }
-    
+
     @Activate
     public void activate() {
-        super.doActivate(commonPaths, sslConfig);
+        super.doActivate(commonPaths, sslConfig, KeycloakAccessTokenService.class.getSimpleName());
     }
-    
+
     @Override
     public KeycloakAccessToken getAccessToken() throws RequestFailedException {
         synchronized(accessTokenLock) {
@@ -96,18 +96,18 @@ public class KeycloakAccessTokenServiceImpl extends BasicHttpService implements 
             } else if (keycloakAccessToken.isKeycloakTokenExpired()) {
                 logger.log(Level.FINE, "Keycloak Token expired attempting to reacquire via refresh_token");
                 keycloakAccessToken = refreshKeycloakToken();
-                
+
                 if (keycloakAccessToken == null) {
                     logger.log(Level.WARNING, "Unable to refresh Keycloak token, attempting to acquire new token");
                     keycloakAccessToken = acquireKeycloakToken();
                 }
-                
+
                 if (keycloakAccessToken == null) {
                     logger.log(Level.SEVERE, "Unable to reacquire KeycloakToken.");
                     throw new RequestFailedException("Keycloak token expired and attempt to refresh and reacquire Keycloak token failed.");
                 }
             }
-                
+
         }
         return keycloakAccessToken;
     }
@@ -158,7 +158,7 @@ public class KeycloakAccessTokenServiceImpl extends BasicHttpService implements 
         return "grant_type=refresh_token&client_id=" + agentStartupConfiguration.getKeycloakClient() +
                 "&refresh_token=" + keycloakAccessToken.getRefreshToken();
     }
-    
+
     // For testing purpuses
     void setKeycloakAccessToken(KeycloakAccessToken token) {
         synchronized (accessTokenLock) {
