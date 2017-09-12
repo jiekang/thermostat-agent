@@ -38,25 +38,23 @@ package com.redhat.thermostat.vm.memory.agent.internal.models;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugin.PluginConfiguration;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.memory.agent.model.VmTlabStat;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpStatus;
+
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.agent.http.HttpRequestService.Method;
+import com.redhat.thermostat.agent.http.RequestFailedException;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.vm.memory.agent.model.VmTlabStat;
 
 @Component
 @Service(value = VmTlabStatDAO.class)
@@ -64,10 +62,7 @@ public class VmTlabStatDAOImpl implements VmTlabStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmTlabStatDAOImpl.class);
     private static final String PLUGIN_ID = "vm-memory";
-    private static final String CONTENT_TYPE = "application/json";
 
-    private final HttpClient client;
-    private final HttpHelper httpHelper;
     private final JsonHelper jsonHelper;
     private final ConfigurationCreator configurationCreator;
 
@@ -75,15 +70,16 @@ public class VmTlabStatDAOImpl implements VmTlabStatDAO {
 
     @Reference
     private ConfigurationInfoSource configInfoSource;
+    
+    @Reference
+    private HttpRequestService httpRequestService;
 
     public VmTlabStatDAOImpl() throws Exception {
-        this(new HttpClient(), new HttpHelper(), new JsonHelper(new VmTlabStatTypeAdapter()), new ConfigurationCreator(), null);
+        this(new JsonHelper(new VmTlabStatTypeAdapter()), new ConfigurationCreator(), null);
     }
 
-    VmTlabStatDAOImpl(HttpClient client, HttpHelper httpHelper, JsonHelper jsonHelper,
+    VmTlabStatDAOImpl(JsonHelper jsonHelper,
             ConfigurationCreator configurationCreator, ConfigurationInfoSource configInfoSource) throws Exception {
-        this.client = client;
-        this.httpHelper = httpHelper;
         this.jsonHelper = jsonHelper;
         this.configurationCreator = configurationCreator;
         this.configInfoSource = configInfoSource;
@@ -93,8 +89,6 @@ public class VmTlabStatDAOImpl implements VmTlabStatDAO {
     void activate() throws Exception {
         PluginConfiguration config = configurationCreator.create(configInfoSource);
         this.gatewayURL = config.getGatewayURL();
-
-        this.httpHelper.startClient(this.client);
     }
 
     @Override
@@ -104,24 +98,15 @@ public class VmTlabStatDAOImpl implements VmTlabStatDAO {
         return;
 //        try {
 //            String json = jsonHelper.toJson(Arrays.asList(stat));
-//            StringContentProvider provider = httpHelper.createContentProvider(json);
-//
-//            Request httpRequest = client.newRequest(gatewayURL);
-//            httpRequest.method(HttpMethod.POST);
-//            httpRequest.content(provider, CONTENT_TYPE);
-//            sendRequest(httpRequest);
-//        } catch (Exception e) {
+//            httpRequestService.sendHttpRequest(json, gatewayURL, Method.POST);
+//        } catch (RequestFailedException | IOException e) {
 //            logger.log(Level.WARNING, "Failed to send VmTlabStat to Web Gateway", e);
 //        }
     }
-
-    private void sendRequest(Request httpRequest)
-            throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        ContentResponse resp = httpRequest.send();
-        int status = resp.getStatus();
-        if (status != HttpStatus.OK_200) {
-            throw new IOException("Gateway returned HTTP status " + String.valueOf(status) + " - " + resp.getReason());
-        }
+    
+    // DS bind method
+    protected void bindHttpRequestService(HttpRequestService httpRequestService) {
+        this.httpRequestService = httpRequestService;
     }
 
     protected Logger getLogger() {
@@ -139,19 +124,6 @@ public class VmTlabStatDAOImpl implements VmTlabStatDAO {
         String toJson(List<VmTlabStat> stats) throws IOException {
             return adapter.toJson(stats);
         }
-    }
-
-    // For testing purposes
-    static class HttpHelper {
-
-        void startClient(HttpClient httpClient) throws Exception {
-            httpClient.start();
-        }
-
-        StringContentProvider createContentProvider(String content) {
-            return new StringContentProvider(content);
-        }
-
     }
 
     // For testing purposes

@@ -36,79 +36,61 @@
 
 package com.redhat.thermostat.vm.memory.agent.internal.models;
 
-import static com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAOImpl.HttpHelper;
-import static com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAOImpl.JsonHelper;
 import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.eq;
 
 import java.net.URI;
 import java.util.Arrays;
 
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.common.plugin.PluginConfiguration;
-import com.redhat.thermostat.vm.memory.agent.model.VmTlabStat;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.agent.http.HttpRequestService.Method;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAOImpl.ConfigurationCreator;
+import com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAOImpl.JsonHelper;
+import com.redhat.thermostat.vm.memory.agent.model.VmTlabStat;
 
 public class VmTlabStatDAOTest {
 
     private static final String JSON = "{\"this\":\"is\",\"test\":\"JSON\"}";
     private static final String VM_ID = "0xcafe";
     private static final String AGENT_ID = "agent";
-    private static final String CONTENT_TYPE = "application/json";
     private static final URI GATEWAY_URI = URI.create("http://example.com/jvm-memory/0.0.2/");
     
-    private HttpClient httpClient;
-    private HttpHelper httpHelper;
     private JsonHelper jsonHelper;
-    private StringContentProvider contentProvider;
-    private Request request;
-    private ContentResponse response;
     private PluginConfiguration config;
+    private HttpRequestService httpRequestService;
+    private ConfigurationCreator configCreator;
+    private ConfigurationInfoSource configInfoSource;
 
     @Before
     public void setUp() throws Exception {
-        httpClient = mock(HttpClient.class);
-        request = mock(Request.class);
-        when(httpClient.newRequest(anyString())).thenReturn(request);
-        response = mock(ContentResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.OK_200);
-        when(request.send()).thenReturn(response);
-
-        httpHelper = mock(HttpHelper.class);
-        contentProvider = mock(StringContentProvider.class);
-        when(httpHelper.createContentProvider(anyString())).thenReturn(contentProvider);
+        httpRequestService = mock(HttpRequestService.class);
         jsonHelper = mock(JsonHelper.class);
         when(jsonHelper.toJson(anyListOf(VmTlabStat.class))).thenReturn(JSON);
         
         config = mock(PluginConfiguration.class);
         when(config.getGatewayURL()).thenReturn(GATEWAY_URI);
+        configCreator = mock(ConfigurationCreator.class);
+        configInfoSource = mock(ConfigurationInfoSource.class);
+        when(configCreator.create(configInfoSource)).thenReturn(config);
     }
 
     @Test
     public void testActivation() throws Exception {
-        PluginConfiguration pluginConfig = mock(PluginConfiguration.class);
-        when(pluginConfig.getGatewayURL()).thenReturn(GATEWAY_URI);
-        VmTlabStatDAOImpl.ConfigurationCreator configCreator = mock(VmTlabStatDAOImpl.ConfigurationCreator.class);
-        ConfigurationInfoSource configInfoSource = mock(ConfigurationInfoSource.class);
-        when(configCreator.create(configInfoSource)).thenReturn(pluginConfig);
 
-        VmTlabStatDAOImpl dao = new VmTlabStatDAOImpl(httpClient, httpHelper, jsonHelper, configCreator, configInfoSource);
+        VmTlabStatDAOImpl dao = new VmTlabStatDAOImpl(jsonHelper, configCreator, configInfoSource);
         dao.activate();
 
-        verify(pluginConfig, times(1)).getGatewayURL();
-        verify(httpHelper, times(1)).startClient(httpClient);
+        verify(config, times(1)).getGatewayURL();
     }
 
     @Test
@@ -134,17 +116,12 @@ public class VmTlabStatDAOTest {
         stat.setTotalFastWaste(678l);
         stat.setMaxFastWaste(333l);
 
-        VmTlabStatDAOImpl.ConfigurationCreator configurationCreator = new VmTlabStatDAOImpl.ConfigurationCreator();
-        ConfigurationInfoSource configInfoSource = mock(ConfigurationInfoSource.class);
-        VmTlabStatDAO dao = new VmTlabStatDAOImpl(httpClient, httpHelper, jsonHelper, configurationCreator, configInfoSource);
+        VmTlabStatDAOImpl dao = new VmTlabStatDAOImpl(jsonHelper, configCreator, configInfoSource);
+        dao.bindHttpRequestService(httpRequestService);
+        dao.activate();
         dao.putStat(stat);
 
-        verify(httpClient).newRequest(GATEWAY_URI);
-        verify(request).method(HttpMethod.POST);
         verify(jsonHelper).toJson(Arrays.asList(stat));
-        verify(httpHelper).createContentProvider(JSON);
-        verify(request).content(contentProvider, CONTENT_TYPE);
-        verify(request).send();
-        verify(response).getStatus();
+        verify(httpRequestService).sendHttpRequest(eq(JSON), eq(GATEWAY_URI), eq(Method.POST));
     }
 }

@@ -122,10 +122,6 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-client</artifactId>
-    </dependency>
     <!-- This will likely have to match what jetty-project's pom uses -->
     <dependency>
       <groupId>javax.servlet</groupId>
