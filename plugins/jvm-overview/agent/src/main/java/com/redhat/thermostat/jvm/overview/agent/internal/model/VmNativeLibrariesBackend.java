@@ -37,12 +37,17 @@
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
 import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.storage.core.WriterID;
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.osgi.framework.BundleContext;
 
 @Component
 @Service(value = Backend.class)
@@ -67,6 +72,20 @@ public class VmNativeLibrariesBackend extends VmListenerBackend {
     @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
         return listenerCreator.create(vmInfoDao, vmId, pid);
+    }
+
+    @Activate
+    public void componentActivated(BundleContext context) {
+        VmStatusListenerRegistrar registrar = new VmStatusListenerRegistrar(context);
+        Version version = new Version(context.getBundle());
+        initialize(writerId, registrar, version.getVersionNumber());
+    }
+
+    @Deactivate
+    protected void componentDeactivated() {
+        if (isActive()) {
+            deactivate();
+        }
     }
 
     // DS bind method
