@@ -47,7 +47,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.Map;
 
@@ -60,7 +59,6 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.agent.ipc.server.ServerTransport;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.server.internal.AgentIPCServiceImpl.FileHelper;
-import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class AgentIPCServiceImplTest {
@@ -74,11 +72,6 @@ public class AgentIPCServiceImplTest {
     private FileHelper helper;
     private IPCConfigurationWriter writer;
     private File userPropFile;
-    private File tmpdirFile;
-    private File runtimePropFile;
-    private Path userPropPath;
-    private Path runtimePropPath;
-    private WriterID writerID;
     private ServerIPCPropertiesBuilder propBuilder;
     private StubBundleContext context;
     
@@ -88,24 +81,13 @@ public class AgentIPCServiceImplTest {
         transport = mock(ServerTransport.class);
         when(transport.getType()).thenReturn(IPCType.UNKNOWN);
         userPropFile = mock(File.class);
-        userPropPath = mock(Path.class);
-        when(userPropFile.toPath()).thenReturn(userPropPath);
         propBuilder = mock(ServerIPCPropertiesBuilder.class);
         props = mock(IPCProperties.class);
         when(props.getType()).thenReturn(IPCType.UNKNOWN);
-        runtimePropFile = mock(File.class);
-        when(propBuilder.getProperties(runtimePropFile)).thenReturn(props);
-        runtimePropPath = mock(Path.class);
-        when(runtimePropFile.toPath()).thenReturn(runtimePropPath);
-        writerID = mock(WriterID.class);
-        when(writerID.getWriterID()).thenReturn(AGENT_ID);
+        when(propBuilder.getProperties(userPropFile)).thenReturn(props);
         helper = mock(FileHelper.class);
         writer = mock(IPCConfigurationWriter.class);
         when(helper.getConfigurationWriter(userPropFile)).thenReturn(writer);
-        when(helper.getSystemProperty("java.io.tmpdir")).thenReturn(TMPDIR);
-        tmpdirFile = mock(File.class);
-        when(helper.getFile(TMPDIR)).thenReturn(tmpdirFile);
-        when(helper.getFile(tmpdirFile, AgentIPCServiceImpl.RUNTIME_IPC_CONFIG_PREFIX + AGENT_ID)).thenReturn(runtimePropFile);
     }
 
     @Test
@@ -124,7 +106,7 @@ public class AgentIPCServiceImplTest {
     }
     
     @Test
-    public void testStartCreatesRuntimePropertyFile() throws Exception {
+    public void testStartCreatesPropertyFile() throws Exception {
         context.registerService(ServerTransport.class.getName(), transport, null);
         AgentIPCServiceImpl service = createService();
         ThermostatIPCCallbacks callbacks = mock(ThermostatIPCCallbacks.class);
@@ -133,27 +115,13 @@ public class AgentIPCServiceImplTest {
         service.createServer(SERVER_NAME, callbacks);
         assertTrue(service.isStarted());
         
-        verify(helper).getSystemProperty("java.io.tmpdir");
-        verify(helper).getFile(TMPDIR);
-        verify(helper).getFile(tmpdirFile, AgentIPCServiceImpl.RUNTIME_IPC_CONFIG_PREFIX + AGENT_ID);
-        verify(helper).copy(userPropPath, runtimePropPath);
-        verify(runtimePropFile).deleteOnExit();
+        verify(helper).configFileExists(userPropFile);
+        verify(helper).getConfigurationWriter(userPropFile);
+        verify(writer).write();
     }
     
-    @Test(expected=IOException.class)
-    public void testUndefinedTmpdirThrowsException() throws Exception {
-        when(helper.getSystemProperty("java.io.tmpdir")).thenReturn(null);
-        
-        context.registerService(ServerTransport.class.getName(), transport, null);
-        AgentIPCServiceImpl service = createService();
-        ThermostatIPCCallbacks callbacks = mock(ThermostatIPCCallbacks.class);
-        
-        assertFalse(service.isStarted());
-        service.createServer(SERVER_NAME, callbacks);
-    }
-
     private AgentIPCServiceImpl createService() {
-        return new AgentIPCServiceImpl(propBuilder, context, userPropFile, writerID, helper);
+        return new AgentIPCServiceImpl(propBuilder, context, userPropFile, helper);
     }
     
     @Test
