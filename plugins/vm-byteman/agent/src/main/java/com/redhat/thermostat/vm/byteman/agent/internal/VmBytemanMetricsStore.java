@@ -36,60 +36,63 @@
 
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.redhat.thermostat.agent.ipc.server.IPCMessage;
-import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
+import com.redhat.thermostat.agent.http.HttpRequestService;
+import com.redhat.thermostat.common.plugin.PluginConfiguration;
+import com.redhat.thermostat.common.plugin.PluginDAOBase;
+import com.redhat.thermostat.common.plugin.SystemID;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.byteman.agent.BytemanMetric;
-import com.redhat.thermostat.vm.byteman.agent.VmBytemanDAO;
-import com.redhat.thermostat.vm.byteman.agent.internal.typeadapters.BytemanTypeAdapterFactory;
 
-class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
-    
-    private static final Logger logger = LoggingUtils.getLogger(BytemanMetricsReceiver.class);
-    private final VmBytemanDAO dao;
-    private final VmSocketIdentifier socketId;
+class VmBytemanMetricsStore extends PluginDAOBase<BytemanMetric> {
+
+    private static final String METRICS_PATH = "metrics";
+    private static final Logger LOGGER = LoggingUtils.getLogger(VmBytemanMetricsStore.class);
+    private final HttpRequestService httpRequestService;
+    private final PluginConfiguration pluginConfig;
+    private final SystemID systemId;
     private final Gson gson;
-    
-    BytemanMetricsReceiver(VmBytemanDAO dao, VmSocketIdentifier socketId) {
-        this.dao = dao;
-        this.socketId = socketId;
-        this.gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new BytemanTypeAdapterFactory())
-                .serializeNulls()
-                .disableHtmlEscaping()
-                .create();
+
+    VmBytemanMetricsStore(HttpRequestService httpRequestService,
+                          PluginConfiguration pluginConfig,
+                          SystemID systemId,
+                          Gson gson) {
+        this.httpRequestService = httpRequestService;
+        this.pluginConfig = pluginConfig;
+        this.systemId = systemId;
+        this.gson = gson;
     }
 
     @Override
-    public void messageReceived(IPCMessage message) {
-        ByteBuffer buf = message.get();
-        CharBuffer charBuf = Charset.forName("UTF-8").decode(buf);
-        String jsonMetric = charBuf.toString();
-        logger.fine("Received metrics from byteman for socketId: " + socketId.getName() + ". Metric was: " + jsonMetric);
-        List<BytemanMetric> metrics = convertFromJson(jsonMetric);
-        for (BytemanMetric metric: metrics) {
-            dao.addMetric(metric);
-        }
+    protected String toJsonString(BytemanMetric obj) throws IOException {
+        List<BytemanMetric> bytemanMetrics = Arrays.asList(obj);
+        return gson.toJson(bytemanMetrics);
     }
 
-    private List<BytemanMetric> convertFromJson(String data) {
-        BytemanMetric[] metrics = gson.fromJson(data, BytemanMetric[].class);
-        List<BytemanMetric> listOfMetrics = new ArrayList<>();
-        for (BytemanMetric m: metrics) {
-            m.setAgentId(socketId.getAgentId());
-            m.setJvmId(socketId.getVmId());
-            listOfMetrics.add(m);
-        }
-        return listOfMetrics;
+    @Override
+    protected HttpRequestService getHttpRequestService() {
+        return httpRequestService;
+    }
+
+    @Override
+    protected PluginConfiguration getConfig() {
+        return pluginConfig;
+    }
+
+    @Override
+    protected URI getPostURI(URI basepath, BytemanMetric obj) {
+        return basepath.resolve(METRICS_PATH + "/systems/" + systemId.getSystemID() + "/jvms/" + obj.getJvmId());
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return LOGGER;
     }
 
 }

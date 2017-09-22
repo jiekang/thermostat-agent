@@ -44,8 +44,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
-import com.redhat.thermostat.common.portability.ProcessUserInfoBuilderFactory;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -53,21 +51,22 @@ import org.apache.felix.scr.annotations.Service;
 import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
 
-import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.commands.agent.receiver.RequestReceiver;
+import com.redhat.thermostat.commands.model.AgentRequest;
+import com.redhat.thermostat.commands.model.WebSocketResponse;
+import com.redhat.thermostat.commands.model.WebSocketResponse.ResponseType;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilderFactory;
 import com.redhat.thermostat.common.portability.UserNameUtil;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.jvm.overview.agent.model.VmId;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
-import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
-import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanStatus;
+import com.redhat.thermostat.vm.byteman.agent.internal.BytemanRequest.RequestAction;
 
 /**
  * Receiver class for Byteman action command channel requests.
@@ -75,105 +74,109 @@ import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAct
  */
 @Component
 @Service(value = RequestReceiver.class)
-@Property(name = "servicename", value = "com.redhat.thermostat.vm.byteman.agent.internal.BytemanRequestReceiver")
+@Property(name = "servicename", value = BytemanRequestReceiver.ACTION_NAME)
 public class BytemanRequestReceiver implements RequestReceiver {
-    
+
+    public static final String ACTION_NAME = "byteman";
     private static final int ILLEGAL_INT_VAL = -1;
     private static final int ILLEGAL_PORT = -2;
     private static final Logger logger = LoggingUtils.getLogger(BytemanRequestReceiver.class);
-    private static final Response ERROR_RESPONSE = new Response(ResponseType.ERROR);
-    private static final Response OK_RESPONSE = new Response(ResponseType.OK);
-    
+
     private final BytemanAgentAttachManager attachManager;
-    
+
     public BytemanRequestReceiver() {
         this(new BytemanAgentAttachManager());
     }
-    
+
     // package-private for testing
     BytemanRequestReceiver(BytemanAgentAttachManager attachManager) {
         this.attachManager = attachManager;
     }
-    
+
     @Reference
     private VmBytemanDAO vmBytemanDao;
-    
+
     @Reference
     private WriterID writerId;
-    
+
     @Reference
     private CommonPaths commonPaths;
-    
+
     @Reference
     private AgentIPCService agentIpcService;
-    
+
     @Reference
     private UserNameUtil userNameUtil;
-    
+
     ////////////////////////////////////////////////
     // methods used by DS
     ////////////////////////////////////////////////
-    
+
     protected void bindWriterId(WriterID writerId) {
         this.writerId = writerId;
         attachManager.setWriterId(writerId);
     }
-    
+
     protected void unbindWriterId(WriterID writerId) {
         this.writerId = null;
         attachManager.setWriterId(null);
     }
-    
+
     protected void bindVmBytemanDao(VmBytemanDAO dao) {
         this.vmBytemanDao = dao;
         attachManager.setVmBytemanDao(dao);
     }
-    
+
     protected void unbindVmBytemanDao(VmBytemanDAO dao) {
         this.vmBytemanDao = null;
         attachManager.setVmBytemanDao(null);
     }
-    
+
     protected void bindCommonPaths(CommonPaths paths) {
         attachManager.setPaths(paths);
     }
-    
+
     protected void unbindCommonPaths(CommonPaths paths) {
         // helper jars don't strictly need unsetting so we don't
         // call setPaths(null)
     }
-    
+
     protected void bindAgentIpcService(AgentIPCService ipcService) {
         IPCEndpointsManager ipcEndpointsManager = new IPCEndpointsManager(ipcService);
         attachManager.setIpcManager(ipcEndpointsManager);
         BytemanAttacher bmAttacher = new BytemanAttacher(ipcService);
         attachManager.setAttacher(bmAttacher);
     }
-    
+
     protected void unbindAgentIpcService(AgentIPCService ipcService) {
         attachManager.setIpcManager(null);
         attachManager.setAttacher(null);
     }
-    
+
     protected void bindUserNameUtil(UserNameUtil userNameUtil) {
         ProcessUserInfoBuilder userInfoBuilder = ProcessUserInfoBuilderFactory.createBuilder(new ProcDataSource(), userNameUtil);
         attachManager.setUserInfoBuilder(userInfoBuilder);
     }
-    
+
     protected void unbindUserNameUtil(UserNameUtil userNameUtil) {
         attachManager.setUserInfoBuilder(null);
     }
-    
+
     ////////////////////////////////////////////////
     // end methods used by DS
     ////////////////////////////////////////////////
-    
+
     @Override
-    public Response receive(Request request) {
-        String vmId = request.getParameter(BytemanRequest.VM_ID_PARAM_NAME);
-        String actionStr = request.getParameter(BytemanRequest.ACTION_PARAM_NAME);
-        String portStr = request.getParameter(BytemanRequest.LISTEN_PORT_PARAM_NAME);
-        String vmPidStr = request.getParameter(BytemanRequest.VM_PID_PARAM_NAME);
+    public WebSocketResponse receive(AgentRequest request) {
+        // Sanity check. We should never get requests outside our action domain.
+        if (!ACTION_NAME.equals(request.getAction())) {
+            logger.severe("Received action '" + request.getAction() + "' for receiver '" + ACTION_NAME + "'");
+            return new WebSocketResponse(request.getSequenceId(), ResponseType.ERROR);
+        }
+        String vmId = request.getJvmId();
+        String actionStr = request.getParam(BytemanRequest.ACTION_PARAM_NAME);
+        String portStr = request.getParam(BytemanRequest.LISTEN_PORT_PARAM_NAME);
+        String vmPidStr = request.getParam(BytemanRequest.VM_PID_PARAM_NAME);
         RequestAction action;
         int vmPid;
         int port;
@@ -181,35 +184,35 @@ public class BytemanRequestReceiver implements RequestReceiver {
             action = RequestAction.fromIntString(actionStr);
         } catch (IllegalArgumentException e) {
             logger.log(Level.WARNING, "Illegal action received", e);
-            return ERROR_RESPONSE;
+            return error(request.getSequenceId());
         }
         if ((vmPid = tryParseInt(vmPidStr, "VM pid not a number!", ILLEGAL_INT_VAL)) == ILLEGAL_INT_VAL) {
-            return ERROR_RESPONSE;
+            return error(request.getSequenceId());
         }
         if ((port = tryParseInt(portStr, "Listen port not an integer!", ILLEGAL_PORT)) == ILLEGAL_PORT) {
-            return ERROR_RESPONSE;
+            return error(request.getSequenceId());
         }
         if (!isPortValid(port)) {
             logger.warning("Listen port is invalid. Got value '" + port + "'");
-            return ERROR_RESPONSE;
+            return error(request.getSequenceId());
         }
         logger.fine("Processing request for vmId: " + vmId + ", pid: " + vmPid + ", Action: " + action + ", port: " + portStr);
-        Response response = null;
+        WebSocketResponse response;
         switch(action) {
         case LOAD_RULES:
-            String rule = request.getParameter(BytemanRequest.RULE_PARAM_NAME);
-            response = attachAndLoadRules(port, new VmId(vmId), vmPid, rule);
+            String rule = request.getParam(BytemanRequest.RULE_PARAM_NAME);
+            response = attachAndLoadRules(port, new VmId(vmId), vmPid, rule, request.getSequenceId());
             break;
         case UNLOAD_RULES:
-            response = unloadRules(port, new VmId(vmId));
+            response = unloadRules(port, new VmId(vmId), request.getSequenceId());
             break;
         default:
             logger.warning("Unknown action: " + action);
-            return ERROR_RESPONSE;
+            return error(request.getSequenceId());
         }
         return response;
     }
-    
+
     private boolean isPortValid(int port) {
         if (port <= 0) {
             // only agent not attached is a valid but negative value
@@ -227,15 +230,15 @@ public class BytemanRequestReceiver implements RequestReceiver {
         }
     }
 
-    private Response attachAndLoadRules(int listenPort, VmId vmId, int vmPid, String bytemanRules) {
+    private WebSocketResponse attachAndLoadRules(int listenPort, VmId vmId, int vmPid, String bytemanRules, long sequenceId) {
         int actualListenPort = attachAgentIfRequired(listenPort, vmId, vmPid);
         if (actualListenPort == BytemanRequest.NOT_ATTACHED_PORT) {
             logger.log(Level.WARNING, "Failed to attach byteman agent. Cannot load rules.");
-            return ERROR_RESPONSE;
+            return error(sequenceId);
         }
-        return loadRules(actualListenPort, vmId, bytemanRules);
+        return loadRules(actualListenPort, vmId, bytemanRules, sequenceId);
     }
-    
+
     private int attachAgentIfRequired(int listenPort, VmId vmId, int vmPid) {
         if (isAgentAttached(listenPort)) {
             return listenPort;
@@ -247,14 +250,14 @@ public class BytemanRequestReceiver implements RequestReceiver {
         }
         return actualListenPort;
     }
-    
+
     private boolean isAgentAttached(int listenPort) {
         // if we come here with a negative port value we know the agent has not
         // yet been attached.
         return listenPort != BytemanRequest.NOT_ATTACHED_PORT;
     }
 
-    private Response loadRules(int listenPort, VmId vmId, String bytemanRules) {
+    private WebSocketResponse loadRules(int listenPort, VmId vmId, String bytemanRules, final long sequence) {
         Submit submit = getSubmit(listenPort);
         try {
             List<ScriptText> existingScripts = submit.getAllScripts();
@@ -269,39 +272,48 @@ public class BytemanRequestReceiver implements RequestReceiver {
             status.setListenPort(listenPort);
             status.setRule(bytemanRules);
             status.setTimeStamp(System.currentTimeMillis());
-            status.setVmId(vmId.get());
-            vmBytemanDao.addOrReplaceBytemanStatus(status);
-            return OK_RESPONSE;
+            status.setJvmId(vmId.get());
+            vmBytemanDao.addBytemanStatus(status);
+            return ok(sequence);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to submit byteman rules", e);
-            return ERROR_RESPONSE;
+            return error(sequence);
         }
     }
 
-    private Response unloadRules(int listenPort, VmId vmId) {
+    private WebSocketResponse unloadRules(int listenPort, VmId vmId, long sequence) {
         Submit submit = getSubmit(listenPort);
         try {
             List<ScriptText> list = submit.getAllScripts();
             // Avoid no scripts to delete errors
             if (!list.isEmpty()) {
-                submit.deleteAllRules();
+                String deleteAllResult = submit.deleteAllRules();
+                logger.info("Removed all byteman rules for VM with id '" + vmId.get() + "' with result: " + deleteAllResult);
                 // update the corresponding status in storage
                 VmBytemanStatus newStatus = new VmBytemanStatus(writerId.getWriterID());
                 newStatus.setListenPort(listenPort);
                 newStatus.setRule(null);
                 newStatus.setTimeStamp(System.currentTimeMillis());
-                newStatus.setVmId(vmId.get());
-                vmBytemanDao.addOrReplaceBytemanStatus(newStatus);
+                newStatus.setJvmId(vmId.get());
+                vmBytemanDao.addBytemanStatus(newStatus);
             }
-            return OK_RESPONSE;
+            return ok(sequence);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to delete rules", e);
-            return ERROR_RESPONSE;
+            return error(sequence);
         }
+    }
+
+    private WebSocketResponse error(long sequence) {
+        return new WebSocketResponse(sequence, ResponseType.ERROR);
+    }
+
+    private WebSocketResponse ok(long sequence) {
+        return new WebSocketResponse(sequence, ResponseType.OK);
     }
 
     protected Submit getSubmit(int listenPort) {
         return new Submit(null /* localhost */, listenPort);
     }
-    
+
 }

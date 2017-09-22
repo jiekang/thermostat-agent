@@ -282,7 +282,6 @@
               <goal>single</goal>
             </goals>
           </execution>
-<!-- TODO Uncomment once Byteman plugin is ported to use web-gateway
           <execution>
             <id>assemble-all-plugin-libs</id>
             <configuration>
@@ -296,7 +295,7 @@
             <goals>
               <goal>single</goal>
             </goals>
-          </execution>-->
+          </execution>
           <execution>
             <id>assemble-scripts</id>
             <configuration>
@@ -429,7 +428,6 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>jnr-x86asm</artifactId>
-      <version>${jnr-x86asm.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
@@ -521,24 +519,24 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
-    <!--<dependency>-->
-      <!--<groupId>com.redhat.thermostat</groupId>-->
-      <!--<artifactId>thermostat-numa-distribution</artifactId>-->
-      <!--<version>${project.version}</version>-->
-      <!--<type>zip</type>-->
-    <!--</dependency>-->
     <!-- thermostat-vm-byteman-distribution does not depend on
          thermostat-vm-byteman-helper. List it explicitly so
          that copy deps works. -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-byteman-helper-distro</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-byteman-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
     <!--<dependency>-->
       <!--<groupId>com.redhat.thermostat</groupId>-->
-      <!--<artifactId>thermostat-vm-byteman-helper-distro</artifactId>-->
-      <!--<version>${project.version}</version>-->
-      <!--<type>zip</type>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>com.redhat.thermostat</groupId>-->
-      <!--<artifactId>thermostat-vm-byteman-distribution</artifactId>-->
+      <!--<artifactId>thermostat-numa-distribution</artifactId>-->
       <!--<version>${project.version}</version>-->
       <!--<type>zip</type>-->
     <!--</dependency>-->

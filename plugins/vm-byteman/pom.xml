@@ -54,7 +54,6 @@
     <module>byteman-helper</module>
     <module>byteman-helper-distro</module>
     <module>agent</module>
-    <module>common</module>
     <module>distribution</module>
   </modules>
 
