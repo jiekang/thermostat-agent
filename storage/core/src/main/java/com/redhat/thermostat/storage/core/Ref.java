@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+@Deprecated
 public interface Ref {
 
     String getStringID();

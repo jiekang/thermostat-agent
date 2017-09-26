@@ -41,6 +41,7 @@ import java.util.Objects;
 
 import com.redhat.thermostat.storage.core.Persist;
 
+@Deprecated
 public class BasePojo implements Pojo {
 
     private String agentId;

@@ -38,14 +38,19 @@ package com.redhat.thermostat.storage.model;
 
 import java.util.Objects;
 
+import com.redhat.thermostat.lang.schema.annotations.Schema;
+import com.redhat.thermostat.lang.schema.models.Timestamp;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 
 @Entity
 public class AgentInformation extends BasePojo {
 
-    private long startTime;
-    private long stopTime;
+    @Schema(required = true)
+    private Timestamp startTime;
+
+    @Schema(required = true)
+    private Timestamp stopTime;
 
     private boolean alive;
     private String address;
@@ -56,26 +61,28 @@ public class AgentInformation extends BasePojo {
     
     public AgentInformation(String writerId) {
         super(writerId);
+        startTime = new Timestamp(0);
+        stopTime = new Timestamp(0);
     }
     
     @Persist
     public long getStartTime() {
-        return startTime;
+        return startTime.get();
     }
 
     @Persist
     public void setStartTime(long startTime) {
-        this.startTime = startTime;
+        this.startTime = new Timestamp(startTime);
     }
 
     @Persist
     public void setStopTime(long stopTime) {
-        this.stopTime = stopTime;
+        this.stopTime = new Timestamp(stopTime);
     }
     
     @Persist
     public long getStopTime() {
-        return stopTime;
+        return stopTime.get();
     }
 
     @Persist

@@ -63,6 +63,7 @@ package com.redhat.thermostat.storage.model;
  *   that such properties cannot be of abstract types.
  * 
  */
+@Deprecated
 public interface Pojo {
 
 }

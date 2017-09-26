@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.lang.schema.models.Id;
+
 /**
  * This class uniquely identifies a Thermostat agent
  *

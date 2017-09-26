@@ -42,6 +42,7 @@ import java.util.Objects;
  * Keys are attributes in {@link Category}s. Think of them as
  * column names in a table if you're familiar with SQL.
  */
+@Deprecated
 public class Key<T> {
 
     // Keys used by most Categories.

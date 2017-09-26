@@ -37,7 +37,7 @@
 package com.redhat.thermostat.jvm.overview.agent;
 
 import com.redhat.thermostat.jvm.overview.agent.model.VmId;
-import com.redhat.thermostat.storage.core.Id;
+import com.redhat.thermostat.lang.schema.models.Id;
 import org.junit.Before;
 import org.junit.Test;
 

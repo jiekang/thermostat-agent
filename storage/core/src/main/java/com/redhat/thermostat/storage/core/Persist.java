@@ -46,6 +46,7 @@ import java.lang.annotation.Target;
  * form of storage when needed. Properties without this annotation will not be
  * persisted.
  */
+@Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Persist {

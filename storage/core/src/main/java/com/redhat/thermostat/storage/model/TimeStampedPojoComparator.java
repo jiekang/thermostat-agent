@@ -38,6 +38,7 @@ package com.redhat.thermostat.storage.model;
 
 import java.util.Comparator;
 
+@Deprecated
 public final class TimeStampedPojoComparator<T extends TimeStampedPojo> implements Comparator<T> {
 
     @Override

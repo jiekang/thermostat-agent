@@ -44,6 +44,7 @@ import java.util.List;
 
 import static com.redhat.thermostat.common.utils.IteratorUtils.head;
 
+@Deprecated
 public class TimeStampedPojoCorrelator implements Iterable<TimeStampedPojoCorrelator.Correlation> {
 
     public static class Correlation {

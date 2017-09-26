@@ -127,6 +127,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.redhat.thermostat.lang.schema</groupId>
+      <artifactId>thermostat-lang-schema</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>

@@ -36,12 +36,13 @@
 
 package com.redhat.thermostat.jvm.overview.agent.model;
 
-import com.redhat.thermostat.storage.core.Id;
+import com.redhat.thermostat.lang.schema.models.Id;
+import com.redhat.thermostat.lang.schema.annotations.Type;
 
 /**
  * This class uniquely identifies a Java Virtual Machine
- *
  */
+@Type(description = "Unique Virtual Machine Identifier")
 public class VmId extends Id {
 
     public VmId(String id) {

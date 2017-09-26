@@ -47,6 +47,7 @@ import java.lang.annotation.Target;
  *
  * @see Persist
  */
+@Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Entity {

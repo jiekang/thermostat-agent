@@ -40,6 +40,7 @@ package com.redhat.thermostat.storage.model;
  * Any Pojo which is taken as a timestamped piece of data should
  * implement this interface.
  */
+@Deprecated
 public interface TimeStampedPojo extends Pojo {
 
     public long getTimeStamp();
