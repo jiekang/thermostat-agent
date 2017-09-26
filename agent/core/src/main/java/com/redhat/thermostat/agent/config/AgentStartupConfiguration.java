@@ -36,38 +36,25 @@
 
 package com.redhat.thermostat.agent.config;
 
-import com.redhat.thermostat.storage.config.StartupConfiguration;
-
-public class AgentStartupConfiguration implements StartupConfiguration {
+public class AgentStartupConfiguration implements AuthenticationProviderConfig {
 
     private boolean purge;
-    private String dbUrl;
     private long startTime;
 
     private boolean keycloakEnabled;
     private String keycloakUrl;
     private String keycloakRealm;
     private String keycloakClient;
-    private String keycloakUsername;
-    private String keycloakPassword;
-    
+    private boolean basicAuthEnabled;
+
     AgentStartupConfiguration() {
     }
-    
-    @Override
-    public String getDBConnectionString() {
-        return dbUrl;
-    }
 
-    public void setDatabaseURL(String url) {
-        this.dbUrl = url;
-    }
-    
     // TODO: that should be a friend, we only want the Service to set this value
     public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
-    
+
     public long getStartTime() {
         return startTime;
     }
@@ -75,7 +62,7 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     void setPurge(boolean purge) {
         this.purge = purge;
     }
-    
+
     public boolean purge() {
         return purge;
     }
@@ -96,22 +83,7 @@ public class AgentStartupConfiguration implements StartupConfiguration {
         this.keycloakClient = keycloakClient;
     }
 
-    public String getKeycloakUsername() {
-        return keycloakUsername;
-    }
-
-    public void setKeycloakUsername(String keycloakUsername) {
-        this.keycloakUsername = keycloakUsername;
-    }
-
-    public String getKeycloakPassword() {
-        return keycloakPassword;
-    }
-
-    public void setKeycloakPassword(String keycloakPassword) {
-        this.keycloakPassword = keycloakPassword;
-    }
-
+    @Override
     public boolean isKeycloakEnabled() {
         return keycloakEnabled;
     }
@@ -126,6 +98,15 @@ public class AgentStartupConfiguration implements StartupConfiguration {
 
     public void setKeycloakRealm(String keycloakRealm) {
         this.keycloakRealm = keycloakRealm;
+    }
+
+    @Override
+    public boolean isBasicAuthEnabled() {
+        return basicAuthEnabled;
+    }
+
+    public void setBasicAuthEnabled(boolean basicAuthEnabled) {
+        this.basicAuthEnabled = basicAuthEnabled;
     }
 }
 

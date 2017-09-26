@@ -46,26 +46,6 @@
   <artifactId>thermostat-vm-byteman-agent</artifactId>
   <packaging>bundle</packaging>
   <name>Thermostat VM Byteman Agent plugin</name>
-  <profiles>
-    <profile>
-      <id>skip-byteman-common-test-jar-dep-on-test-skip</id>
-      <activation>
-        <property>
-          <name>!maven.test.skip</name>
-        </property>
-      </activation>
-      <dependencies>
-        <!-- For JsonHelper test-only dependency -->
-        <dependency>
-          <groupId>com.redhat.thermostat</groupId>
-          <artifactId>thermostat-vm-byteman-common</artifactId>
-          <version>${project.version}</version>
-          <type>test-jar</type>
-          <scope>test</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
   <build>
     <plugins>
       <plugin>
@@ -76,10 +56,12 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.byteman.agent</Bundle-SymbolicName>
-            <Export-Package />
+            <Export-Package>
+              com.redhat.thermostat.vm.byteman.agent
+            </Export-Package>
             <Private-Package>
               com.redhat.thermostat.vm.byteman.agent.internal,
-              com.redhat.thermostat.vm.byteman.agent.internal.typeadapter
+              com.redhat.thermostat.vm.byteman.agent.internal.typeadapters,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -128,12 +110,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-byteman-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-command</artifactId>
+      <artifactId>thermostat-commands-agent</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -149,6 +126,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-storage-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-jvm-overview-agent</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

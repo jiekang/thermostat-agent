@@ -58,7 +58,7 @@ import com.redhat.thermostat.host.cpu.model.CpuStatTypeAdapter;
 
 @Component
 @Service(value = CpuStatDAO.class)
-public class CpuStatDAOImpl extends PluginDAOBase<CpuStat, CpuStatDAOImpl> implements CpuStatDAO {
+public class CpuStatDAOImpl extends PluginDAOBase<CpuStat> implements CpuStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(CpuStatDAOImpl.class);
 
@@ -115,7 +115,7 @@ public class CpuStatDAOImpl extends PluginDAOBase<CpuStat, CpuStatDAOImpl> imple
     }
 
     @Override
-    protected URI getPostURI(URI basepath) {
+    protected URI getPostURI(URI basepath, CpuStat obj) {
         return basepath.resolve("systems/" + systemID.getSystemID());
     }
 

@@ -1007,3 +1007,48 @@ JNIEXPORT void JNICALL Java_com_redhat_thermostat_common_portability_internal_wi
     void *buffer = (*env)->GetDirectBufferAddress(env, bytebuffer);
     free(buffer);
 }
+
+/*
+ * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
+ * Method:    getModules0
+ * Signature: (J)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getModules0
+  (JNIEnv *env, jclass klass, jint pid) {
+
+    // Get a handle to the process (current process if pid = 0)
+    HANDLE hProcess = (pid == 0) ? GetCurrentProcess() : OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (NULL == hProcess) {
+        return NULL;
+    }
+
+    jobjectArray ret = NULL;
+
+    // Get a list of all the modules in this process.
+    DWORD cbNeeded = 0;
+    if (EnumProcessModules(hProcess, NULL, 0, &cbNeeded)) {
+        HMODULE* hMods = malloc(cbNeeded);
+        DWORD retBytes = 0;
+        // potential chase here: the library list can change size between these two calls.
+        if (EnumProcessModules(hProcess, hMods, cbNeeded, &retBytes)) {
+            int nModules = (retBytes / sizeof(HMODULE));
+            ret = (jobjectArray) (*env)->NewObjectArray(env, nModules, (*env)->FindClass(env, "java/lang/String"), NULL);
+            for (int i = 0; i < nModules; i++) {
+                TCHAR szModName[MAX_PATH];
+                // Get the full path to the module's file.
+                int nchar = GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName) / sizeof(TCHAR));
+                if (nchar > 0) {
+                    // Print the module name and handle value.
+                    jstring s = (*env)->NewString(env, (const jchar *)szModName, (jsize)wcslen(szModName));
+                    s = (*env)->NewStringUTF(env, szModName);
+                    (*env)->SetObjectArrayElement(env, ret, i, s);
+                }
+            }
+        }
+        free(hMods);
+    }
+
+    // Release the handle to the process.
+    CloseHandle( hProcess );
+    return ret;
+}

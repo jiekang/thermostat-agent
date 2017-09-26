@@ -52,12 +52,15 @@ import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.agent.config.AuthenticationProviderConfig;
+import com.redhat.thermostat.agent.http.RequestFailedException;
+import com.redhat.thermostat.agent.keycloak.KeycloakAccessToken;
+import com.redhat.thermostat.agent.keycloak.KeycloakAccessTokenService;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.commands.agent.internal.socket.AgentSocketOnMessageCallback;
 import com.redhat.thermostat.commands.agent.internal.socket.CmdChannelAgentSocket;
 import com.redhat.thermostat.commands.agent.receiver.ReceiverRegistry;
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
@@ -93,7 +96,7 @@ public class CommandsBackend extends BaseBackend {
 
     @Reference
     private SystemID systemId;
-    
+
     @Reference
     private WriterID agentId;
 
@@ -102,14 +105,20 @@ public class CommandsBackend extends BaseBackend {
 
     @Reference
     private ConfigurationInfoSource commandInfo;
-    
+
     @Reference
     private SSLConfiguration sslConfig;
+
+    @Reference
+    private KeycloakAccessTokenService keycloakTokenService;
+
+    @Reference
+    private AuthenticationProviderConfig authConfig;
 
     public CommandsBackend() {
         this(new WsClientCreator(), new CredentialsCreator(), new ConfigCreator(), new CountDownLatch(1));
     }
-    
+
     // For testing purposes
     CommandsBackend(WsClientCreator creator,
                     CredentialsCreator credsCreator,
@@ -148,12 +157,7 @@ public class CommandsBackend extends BaseBackend {
     public boolean isActive() {
         return isActive;
     }
-
-    @Override
-    public int getOrderValue() {
-        return Ordered.ORDER_FIRST + 32;
-    }
-
+    
     @Activate
     protected void componentActivated(BundleContext ctx) {
         Version version = new Version(ctx.getBundle());
@@ -181,7 +185,7 @@ public class CommandsBackend extends BaseBackend {
     }
 
     /**
-     * 
+     *
      * @return {@code true} if and only if connection was successfully made
      */
     private boolean connectWsClient() {
@@ -189,15 +193,22 @@ public class CommandsBackend extends BaseBackend {
         try {
             URI microserviceURI = config.getGatewayURL();
             String agent = agentId.getWriterID();
-            String sysId = systemId.getSystemID(); 
+            String sysId = systemId.getSystemID();
             String cmdUriPath = String.format(ENDPOINT_FORMAT, sysId, agent);
             URI agentUri = microserviceURI.resolve(cmdUriPath);
             AgentSocketOnMessageCallback onMsgCallback = new AgentSocketOnMessageCallback(receiverReg);
             CmdChannelAgentSocket agentSocket = new CmdChannelAgentSocket(
                     onMsgCallback, socketConnectLatch, agent);
             ClientUpgradeRequest agentRequest = new ClientUpgradeRequest();
-            agentRequest.setHeader(HttpHeader.AUTHORIZATION.asString(),
-                    getBasicAuthHeaderValue());
+            if (authConfig.isKeycloakEnabled()) {
+                agentRequest.setHeader(HttpHeader.AUTHORIZATION.asString(),
+                        getKeycloakAuthHeaderValue());
+            } else if (authConfig.isBasicAuthEnabled()) {
+                agentRequest.setHeader(HttpHeader.AUTHORIZATION.asString(),
+                        getBasicAuthHeaderValue());
+            } else {
+                logger.warning("No authentication scheme configured. Connection will likely fail.");
+            }
             wsClient.connect(agentSocket, agentUri, agentRequest);
             logger.fine("WebSocket connect initiated.");
             expired = !socketConnectLatch.await(10, TimeUnit.SECONDS);
@@ -215,6 +226,17 @@ public class CommandsBackend extends BaseBackend {
         }
     }
 
+    private String getKeycloakAuthHeaderValue() {
+        String bearerToken = UNKNOWN_CREDS;
+        try {
+            KeycloakAccessToken keycloakToken = keycloakTokenService.getAccessToken();
+            bearerToken = keycloakToken.getAccessToken();
+        } catch (RequestFailedException e) {
+            logger.warning("Failed to get keycloak access token from auth provider.");
+        }
+        return "Bearer " + bearerToken;
+    }
+
     String getBasicAuthHeaderValue() {
         String username = creds.getUsername();
         char[] pwdChar = creds.getPassword();
@@ -226,40 +248,45 @@ public class CommandsBackend extends BaseBackend {
             String pwd = new String(pwdChar);
             userpassword = username + ":" + pwd;
         }
-        
+
         @SuppressWarnings("restriction")
         String encodedAuthorization = new sun.misc.BASE64Encoder()
                 .encode(userpassword.getBytes());
         return "Basic " + encodedAuthorization;
     }
-    
+
     // DS bind method
     protected void bindPaths(CommonPaths paths) {
         this.paths = paths;
     }
-    
+
     // DS bind method
     protected void bindAgentId(WriterID agentId) {
         this.agentId = agentId;
     }
-    
+
     // DS bind method
     protected void bindSystemId(SystemID systemId) {
         this.systemId = systemId;
     }
-    
+
+    // DS bind method
+    protected void bindAuthConfig(AuthenticationProviderConfig authConfig) {
+        this.authConfig = authConfig;
+    }
+
     static class WsClientCreator {
         WebSocketClientFacade createClient(SSLConfiguration sslConfig) {
             return new WebSocketClientFacadeImpl(sslConfig);
         }
     }
-    
+
     static class CredentialsCreator {
         StorageCredentials create(CommonPaths paths) {
             return new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
         }
     }
-    
+
     static class ConfigCreator {
         PluginConfiguration createConfig(ConfigurationInfoSource source) {
             return new PluginConfiguration(source, PLUGIN_ID);

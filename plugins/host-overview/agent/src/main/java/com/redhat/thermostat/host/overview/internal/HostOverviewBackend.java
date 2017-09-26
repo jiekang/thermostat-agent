@@ -93,11 +93,6 @@ public class HostOverviewBackend extends BaseBackend {
     public boolean isActive() {
         return started;
     }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_DEFAULT_GROUP;
-    }
     
     // For testing purposes
     static class HostInfoBuilderCreator {

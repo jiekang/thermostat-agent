@@ -65,12 +65,5 @@ public class VmClassStatBackendTest {
         WriterID id = mock(WriterID.class);
         backend = new VmClassStatBackend(vmClassStatDao, version, registrar, id);
     }
-
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_CODE_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_USER_GROUP);
-    }
 }
 

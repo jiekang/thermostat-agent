@@ -668,7 +668,7 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
         // gets registered automatically for that reason, no need to do it
         // manually for this test.
         String strDesc = "ADD vm-class-stats SET 'agentId' = ?s , " +
-                                "'vmId' = ?s , " +
+                                "'jvmId' = ?s , " +
                                 "'timeStamp' = ?l , " +
                                 "'loadedClasses' = ?l , " +
                                 "'loadedBytes' = ?l , " +

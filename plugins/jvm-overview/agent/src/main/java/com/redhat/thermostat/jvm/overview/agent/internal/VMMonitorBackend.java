@@ -50,7 +50,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
@@ -133,10 +132,5 @@ public class VMMonitorBackend extends BaseBackend {
     @Override
     public synchronized boolean isActive() {
         return active;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_DEFAULT_GROUP;
     }
 }

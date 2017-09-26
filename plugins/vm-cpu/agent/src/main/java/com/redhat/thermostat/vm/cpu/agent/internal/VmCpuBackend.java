@@ -74,12 +74,7 @@ public class VmCpuBackend extends VmPollingBackend {
         this.action = action;
         registerAction(action);
     }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
-    }
-
+    
     private static class VmCpuBackendAction implements VmPollingAction {
 
         private VmCpuStatBuilder builder;

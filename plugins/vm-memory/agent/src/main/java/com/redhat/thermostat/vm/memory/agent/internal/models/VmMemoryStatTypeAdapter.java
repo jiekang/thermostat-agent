@@ -52,7 +52,7 @@ public class VmMemoryStatTypeAdapter extends TypeAdapter<List<VmMemoryStat>> {
     private static final String GENERATIONS = "generations";
     private static final String TIMESTAMP = "timeStamp";
     private static final String AGENT_ID = "agentId";
-    private static final String VM_ID = "jvmId";
+    private static final String JVM_ID = "jvmId";
     private static final String METASPACE_MAX_CAPACITY = "metaspaceMaxCapacity";
     private static final String METASPACE_MIN_CAPACITY = "metaspaceMinCapacity";
     private static final String METASPACE_CAPACITY = "metaspaceCapacity";
@@ -84,8 +84,8 @@ public class VmMemoryStatTypeAdapter extends TypeAdapter<List<VmMemoryStat>> {
         out.beginObject();
         out.name(AGENT_ID);
         out.value(stat.getAgentId());
-        out.name(VM_ID);
-        out.value(stat.getVmId());
+        out.name(JVM_ID);
+        out.value(stat.getJvmId());
         out.name(TIMESTAMP);
         writeLong(out, stat.getTimeStamp());
         out.name(METASPACE_MAX_CAPACITY);

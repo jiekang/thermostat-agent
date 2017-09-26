@@ -43,26 +43,32 @@
   <formats>
     <format>zip</format>
   </formats>
-  <baseDirectory>${thermostat.plugin}</baseDirectory>
-  <includeBaseDirectory>true</includeBaseDirectory>
+  <includeBaseDirectory>false</includeBaseDirectory>
   
   <dependencySets>
     <dependencySet>
       <includes>
-        <include>com.redhat.thermostat:thermostat-vm-io-common</include>
         <include>com.redhat.thermostat:thermostat-vm-io-agent</include>
       </includes>
       <useProjectArtifact>false</useProjectArtifact>
       <useStrictFiltering>true</useStrictFiltering>
+      <outputDirectory>plugins/${thermostat.plugin}</outputDirectory>
     </dependencySet>
   </dependencySets>
-  
-  <files>
-    <file>
-      <source>thermostat-plugin.xml</source>
-      <outputDirectory>/</outputDirectory>
+
+  <fileSets>
+    <fileSet>
+      <includes>
+        <include>thermostat-plugin.xml</include>
+      </includes>
+      <outputDirectory>plugins/${thermostat.plugin}</outputDirectory>
       <filtered>true</filtered>
-    </file>
-  </files>
+    </fileSet>
+    <fileSet>
+      <directory>configFiles</directory>
+      <outputDirectory>etc/plugins.d/${thermostat.plugin}</outputDirectory>
+      <filtered>true</filtered>
+    </fileSet>
+  </fileSets>
 </assembly>
 

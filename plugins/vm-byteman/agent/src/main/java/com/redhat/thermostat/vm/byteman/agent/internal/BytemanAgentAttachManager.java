@@ -49,15 +49,15 @@ import java.util.logging.Logger;
 
 import org.jboss.byteman.agent.submit.Submit;
 
+import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.portability.ProcessUserInfo;
 import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
-import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.jvm.overview.agent.model.VmId;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanStatus;
 
 /**
  * Manages attaching of the byteman agent as well as adding
@@ -65,18 +65,18 @@ import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
  *
  */
 class BytemanAgentAttachManager {
-    
+
     private static final String BYTEMAN_PLUGIN_DIR = System.getProperty("thermostat.plugin", "vm-byteman");
     private static final String BYTEMAN_PLUGIN_LIBS_DIR = BYTEMAN_PLUGIN_DIR + File.separator + "plugin-libs";
     private static final String BYTEMAN_INSTALL_HOME = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "byteman-install";
     private static final String BYTEMAN_HELPER_DIR = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "thermostat-helper";
     private static final String BYTEMAN_HOME_PROPERTY = "org.jboss.byteman.home";
     private static final Logger logger = LoggingUtils.getLogger(BytemanAgentAttachManager.class);
-    
+
     // package-private for testing
     static final String THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY = "org.jboss.byteman.thermostat.socketName";
     static List<String> helperJars;
-    
+
     private final SubmitHelper submit;
     private final FileSystemUtils fsUtils;
     private BytemanAttacher attacher;
@@ -89,7 +89,7 @@ class BytemanAgentAttachManager {
         this.submit = new SubmitHelper();
         this.fsUtils = new FileSystemUtils();
     }
-    
+
     // for testing only
     BytemanAgentAttachManager(BytemanAttacher attacher, IPCEndpointsManager ipcManager, VmBytemanDAO vmBytemanDao, SubmitHelper submit,
                               WriterID writerId, ProcessUserInfoBuilder userInfoBuilder, FileSystemUtils fsUtils) {
@@ -101,7 +101,7 @@ class BytemanAgentAttachManager {
         this.userInfoBuilder = userInfoBuilder;
         this.fsUtils = fsUtils;
     }
-    
+
     VmBytemanStatus attachBytemanToVm(VmId vmId, int vmPid) {
         logger.fine("Attaching byteman agent to VM '" + vmPid + "'");
         // Fail early if we can't determine process owner
@@ -125,11 +125,11 @@ class BytemanAgentAttachManager {
         VmBytemanStatus status = new VmBytemanStatus(writerId.getWriterID());
         status.setListenPort(info.getAgentListenPort());
         status.setTimeStamp(System.currentTimeMillis());
-        status.setVmId(vmId.get());
-        vmBytemanDao.addOrReplaceBytemanStatus(status);
+        status.setJvmId(vmId.get());
+        vmBytemanDao.addBytemanStatus(status);
         return status;
     }
-    
+
     private UserPrincipal getUserPrincipalForPid(int vmPid) {
         UserPrincipal principal = null;
         ProcessUserInfo info = userInfoBuilder.build(vmPid);
@@ -170,12 +170,12 @@ class BytemanAgentAttachManager {
     private boolean addThermostatHelperJarsToClasspath(BytemanAgentInfo info) {
         return submit.addJarsToSystemClassLoader(helperJars, info);
     }
-    
+
     static List<String> initListOfHelperJars(CommonPaths commonPaths) {
         File bytemanHelperDir = new File(commonPaths.getSystemPluginRoot(), BYTEMAN_HELPER_DIR);
         return initListOfHelperJars(bytemanHelperDir);
     }
-    
+
     // package private for testing
     static synchronized List<String> initListOfHelperJars(File helperDir) {
         if (helperJars == null) {
@@ -187,7 +187,7 @@ class BytemanAgentAttachManager {
         }
         return helperJars;
     }
-    
+
     static synchronized void setBytemanHomeProperty(CommonPaths commonPaths) {
         final String bytemanHomePropVal = System.getProperty(BYTEMAN_HOME_PROPERTY);
         if (bytemanHomePropVal == null) {
@@ -197,7 +197,7 @@ class BytemanAgentAttachManager {
             System.setProperty(BYTEMAN_HOME_PROPERTY, bytemanHome);
         }
     }
-    
+
     void setAttacher(BytemanAttacher attacher) {
         this.attacher = attacher;
     }
@@ -222,9 +222,9 @@ class BytemanAgentAttachManager {
     void setUserInfoBuilder(ProcessUserInfoBuilder userInfoBuilder) {
         this.userInfoBuilder = userInfoBuilder;
     }
-    
+
     static class SubmitHelper {
-        
+
         boolean addJarsToSystemClassLoader(List<String> jars, BytemanAgentInfo info) {
             Submit submit = new Submit(null /* localhost */, info.getAgentListenPort());
             try {
@@ -236,7 +236,7 @@ class BytemanAgentAttachManager {
                 return false;
             }
         }
-        
+
         boolean setSystemProperties(Properties properties, BytemanAgentInfo info) {
             Submit submit = new Submit(null /* localhost */, info.getAgentListenPort());
             try {
@@ -248,14 +248,14 @@ class BytemanAgentAttachManager {
                 return false;
             }
         }
-        
+
     }
-    
+
     static class FileSystemUtils {
-        
+
         UserPrincipalLookupService getUserPrincipalLookupService() {
             return FileSystems.getDefault().getUserPrincipalLookupService();
         }
-        
+
     }
 }

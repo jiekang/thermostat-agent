@@ -104,6 +104,7 @@ do
     esac
 done
 
+THERMOSTAT_EXT_JAVA_OPTS="-XX:ThreadStackSize=300 -XX:MaxRAM=50m -XX:+UseSerialGC $THERMOSTAT_EXT_JAVA_OPTS"
 # if running on cygwin, modify THERMOSTAT_HOME and BOOT_CLASSPATH to windows for the JDK
 if [ $CYGWIN_MODE -eq 1 ]; then
   export THERMOSTAT_HOME="`cygpath -w $THERMOSTAT_HOME`"

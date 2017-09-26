@@ -41,7 +41,6 @@ import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.classstat.common.Constants;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
 public class VmClassStatBackend extends VmListenerBackend {
@@ -54,11 +53,6 @@ public class VmClassStatBackend extends VmListenerBackend {
                 "Gathers class loading statistics about a JVM",
                 "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
         this.vmClassStats = vmClassStatDAO;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
     }
 
     @Override

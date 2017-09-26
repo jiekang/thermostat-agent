@@ -44,26 +44,26 @@ import com.redhat.thermostat.storage.core.Persist;
 @Entity
 public class NetworkInterfaceInfo {
 
-    private String iFace;
+    private String interfaceName;
     private String displayName;
     private String ip4Addr;
     private String ip6Addr;
 
 
     public NetworkInterfaceInfo(String iFace) {
-        this.iFace = iFace;
+        this.interfaceName = iFace;
         this.ip4Addr = null;
         this.ip6Addr = null;
     }
 
     @Persist
     public String getInterfaceName() {
-        return iFace;
+        return interfaceName;
     }
 
     @Persist
     public void setInterfaceName(String iFace) {
-        this.iFace = iFace;
+        this.interfaceName = iFace;
     }
 
     @Persist
@@ -106,7 +106,7 @@ public class NetworkInterfaceInfo {
     
     @Override
     public int hashCode() {
-        return Objects.hash(iFace, ip4Addr, ip6Addr);
+        return Objects.hash(interfaceName, ip4Addr, ip6Addr);
     }
 
     @Override
@@ -118,7 +118,7 @@ public class NetworkInterfaceInfo {
         if (getClass() != obj.getClass())
             return false;
             NetworkInterfaceInfo other = (NetworkInterfaceInfo) obj;
-            return Objects.equals(iFace, other.iFace) && Objects.equals(ip4Addr, other.ip4Addr)
+            return Objects.equals(interfaceName, other.interfaceName) && Objects.equals(ip4Addr, other.ip4Addr)
                     && Objects.equals(ip6Addr, other.ip6Addr);
     }
 }

@@ -52,7 +52,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanDAO;
 
 public class IPCEndpointsManagerTest {
     

@@ -43,13 +43,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.plugin.SystemID;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 import com.redhat.thermostat.agent.http.HttpRequestService;
-import com.redhat.thermostat.agent.http.HttpRequestService.RequestFailedException;
+import com.redhat.thermostat.agent.http.RequestFailedException;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.plugin.PluginConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -72,6 +73,9 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     @Reference
     private HttpRequestService httpRequestService;
 
+    @Reference
+    private SystemID systemID;
+
     public VmGcStatDAOImpl() {
         this(new JsonHelper(new VmGcStatTypeAdapter()), new ConfigurationCreator(), null);
     }
@@ -88,6 +92,10 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
         this.gatewayURL = config.getGatewayURL();
     }
 
+    void bindSystemID(final SystemID id) {
+        this.systemID = id;
+    }
+
     protected void bindHttpRequestService(HttpRequestService httpRequestService) {
         this.httpRequestService = httpRequestService;
     }
@@ -97,11 +105,15 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
         logger.log(Level.INFO, "Unbound HTTP service. Further attempts to store data will fail until bound again.");
     }
 
+    protected URI getPostURI(final String jvmID) {
+        return gatewayURL.resolve("systems/" + systemID.getSystemID() + "/jvms/" + jvmID);
+    }
+
     @Override
     public void putVmGcStat(final VmGcStat stat) {
         try {
             String json = jsonHelper.toJson(Arrays.asList(stat));
-            httpRequestService.sendHttpRequest(json, gatewayURL, HttpRequestService.Method.POST);
+            httpRequestService.sendHttpRequest(json, getPostURI(stat.getJvmId()), HttpRequestService.Method.POST);
         } catch (RequestFailedException | IOException e) {
             logger.log(Level.WARNING, "Failed to send VmGcStat information to web gateway", e);
         }

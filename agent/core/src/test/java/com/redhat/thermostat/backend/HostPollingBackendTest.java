@@ -63,11 +63,7 @@ public class HostPollingBackendTest {
         Version mockVersion = mock(Version.class);
         when(mockVersion.getVersionNumber()).thenReturn("backend-version");
         backend = new HostPollingBackend("backend-name", "backend-description",
-                  "backend-vendor", mockVersion, mockExecutor) {
-                    @Override
-                    public int getOrderValue() {
-                        return 0; // Doesn't matter, not being tested.
-                    }
+                "backend-vendor", mockVersion, mockExecutor) {
         };
         if (!backend.getObserveNewJvm()) {
             /* At time of writing, default is true.  This is
@@ -77,14 +73,14 @@ public class HostPollingBackendTest {
             backend.setObserveNewJvm(true);
         }
     }
-    
+
     /**
      * If an action throws exceptions repeatedly, that action shall get
      * disabled/unregistered.
      */
     @Bug(id = "3242",
-         summary = "Adverse Backend breaks other Backends badly ",
-         url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3242")
+            summary = "Adverse Backend breaks other Backends badly ",
+            url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3242")
     @Test
     public void testDoScheduledActionsWithExceptions() {
         final int beyondExceptionThreshold = 13; // Anything beyond 10 will do
@@ -133,9 +129,9 @@ public class HostPollingBackendTest {
         backend.doScheduledActions();
         verify(action, never()).run();
     }
-    
+
     private static class BadHostPollingAction implements HostPollingAction {
-        
+
         private int callCount;
 
         @Override
@@ -143,7 +139,7 @@ public class HostPollingBackendTest {
             callCount++;
             throw new RuntimeException("HostPollingBackend.doScheduledActions() testing!");
         }
-        
+
     }
 
 }

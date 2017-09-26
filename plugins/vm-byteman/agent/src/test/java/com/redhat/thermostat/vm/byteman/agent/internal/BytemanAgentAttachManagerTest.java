@@ -63,26 +63,26 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
+import com.redhat.thermostat.common.portability.ProcessChecker;
 import com.redhat.thermostat.common.portability.ProcessUserInfo;
 import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
-import com.redhat.thermostat.common.portability.ProcessChecker;
-import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.jvm.overview.agent.model.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.FileSystemUtils;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.SubmitHelper;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 
 public class BytemanAgentAttachManagerTest {
-    
+
     private static final VmId SOME_VM_ID = new VmId("some-vm-id");
     private static final int SOME_VM_PID = 99910;
     private static final String SOME_AGENT_ID = "some-agent-id";
     private static final int SOME_UID = 1111;
     private static final String SOME_USERNAME = "someUser";
     private static final BytemanAgentInfo SOME_SUCCESS_BYTEMAN_INFO = new BytemanAgentInfo(SOME_VM_PID, 3344, null, SOME_VM_ID.get(), SOME_AGENT_ID, false, false);
-    
+
     private BytemanAgentAttachManager manager;
     private IPCEndpointsManager ipcManager;
     private VmBytemanDAO vmBytemanDao;
@@ -90,7 +90,7 @@ public class BytemanAgentAttachManagerTest {
     private BytemanAttacher bytemanAttacher;
     private ProcessUserInfoBuilder userInfoBuilder;
     private UserPrincipalLookupService lookup;
-    
+
     @Before
     public void setup() throws IOException {
         ipcManager = mock(IPCEndpointsManager.class);
@@ -101,7 +101,7 @@ public class BytemanAgentAttachManagerTest {
         when(writerId.getWriterID()).thenReturn(SOME_AGENT_ID);
         userInfoBuilder = mock(ProcessUserInfoBuilder.class);
         FileSystemUtils fsUtils = mock(FileSystemUtils.class);
-        
+
         ProcessUserInfo info = new ProcessUserInfo(SOME_UID, SOME_USERNAME);
         when(userInfoBuilder.build(SOME_VM_PID)).thenReturn(info);
         lookup = mock(UserPrincipalLookupService.class);
@@ -110,7 +110,7 @@ public class BytemanAgentAttachManagerTest {
         when(lookup.lookupPrincipalByName(SOME_USERNAME)).thenReturn(owner);
         manager = new BytemanAgentAttachManager(bytemanAttacher, ipcManager, vmBytemanDao, submit, writerId, userInfoBuilder, fsUtils);
     }
-    
+
     @After
     public void tearDown() {
         BytemanAgentAttachManager.helperJars = null;
@@ -125,42 +125,42 @@ public class BytemanAgentAttachManagerTest {
         int listenPort = 9881;
         BytemanAgentInfo bytemanAgentInfo = new BytemanAgentInfo(vmPid, listenPort, null, workingVmId, agentId, false, false);
         when(bytemanAttacher.attach(workingVmId, vmPid, agentId)).thenReturn(bytemanAgentInfo);
-        
+
         // mock that installing of helper jars works
         when(submit.addJarsToSystemClassLoader(any(List.class), any(BytemanAgentInfo.class))).thenReturn(true);
-        
+
         ProcessUserInfo info = new ProcessUserInfo(5000, "testUser");
         when(userInfoBuilder.build(vmPid)).thenReturn(info);
         UserPrincipal owner = mock(UserPrincipal.class);
         when(lookup.lookupPrincipalByName("testUser")).thenReturn(owner);
-        
+
         VmId vmId = new VmId(workingVmId);
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn(agentId);
         manager.setWriterId(writerId);
         VmBytemanStatus bytemanStatus = manager.attachBytemanToVm(vmId, vmPid);
         VmSocketIdentifier socketId = new VmSocketIdentifier(workingVmId, vmPid, agentId);
-        
+
         // IPC endpoint must be started
         verify(ipcManager).startIPCEndpoint(eq(socketId), isA(BytemanMetricsReceiver.class), eq(owner));
-        
+
         // Status should have been updated/inserted
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
-        verify(vmBytemanDao).addOrReplaceBytemanStatus(statusCaptor.capture());
+        verify(vmBytemanDao).addBytemanStatus(statusCaptor.capture());
         VmBytemanStatus capturedStatus = statusCaptor.getValue();
         assertNotNull(capturedStatus);
-        assertEquals(workingVmId, capturedStatus.getVmId());
+        assertEquals(workingVmId, capturedStatus.getJvmId());
         assertEquals(agentId, capturedStatus.getAgentId());
         assertEquals(listenPort, capturedStatus.getListenPort());
         assertNull(capturedStatus.getRule());
         assertTrue(capturedStatus.getTimeStamp() > 0);
-        
+
         // Helper jars must have been added to classpath
         verify(submit).addJarsToSystemClassLoader(eq((List)null), eq(bytemanAgentInfo));
-        
+
         assertEquals(listenPort, bytemanStatus.getListenPort());
     }
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void canUseOldAttachedAgentStartIPCandAddsStatus() throws IOException {
@@ -170,70 +170,70 @@ public class BytemanAgentAttachManagerTest {
         int listenPort = 9881;
         BytemanAgentInfo bytemanAgentInfo = new BytemanAgentInfo(vmPid, listenPort, null, workingVmId, agentId, false, true);
         when(bytemanAttacher.attach(workingVmId, vmPid, agentId)).thenReturn(bytemanAgentInfo);
-        
+
         // mock setting system properties' success
         when(submit.setSystemProperties(any(Properties.class), any(BytemanAgentInfo.class))).thenReturn(true);
-        
+
         ProcessUserInfo info = new ProcessUserInfo(5000, "testUser");
         when(userInfoBuilder.build(vmPid)).thenReturn(info);
         UserPrincipal owner = mock(UserPrincipal.class);
         when(lookup.lookupPrincipalByName("testUser")).thenReturn(owner);
-        
+
         VmId vmId = new VmId(workingVmId);
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn(agentId);
         manager.setWriterId(writerId);
         VmBytemanStatus bytemanStatus = manager.attachBytemanToVm(vmId, vmPid);
         VmSocketIdentifier socketId = new VmSocketIdentifier(workingVmId, vmPid, agentId);
-        
+
         // IPC endpoint must be started
         verify(ipcManager).startIPCEndpoint(eq(socketId), isA(BytemanMetricsReceiver.class), eq(owner));
-        
+
         // Status should have been updated/inserted
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
-        verify(vmBytemanDao).addOrReplaceBytemanStatus(statusCaptor.capture());
+        verify(vmBytemanDao).addBytemanStatus(statusCaptor.capture());
         VmBytemanStatus capturedStatus = statusCaptor.getValue();
         assertNotNull(capturedStatus);
-        assertEquals(workingVmId, capturedStatus.getVmId());
+        assertEquals(workingVmId, capturedStatus.getJvmId());
         assertEquals(agentId, capturedStatus.getAgentId());
         assertEquals(listenPort, capturedStatus.getListenPort());
         assertNull(capturedStatus.getRule());
         assertTrue(capturedStatus.getTimeStamp() > 0);
-        
+
         // Helper jars must not have been added again to classpath
         verify(submit, times(0)).addJarsToSystemClassLoader(any(List.class), any(BytemanAgentInfo.class));
-        
+
         // Verify properties got set appropriately
         ArgumentCaptor<Properties> propsCaptor = ArgumentCaptor.forClass(Properties.class);
         verify(submit).setSystemProperties(propsCaptor.capture(), eq(bytemanAgentInfo));
         Properties props = propsCaptor.getValue();
         String propVal = props.getProperty(BytemanAgentAttachManager.THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY);
         assertEquals(socketId.getName(), propVal);
-        
+
         assertEquals(listenPort, bytemanStatus.getListenPort());
     }
-    
+
     @Test
     public void usernameFailureDoesNotAttach() throws IOException {
         ProcessUserInfo info = new ProcessUserInfo(SOME_UID, null);
         when(userInfoBuilder.build(SOME_VM_PID)).thenReturn(info);
-        
+
         VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
         verify(bytemanAttacher, never()).attach(any(String.class), any(int.class), any(String.class));
         verify(ipcManager, never()).startIPCEndpoint(any(VmSocketIdentifier.class), any(ThermostatIPCCallbacks.class), any(UserPrincipal.class));
         assertNull(status);
     }
-    
+
     @Test
     public void userPrincipalExceptionDoesNotAttach() throws IOException {
         when(lookup.lookupPrincipalByName(SOME_USERNAME)).thenThrow(new IOException("TEST"));
-        
+
         VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
         verify(bytemanAttacher, never()).attach(any(String.class), any(int.class), any(String.class));
         verify(ipcManager, never()).startIPCEndpoint(any(VmSocketIdentifier.class), any(ThermostatIPCCallbacks.class), any(UserPrincipal.class));
         assertNull(status);
     }
-    
+
     @Test
     public void failureToAttachDoesNotStartIPC() throws Exception {
         BytemanAttacher failAttacher = getFailureAttacher();
@@ -248,21 +248,21 @@ public class BytemanAgentAttachManagerTest {
         BytemanAttacher failAttacher = getFailureAttacher();
         manager.setAttacher(failAttacher);
         VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
-        verify(vmBytemanDao, never()).addOrReplaceBytemanStatus(any(VmBytemanStatus.class));
+        verify(vmBytemanDao, never()).addBytemanStatus(any(VmBytemanStatus.class));
         assertNull(status);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void successfulAttachAddsHelperJars() {
         // mock that installing of helper jars works
         when(submit.addJarsToSystemClassLoader(any(List.class), any(BytemanAgentInfo.class))).thenReturn(true);
-        
+
         when(bytemanAttacher.attach(SOME_VM_ID.get(), SOME_VM_PID, SOME_AGENT_ID)).thenReturn(SOME_SUCCESS_BYTEMAN_INFO);
         manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
         verify(submit).addJarsToSystemClassLoader(any(List.class), any(BytemanAgentInfo.class));
     }
-    
+
     @Test
     public void canGetListOfJarsForBytemanHelper() {
         String parent = "/foo";
@@ -278,7 +278,7 @@ public class BytemanAgentAttachManagerTest {
             assertEquals("/foo/test-file" + i + ".jar", jars.get(i));
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private BytemanAttacher getFailureAttacher() throws Exception {
         AgentIPCService ipcService = mock(AgentIPCService.class);

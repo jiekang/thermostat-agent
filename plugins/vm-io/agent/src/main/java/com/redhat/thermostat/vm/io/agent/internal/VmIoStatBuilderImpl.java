@@ -40,7 +40,7 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.portability.PortableVmIoStat;
 import com.redhat.thermostat.common.portability.PortableVmIoStatFactory;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.io.common.VmIoStat;
+import com.redhat.thermostat.vm.io.model.VmIoStat;
 
 public class VmIoStatBuilderImpl implements VmIoStatBuilder {
 

@@ -46,7 +46,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -71,8 +70,6 @@ public class ActivatorTest {
         
         CommonPaths paths = mock(CommonPaths.class);
         context.registerService(CommonPaths.class, paths, null);
-        WriterID writerID = mock(WriterID.class);
-        context.registerService(WriterID.class, writerID, null);
 
         Activator activator = new Activator();
 
@@ -81,7 +78,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(1, context.getAllServices().size());
     }
     
     @Test

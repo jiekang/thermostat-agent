@@ -44,10 +44,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.compiler.agent.internal.VmCompilerStatBackend;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
 
 public class VmClassStatBackendTest {
@@ -65,13 +63,6 @@ public class VmClassStatBackendTest {
 
         WriterID id = mock(WriterID.class);
         backend = new VmCompilerStatBackend(vmCompilerStatDao, version, registrar, id);
-    }
-
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_CODE_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_USER_GROUP);
     }
 
 }

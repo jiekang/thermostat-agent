@@ -49,7 +49,7 @@ public class CpuStatBuilderFactory {
     }
 
     public CpuStatBuilder build(final WriterID id) {
-        return OS.IS_LINUX ? buildForLinux(id) : buildForWindows(id);
+        return OS.IS_LINUX ? buildForLinux(id) : OS.IS_WINDOWS ? buildForWindows(id) : buildForMacOS(id);
     }
 
     private CpuStatBuilder buildForLinux(final WriterID id) {
@@ -57,6 +57,12 @@ public class CpuStatBuilderFactory {
         final long ticksPerSecond = SysConf.getClockTicksPerSecond();
         final ProcDataSource source = new ProcDataSource();
         return new LinuxCpuStatBuilder(clock, source, ticksPerSecond, id);
+    }
+
+    private CpuStatBuilder buildForMacOS(final WriterID id) {
+        final Clock clock = new SystemClock();
+        final long ticksPerSecond = SysConf.getClockTicksPerSecond();
+        return new MacOsCpuStatBuilder(clock, ticksPerSecond, id);
     }
 
     private CpuStatBuilder buildForWindows(final WriterID id) {

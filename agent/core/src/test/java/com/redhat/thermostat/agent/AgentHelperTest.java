@@ -59,7 +59,6 @@ public class AgentHelperTest {
         when(backend.getDescription()).thenReturn(DESCRIPTION);
         when(backend.getObserveNewJvm()).thenReturn(true);
         when(backend.isActive()).thenReturn(true);
-        when(backend.getOrderValue()).thenReturn(ORDER_VALUE);
 
         BackendInformation information =
                 AgentHelper.createBackendInformation(backend, WRITER_ID);
@@ -68,7 +67,6 @@ public class AgentHelperTest {
         assertEquals(DESCRIPTION, information.getDescription());
         assertEquals(true, information.isObserveNewJvm());
         assertEquals(true, information.isActive());
-        assertEquals(ORDER_VALUE, information.getOrderValue());
         assertEquals(WRITER_ID, information.getAgentId());
     }
 
@@ -80,7 +78,6 @@ public class AgentHelperTest {
         when(backend.getDescription()).thenReturn(DESCRIPTION);
         when(backend.getObserveNewJvm()).thenReturn(false);
         when(backend.isActive()).thenReturn(false);
-        when(backend.getOrderValue()).thenReturn(ORDER_VALUE);
 
         BackendInformation information =
                 AgentHelper.createBackendInformation(backend, WRITER_ID);
@@ -89,7 +86,6 @@ public class AgentHelperTest {
         assertEquals(DESCRIPTION, information.getDescription());
         assertEquals(false, information.isObserveNewJvm());
         assertEquals(false, information.isActive());
-        assertEquals(ORDER_VALUE, information.getOrderValue());
         assertEquals(WRITER_ID, information.getAgentId());
     }
 }

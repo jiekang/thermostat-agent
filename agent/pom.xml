@@ -59,7 +59,6 @@
   </dependencies>
 
   <modules>
-    <module>cli</module>
     <module>core</module>
     <module>ipc</module>
   </modules>

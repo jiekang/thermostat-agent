@@ -36,73 +36,105 @@
 
 package com.redhat.thermostat.vm.io.agent.internal;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdate;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.jvm.overview.agent.VmListenerBackend;
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdate;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.io.common.Constants;
-import com.redhat.thermostat.vm.io.common.VmIoStat;
-import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
+import com.redhat.thermostat.vm.io.model.VmIoStat;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.osgi.framework.BundleContext;
 
+@Component
+@Service(value = Backend.class)
 public class VmIoBackend extends VmListenerBackend {
+    
+    private final ListenerCreator listenerCreator;
 
+    @Reference
     private VmIoStatDAO vmIoStatDAO;
+
+    @Reference
+    private WriterID writerId;
+
     private VmIoStatBuilder builder;
 
-    public VmIoBackend(Clock clock, Version version,
-            VmIoStatDAO vmIoStatDao,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        this(version,
-                vmIoStatDao,
-                new VmIoStatBuilderImpl(clock, writerId),
-                registrar, writerId);
+    public VmIoBackend() {
+
+        this(new ListenerCreator());
     }
 
-    VmIoBackend(Version version,
-            VmIoStatDAO vmIoStatDao, VmIoStatBuilder builder,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
+    VmIoBackend(ListenerCreator listenerCreator) {
         super("VM IO Backend",
               "Gathers IO statistics about a JVM",
               "Red Hat, Inc.",
-              version.getVersionNumber(), true , registrar, writerId);
-        this.vmIoStatDAO = vmIoStatDao;
-        this.builder = builder;
+              true);
+        this.listenerCreator = listenerCreator;
+    }
+
+    @Activate
+    protected void componentActivated(BundleContext context) {
+        VmStatusListenerRegistrar registrar = new VmStatusListenerRegistrar(context);
+        Version version = new Version(context.getBundle());
+        this.builder = new VmIoStatBuilderImpl(new SystemClock(), writerId);
+        initialize(writerId, registrar, version.getVersionNumber());
+    }
+
+    @Deactivate
+    protected void componentDeactivated() {
+        if (isActive()) {
+            deactivate();
+        }
+    }
+
+    // DS bind method
+    void bindVVmIoStatDAO(VmIoStatDAO dao) {
+        this.vmIoStatDAO = dao;
+    }
+
+    // DS bind method
+    void bindWriterId(WriterID id) {
+        this.writerId = id;
     }
 
     @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmIoBackendListener(vmIoStatDAO, builder, vmId, pid);
+    protected VmUpdateListener createVmListener(String writerId, String jvmId, int pid) {
+        return listenerCreator.create(vmIoStatDAO, builder, jvmId, pid);
     }
 
     private static class VmIoBackendListener implements VmUpdateListener {
         private VmIoStatDAO vmIoStatDAO;
         private VmIoStatBuilder builder;
-        private String vmId;
+        private String jvmId;
         private int pid;
 
-
-        public VmIoBackendListener (VmIoStatDAO vmIoStatDAO, VmIoStatBuilder builder, String vmId, int pid) {
+        VmIoBackendListener(VmIoStatDAO vmIoStatDAO, VmIoStatBuilder builder, String jvmId, int pid) {
             this.vmIoStatDAO = vmIoStatDAO;
             this.builder = builder;
-            this.vmId = vmId;
+            this.jvmId = jvmId;
             this.pid = pid;
         }
 
         @Override
         public void countersUpdated(VmUpdate update) {
-            VmIoStat dataBuilt = builder.build(vmId, pid);
+            VmIoStat dataBuilt = builder.build(jvmId, pid);
             if (dataBuilt != null) {
-                vmIoStatDAO.putVmIoStat(dataBuilt);
+                vmIoStatDAO.put(dataBuilt);
             }
         }
     }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
+    
+    // For testing purposes
+    static class ListenerCreator {
+        VmIoBackendListener create(VmIoStatDAO dao, VmIoStatBuilder builder,  String jvmId, int pid) {
+            return new VmIoBackendListener(dao, builder, jvmId, pid);
+        }
     }
-
 }

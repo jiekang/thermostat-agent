@@ -41,7 +41,6 @@
         <extension>
             <name>agent</name>
             <bundles>
-                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.common</symbolic-name><version>${project.version}</version></bundle>
                 <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.agent</symbolic-name><version>${project.version}</version></bundle>
             </bundles>
         </extension>

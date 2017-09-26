@@ -48,6 +48,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.dao.BackendInfoDAO;
+
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpContentResponse;
 import org.eclipse.jetty.client.HttpRequest;
@@ -61,6 +64,8 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import com.redhat.thermostat.storage.model.BackendInformation;
 
+@Component
+@Service(value = BackendInfoDAO.class)
 public class BackendInfoDAOImpl implements BackendInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(BackendInfoDAOImpl.class);

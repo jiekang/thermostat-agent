@@ -85,9 +85,9 @@ export THERMOSTAT_HOME
 # Thermostat user home
 if [[ "${USER_THERMOSTAT_HOME}" = "" ]]; then
   if [ $CYGWIN_MODE -eq 1 ]; then
-    USER_THERMOSTAT_HOME="`cygpath -u ${USERPROFILE}`/.thermostat"
+    USER_THERMOSTAT_HOME="`cygpath -u ${USERPROFILE}`/.thermostat-ng"
   else
-    USER_THERMOSTAT_HOME="${HOME}/.thermostat"
+    USER_THERMOSTAT_HOME="${HOME}/.thermostat-ng"
   fi
 fi
 export USER_THERMOSTAT_HOME

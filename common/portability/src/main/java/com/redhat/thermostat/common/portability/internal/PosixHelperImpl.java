@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.portability.internal;
 
-public class PosixHelperImpl {
+public class PosixHelperImpl extends PortableNativeLibraryLoader{
 
     public int getCurrentProcessPid() {
         return getCurrentProcessID0();

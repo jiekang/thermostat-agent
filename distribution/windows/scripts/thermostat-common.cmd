@@ -36,7 +36,7 @@
 
 set THERMOSTAT_HOME=%~dp0..
 set THERMOSTAT_LIBS=%THERMOSTAT_HOME%\libs
-set USER_THERMOSTAT_HOME=%USERPROFILE%\.thermostat
+set USER_THERMOSTAT_HOME=%USERPROFILE%\.thermostat-ng
 
 :: Duplicated in ThermostatVmMainLabelDecorator
 set THERMOSTAT_MAIN=com.redhat.thermostat.main.Thermostat

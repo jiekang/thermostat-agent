@@ -45,7 +45,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class VmGcStat extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
-    private String vmId;
+    private String jvmId;
     private String collectorName;
     private long runCount;
     private long wallTimeInMicros;
@@ -54,23 +54,23 @@ public class VmGcStat extends BasePojo implements TimeStampedPojo {
         super(null);
     }
 
-    public VmGcStat(String writerId, String vmId, long timestamp, String collectorName, long runCount, long wallTimeInMicros) {
+    public VmGcStat(String writerId, String jvmId, long timestamp, String collectorName, long runCount, long wallTimeInMicros) {
         super(writerId);
         this.timeStamp = timestamp;
-        this.vmId = vmId;
+        this.jvmId = jvmId;
         this.collectorName = collectorName;
         this.runCount = runCount;
         this.wallTimeInMicros = wallTimeInMicros;
     }
 
     @Persist
-    public String getVmId() {
-        return vmId;
+    public String getJvmId() {
+        return jvmId;
     }
 
     @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
+    public void setJvmId(String jvmId) {
+        this.jvmId = jvmId;
     }
 
     @Persist

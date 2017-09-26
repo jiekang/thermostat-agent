@@ -178,7 +178,7 @@ public class CommonPathsImplTest {
             userHome = System.getenv(USER_THERMOSTAT_HOME_PROPERTY);
         }
         if (userHome == null) {
-            userHome = System.getProperty("user.home") + s + ".thermostat";
+            userHome = System.getProperty("user.home") + s + ".thermostat-ng";
         }
         return userHome;
     }

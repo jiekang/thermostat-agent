@@ -69,11 +69,6 @@ public class PollingBackendTest {
                   "backend-vendor", mockVersion, mockExecutor) {
 
             @Override
-            public int getOrderValue() {
-                return 0; // Doesn't matter, not being tested.
-            }
-
-            @Override
             protected void doScheduledActions() {
                 // Won't be called because mock executor.
             }
@@ -133,11 +128,6 @@ public class PollingBackendTest {
         ScheduledExecutorService mockExecutor = mock(ScheduledExecutorService.class);
         backend = new PollingBackend("backend-name", "backend-description",
                   "backend-vendor", mockVersion, mockExecutor) {
-
-            @Override
-            public int getOrderValue() {
-                return 0;
-            }
 
             @Override
             protected void doScheduledActions() {

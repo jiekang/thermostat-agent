@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.util.Arrays;
 
+import com.redhat.thermostat.common.plugin.SystemID;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,7 +75,7 @@ public class VmGcStatDAOImplTest {
         stat.setTimeStamp(1234l);
         stat.setWallTime(4000l);
         stat.setRunCount(1000l);
-        stat.setVmId("Vm-1");
+        stat.setJvmId("Vm-1");
         stat.setCollectorName("Collector");
 
         jsonHelper = mock(JsonHelper.class);
@@ -93,12 +94,15 @@ public class VmGcStatDAOImplTest {
 
     @Test
     public void verifyAddVmGcStat() throws Exception {
+        SystemID id = mock(SystemID.class);
+        when(id.getSystemID()).thenReturn("systemid");
+        dao.bindSystemID(id);
         dao.activate();
         dao.putVmGcStat(stat);
 
         verify(jsonHelper).toJson(eq(Arrays.asList(stat)));
 
-        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.Method.POST);
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI.resolve("systems/systemid/jvms/Vm-1"), HttpRequestService.Method.POST);
     }
 
 }

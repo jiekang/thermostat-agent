@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.redhat.thermostat.common.plugin.SystemID;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -113,17 +114,20 @@ public class VmMemoryStatDAOImplTest {
             }
             gen.setSpaces(spaces.toArray(new Space[spaces.size()]));
         }
-        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]),
+        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "jvmId", generations.toArray(new Generation[generations.size()]),
                 2, 3, 4, 5);
 
         VmMemoryStatDAOImpl dao = new VmMemoryStatDAOImpl(jsonHelper, creator, source);
         dao.bindHttpRequestService(httpRequestService);
+        SystemID id = mock(SystemID.class);
+        when(id.getSystemID()).thenReturn("systemid");
+        dao.bindSystemID(id);
         dao.activate();
         
         dao.putVmMemoryStat(stat);
 
         verify(jsonHelper).toJson(Arrays.asList(stat));
-        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI, HttpRequestService.Method.POST);
+        verify(httpRequestService).sendHttpRequest(JSON, GATEWAY_URI.resolve("systems/systemid/jvms/jvmId"), HttpRequestService.Method.POST);
     }
     
 }

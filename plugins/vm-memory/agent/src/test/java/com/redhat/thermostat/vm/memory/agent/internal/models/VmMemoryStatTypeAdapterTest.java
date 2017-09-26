@@ -53,7 +53,7 @@ public class VmMemoryStatTypeAdapterTest {
         VmMemoryStatTypeAdapter typeAdapter = new VmMemoryStatTypeAdapter();
         VmMemoryStat stat = new VmMemoryStat();
         stat.setTimeStamp(100l);
-        stat.setVmId("VM-1");
+        stat.setJvmId("VM-1");
         stat.setAgentId("AGENT-1");
         stat.setMetaspaceCapacity(2000l);
         stat.setMetaspaceMaxCapacity(4096l);

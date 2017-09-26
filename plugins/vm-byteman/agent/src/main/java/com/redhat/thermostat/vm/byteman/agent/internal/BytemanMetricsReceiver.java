@@ -48,9 +48,9 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
-import com.redhat.thermostat.vm.byteman.common.BytemanMetricTypeAdapterFactory;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.BytemanMetric;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.internal.typeadapters.BytemanTypeAdapterFactory;
 
 class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
     
@@ -63,7 +63,7 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
         this.dao = dao;
         this.socketId = socketId;
         this.gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new BytemanMetricTypeAdapterFactory())
+                .registerTypeAdapterFactory(new BytemanTypeAdapterFactory())
                 .serializeNulls()
                 .disableHtmlEscaping()
                 .create();
@@ -86,7 +86,7 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
         List<BytemanMetric> listOfMetrics = new ArrayList<>();
         for (BytemanMetric m: metrics) {
             m.setAgentId(socketId.getAgentId());
-            m.setVmId(socketId.getVmId());
+            m.setJvmId(socketId.getVmId());
             listOfMetrics.add(m);
         }
         return listOfMetrics;

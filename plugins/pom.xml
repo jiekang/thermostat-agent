@@ -59,14 +59,14 @@
     <module>host-network</module>
     <module>jvm-overview</module>
     <module>vm-gc</module>
+    <module>vm-io</module>
     <module>vm-memory</module>
     <module>commands</module>
-    <!--<module>vm-byteman</module>-->
+    <module>vm-byteman</module>
     <!--<module>vm-cpu</module>-->
     <!--<module>vm-classstat</module>-->
     <!--<module>vm-compiler</module>-->
     <!--<module>vm-heap-analysis</module>-->
-    <!--<module>vm-io</module>-->
     <!--<module>vm-jmx</module>-->
     <!--<module>vm-profiler</module>-->
     <!--<module>numa</module>-->

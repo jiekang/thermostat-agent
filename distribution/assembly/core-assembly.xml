@@ -52,7 +52,6 @@
         <include>com.redhat.thermostat:thermostat-main</include>
         <include>com.redhat.thermostat:thermostat-launcher</include>
         <include>com.redhat.thermostat:thermostat-agent-core</include>
-        <include>com.redhat.thermostat:thermostat-agent-cli</include>
         <include>com.redhat.thermostat:thermostat-agent-proxy-server</include>
         <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-server</include>
         <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-client</include>

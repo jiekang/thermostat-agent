@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.agent.config;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
@@ -61,15 +64,6 @@ public class AgentConfigsUtilsTest {
     }
     
     @Test
-    public void testSystemDbUrl() throws InvalidConfigurationException, IOException {
-        Properties sysProps = createSystemProperties();
-        setConfigs(sysProps, new Properties());
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
-
-        Assert.assertEquals("http://1.2.3.4:9001/hello", config.getDBConnectionString());
-    }
-    
-    @Test
     public void testSystemPurgeProp() throws InvalidConfigurationException, IOException {
         Properties sysProps = createSystemProperties();
         setConfigs(sysProps, new Properties());
@@ -78,14 +72,9 @@ public class AgentConfigsUtilsTest {
         Assert.assertFalse(config.purge());
     }
     
-    @Test
-    public void testUserDbUrl() throws InvalidConfigurationException, IOException {
-        Properties sysProps = createSystemProperties();
-        Properties userProps = createUserProperties();
-        setConfigs(sysProps, userProps);
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
-
-        Assert.assertEquals("http://5.6.7.8:9002/world", config.getDBConnectionString());
+    @Test(expected = InvalidConfigurationException.class)
+    public void testNoConfiSet() throws InvalidConfigurationException {
+        AgentConfigsUtils.createAgentConfigs();
     }
     
     @Test
@@ -96,6 +85,16 @@ public class AgentConfigsUtilsTest {
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
 
         Assert.assertTrue(config.purge());
+    }
+    
+    @Test
+    public void testIsBasicAuthEnabled() throws InvalidConfigurationException, IOException {
+        Properties sysProps = createSystemProperties();
+        Properties userProps = createUserProperties();
+        setConfigs(sysProps, userProps);
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
+        assertTrue(config.isBasicAuthEnabled());
+        assertFalse(config.isKeycloakEnabled());
     }
     
     private Properties createSystemProperties(String configListenAddress) {
@@ -110,7 +109,8 @@ public class AgentConfigsUtilsTest {
         Properties agentProperties = new Properties();
         agentProperties.setProperty("DB_URL", "http://5.6.7.8:9002/world");
         agentProperties.setProperty("SAVE_ON_EXIT", "false");
-        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "24.24.24.24:24");
+        agentProperties.setProperty("BASIC_AUTH_ENABLED", "true");
+        agentProperties.setProperty("KEYCLOAK_ENABLED", "false");
         return agentProperties;
     }
     

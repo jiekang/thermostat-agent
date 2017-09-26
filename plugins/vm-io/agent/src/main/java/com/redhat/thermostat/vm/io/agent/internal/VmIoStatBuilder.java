@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.io.agent.internal;
 
-import com.redhat.thermostat.vm.io.common.VmIoStat;
+import com.redhat.thermostat.vm.io.model.VmIoStat;
 
 public interface VmIoStatBuilder {
     VmIoStat build(String vmId, Integer pid);

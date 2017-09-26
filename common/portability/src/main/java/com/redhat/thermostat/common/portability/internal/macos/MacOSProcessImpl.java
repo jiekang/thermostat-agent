@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.portability.PortableProcess;
 import com.redhat.thermostat.common.portability.PortableProcessStat;
 import com.redhat.thermostat.common.portability.PortableVmIoStat;
 import com.redhat.thermostat.common.portability.internal.PosixHelperImpl;
+import com.redhat.thermostat.common.portability.internal.UnimplementedError;
 
 import java.util.Map;
 
@@ -101,5 +102,10 @@ public class MacOSProcessImpl implements PortableProcess {
     @Override
     public int getCurrentProcessPid() {
         return posixHelper.getCurrentProcessPid();
+    }
+
+    @Override
+    public String[] getNativeLibs(int pid) {
+        throw new UnimplementedError("getNativeLibs() is unsupported on macOS");
     }
 }

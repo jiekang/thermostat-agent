@@ -69,7 +69,7 @@ public class VmInfoDAOImplTest {
     private static final URI UPDATE_URI = GATEWAY_URI.resolve("systems/foo/jvms/vmId");
     private static final String SOME_JSON = "{\"some\" : \"json\"}";
     private static final String SOME_OTHER_JSON = "{\"some\" : {\"other\" : \"json\"}}";
-    
+
     private VmInfo info;
     private JsonHelper jsonHelper;
     private HttpRequestService httpRequestService;
@@ -122,7 +122,7 @@ public class VmInfoDAOImplTest {
         dao.bindHttpRequestService(httpRequestService);
         dao.activate();
         dao.putVmInfo(info);
-        
+
         verify(jsonHelper).toJson(eq(Arrays.asList(info)));
         verify(httpRequestService).sendHttpRequest(SOME_JSON, POST_URI, HttpRequestService.Method.POST);
     }
@@ -138,10 +138,9 @@ public class VmInfoDAOImplTest {
         ArgumentCaptor<VmInfoUpdate> updateCaptor = ArgumentCaptor.forClass(VmInfoUpdate.class);
         verify(jsonHelper).toJson(updateCaptor.capture());
         VmInfoUpdate update = updateCaptor.getValue();
-        assertEquals(3L, update.getStoppedTime());
-                
+        assertEquals(3L, update.getParam());
+
         verify(httpRequestService).sendHttpRequest(SOME_OTHER_JSON, UPDATE_URI, HttpRequestService.Method.PUT);
     }
 
 }
-

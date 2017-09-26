@@ -106,7 +106,7 @@ public class WinPipesTransportImplTest {
     public static void main(String args[]) {
 
         try {
-            WinPipesIPCProperties props = new WinPipesIPCPropertiesProvider().create(System.getProperties(), new File(System.getProperty("user.home") + "/.thermostat/etc/ipc.properties"));
+            WinPipesIPCProperties props = new WinPipesIPCPropertiesProvider().create(System.getProperties(), new File(System.getProperty("user.home") + "/.thermostat-ng/etc/ipc.properties"));
             ClientTransport tr = new WinPipesTransportImpl(props);
             IPCMessageChannel ch = tr.connect("command-channel");
             if (!ch.isOpen()) {

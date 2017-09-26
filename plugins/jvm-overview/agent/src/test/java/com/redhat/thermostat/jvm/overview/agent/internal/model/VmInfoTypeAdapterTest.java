@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoLongUpdate;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAOImpl.VmInfoStringArrayUpdate;
 import static com.redhat.thermostat.testutils.JsonUtils.assertJsonEquals;
 
 import java.util.Arrays;
@@ -49,7 +51,7 @@ import com.redhat.thermostat.jvm.overview.agent.model.VmInfo;
 import org.junit.Test;
 
 public class VmInfoTypeAdapterTest {
-    
+
     @Test
     public void testWrite() throws Exception {
         VmInfoTypeAdapter adapter = new VmInfoTypeAdapter();
@@ -68,16 +70,16 @@ public class VmInfoTypeAdapterTest {
                 "\"environment\":[{\"key\":\"A\",\"value\":\"B\"},{\"key\":\"C\",\"value\":\"D\"}]," +
                 "\"loadedNativeLibraries\":[\"libhello\",\"libworld\"],\"uid\":{\"$numberLong\":\"5678\"}," +
                 "\"username\":\"user\"}]";
-        
+
         final Map<String, String> props = new HashMap<>();
         props.put("A", "B");
         props.put("C", "D");
         final Map<String, String> env = new HashMap<>();
         env.put("E", "F");
         env.put("G", "H");
-        VmInfo first = new VmInfo("agent1", "vm1", 8000, 50000L, Long.MIN_VALUE, "1.8.0", "/path/to/java", "myClass", 
+        VmInfo first = new VmInfo("agent1", "vm1", 8000, 50000L, Long.MIN_VALUE, "1.8.0", "/path/to/java", "myClass",
                 "java myClass", "myJVM", "interesting", "1800", "-Dhello", props, env, new String[0], 1234L, "test");
-        
+
         final Map<String, String> props2 = new HashMap<>();
         final Map<String, String> env2 = new HashMap<>();
         env2.put("A", "B");
@@ -86,19 +88,29 @@ public class VmInfoTypeAdapterTest {
         VmInfo second = new VmInfo("agent2", "vm2", 9000, 100000L, 200000L, "1.7.0", "/path/to/jre", "myOtherClass",
                                    "otherClass.sh", "myOtherJVM", "info", "1700", "-Dworld", props2, env2, libs, 5678L, "user");
         List<VmInfo> infos = Arrays.asList(first, second);
-        
+
         String json = adapter.toJson(infos);
         assertJsonEquals(expected, json);
     }
-    
+
     @Test
-    public void testUpdate() throws Exception {
+    public void testUpdateLong() throws Exception {
         VmInfoUpdateTypeAdapter adapter = new VmInfoUpdateTypeAdapter();
         final String expected = "{\"set\":{\"stopTime\":{\"$numberLong\":\"5000\"}}}";
-        
-        VmInfoUpdate update = new VmInfoUpdate(5000L);
+
+        VmInfoUpdate update = new VmInfoLongUpdate(5000L);
         String json = adapter.toJson(update);
         assertJsonEquals(expected, json);
     }
-    
+
+    @Test
+    public void testUpdateStringArray() throws Exception {
+        VmInfoUpdateTypeAdapter adapter = new VmInfoUpdateTypeAdapter();
+        final String expected = "{\"set\":{\"loadedNativeLibraries\":[\"libupdate\",\"libthree\",\"libitems\"]}}";
+        String[] libs = new String[]{"libupdate", "libthree", "libitems"};
+        VmInfoUpdate update = new VmInfoStringArrayUpdate(libs);
+        String json = adapter.toJson(update);
+        assertJsonEquals(expected, json);
+    }
+
 }

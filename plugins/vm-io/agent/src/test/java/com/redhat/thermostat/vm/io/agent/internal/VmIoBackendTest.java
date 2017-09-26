@@ -36,87 +36,106 @@
 
 package com.redhat.thermostat.vm.io.agent.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
+import com.redhat.thermostat.jvm.overview.agent.VmStatusListenerRegistrar;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Version;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
+import com.redhat.thermostat.vm.io.agent.internal.VmIoBackend.ListenerCreator;
 
 public class VmIoBackendTest {
 
-    private VmIoBackend backend;
-    private VmIoStatDAO vmIoStatDao;
-    private VmStatusListenerRegistrar registrar;
-    private VmIoStatBuilder ioStatBuilder;
+    private TestVmIoBackend backend;
+    private ListenerCreator listenerCreator;
 
     @Before
     public void setup() {
-        vmIoStatDao = mock(VmIoStatDAO.class);
+        listenerCreator = mock(ListenerCreator.class);
+        backend = new TestVmIoBackend(listenerCreator);
+    }
 
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
-
-        registrar = mock(VmStatusListenerRegistrar.class);
+    @Test
+    public void testComponentActivated() {
+        BundleContext context = mock(BundleContext.class);
+        Bundle bundle = mock(Bundle.class);
+        Version version = new Version(1, 2, 3);
+        when(bundle.getVersion()).thenReturn(version);
+        when(context.getBundle()).thenReturn(bundle);
 
         WriterID id = mock(WriterID.class);
-        ioStatBuilder = mock(VmIoStatBuilderImpl.class);
-        backend = new VmIoBackend(version, vmIoStatDao, ioStatBuilder, registrar, id);
+        backend.bindWriterId(id);
+        backend.componentActivated(context);
+
+        assertEquals(id, backend.writerId);
+        assertEquals("1.2.3", backend.version);
+        assertNotNull(backend.registrar);
     }
 
     @Test
-    public void testActivate() {
-        backend.activate();
+    public void testComponentDeactivated() {
+        // Begin with backend appearing active for this test
+        backend.active = true;
 
-        verify(registrar).register(backend);
         assertTrue(backend.isActive());
-    }
-
-    @Test
-    public void testActivateTwice() {
-        assertTrue(backend.activate());
-        assertTrue(backend.isActive());
-        assertTrue(backend.activate());
-        assertTrue(backend.isActive());
-
-        assertTrue(backend.deactivate());
-    }
-
-    @Test
-    public void testDeactivate() {
-        backend.activate();
-        backend.deactivate();
-
-        verify(registrar).unregister(backend);
+        backend.componentDeactivated();
         assertFalse(backend.isActive());
     }
 
     @Test
-    public void testDeactivateTwice() {
-        assertTrue(backend.activate());
-        assertTrue(backend.isActive());
+    public void testCreateVmListener() {
+        final String writerId = "myAgent";
+        final String vmId = "myJVM";
+        final int pid = 1234;
 
-        assertTrue(backend.deactivate());
-        assertFalse(backend.isActive());
-        assertTrue(backend.deactivate());
-        assertFalse(backend.isActive());
+        VmIoStatDAO dao = mock(VmIoStatDAO.class);
+        backend.bindVVmIoStatDAO(dao);
+        backend.createVmListener(writerId, vmId, pid);
+
+        verify(listenerCreator).create(eq(dao), any(VmIoStatBuilder.class), eq(vmId), eq(pid));
     }
 
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
+    static class TestVmIoBackend extends VmIoBackend {
+        WriterID writerId;
+        VmStatusListenerRegistrar registrar;
+        String version;
+        boolean active;
 
-        assertTrue(orderValue >= Ordered.ORDER_IO_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_THREAD_GROUP);
+        TestVmIoBackend(ListenerCreator creator) {
+            super(creator);
+        }
+
+        // Override to capture values
+        @Override
+        protected void initialize(WriterID writerId, VmStatusListenerRegistrar registrar, String version) {
+            this.writerId = writerId;
+            this.registrar = registrar;
+            this.version = version;
+        }
+
+        // Override the following to test backend is deactivated when dependencies are lost
+        @Override
+        public boolean isActive() {
+            return active;
+        }
+
+        @Override
+        public boolean deactivate() {
+            active = false;
+            return true;
+        }
     }
 }
+

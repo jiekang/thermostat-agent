@@ -53,9 +53,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.ipc.server.IPCMessage;
-import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
-import com.redhat.thermostat.vm.byteman.common.JsonHelper;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.BytemanMetric;
+import com.redhat.thermostat.vm.byteman.agent.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.agent.internal.typeadapter.JsonHelper;
 
 public class BytemanMetricsReceiverTest {
 
@@ -74,7 +74,7 @@ public class BytemanMetricsReceiverTest {
         receiver.messageReceived(message);
         verify(dao, times(3)).addMetric(metricsCaptor.capture());
         List<BytemanMetric> metrics = metricsCaptor.getAllValues();
-        assertEquals("vm-id", metrics.get(0).getVmId());
+        assertEquals("vm-id", metrics.get(0).getJvmId());
         assertEquals("agent-id", metrics.get(2).getAgentId());
         assertTrue(metrics.get(1).getTimeStamp() > 0);
         assertEquals("baz0", metrics.get(0).getMarker());

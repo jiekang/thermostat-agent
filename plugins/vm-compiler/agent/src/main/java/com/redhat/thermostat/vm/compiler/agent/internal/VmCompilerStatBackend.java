@@ -55,12 +55,7 @@ public class VmCompilerStatBackend extends VmListenerBackend {
               "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
         this.vmCompilerStats = vmCompilerStatDao;
     }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
-    }
-
+    
     @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
         return new VmCompilerStatVmListener(writerId, vmCompilerStats, vmId);

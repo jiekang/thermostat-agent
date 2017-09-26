@@ -45,7 +45,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-
 /**
  * Utility class to access Windows native code
  */
@@ -307,6 +306,15 @@ public class WindowsHelperImpl extends PortableNativeLibraryLoader {
         return terminateProcess0(pid, exitcode, waitMillis);
     }
 
+    /**
+     * returns a list ofprocess modules.
+     * @param pid process id (input) if 0, use current process
+     * @return array of process moudles (DLLs and executable), module 0 is executable binary.  NULL if there was an error.
+     */
+    public String[] getProcessModules(int pid) {
+        return getModules0(pid);
+    }
+
     private static native String getHostName0(boolean prependDomain);
     private static native void getOSVersion0(long[] versionAndBuild);
     private static native boolean getGlobalMemoryStatus0(long[] info);
@@ -321,10 +329,14 @@ public class WindowsHelperImpl extends PortableNativeLibraryLoader {
 
     private static native String getProcessSID0(int pid);
     private static native String getUserName0(int pid, boolean prependDomain);
-    private static native Object getEnvironment0(long hProcess, int mode); // mode = 0 returns DirectByteBuffer, 1 = String cwd, 2 = String execuatable, 3 = String command line
     private static native boolean getProcessInfo0(int pid, long[] info);
     private static native boolean getProcessIOInfo0(int pid, long[] info);
     private static native int exists0(int pid);
+
+    // mode = 0 returns DirectByteBuffer, 1 = String cwd, 2 = String executable, 3 = String command line
+    private static native Object getEnvironment0(long hProcess, int mode);
+
+    private static native String[] getModules0(int pid);
 
     private static native int getCurrentProcessID0();
     private static native long getCurrentProcessHandle0();

@@ -58,7 +58,7 @@ import com.redhat.thermostat.host.memory.model.MemoryStatTypeAdapter;
 
 @Component
 @Service(value = MemoryStatDAO.class)
-public class MemoryStatDAOImpl extends PluginDAOBase<MemoryStat, MemoryStatDAOImpl> implements MemoryStatDAO {
+public class MemoryStatDAOImpl extends PluginDAOBase<MemoryStat> implements MemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(MemoryStatDAOImpl.class);
 
@@ -115,7 +115,7 @@ public class MemoryStatDAOImpl extends PluginDAOBase<MemoryStat, MemoryStatDAOIm
     }
 
     @Override
-    protected URI getPostURI(URI basepath) {
+    protected URI getPostURI(URI basepath, MemoryStat obj) {
         return basepath.resolve("systems/" + systemID.getSystemID());
     }
 

@@ -60,8 +60,10 @@ public class AgentConfigsUtils {
     }
     
     private static void readAndSetProperties(File systemConfigFile, File userConfigFile, AgentStartupConfiguration configuration)
-            throws InvalidConfigurationException
-    {
+            throws InvalidConfigurationException {
+        if (systemConfigFile == null && userConfigFile == null) {
+            throw new InvalidConfigurationException("No agent configuration files set!");
+        }
         Properties systemConfig = new Properties();
         if (systemConfigFile != null) {
             try {
@@ -80,11 +82,6 @@ public class AgentConfigsUtils {
             }
         }
 
-        String db = properties.getProperty(AgentProperties.DB_URL.name());
-        if (db != null) {
-            configuration.setDatabaseURL(db);
-        }
-        
         String saveOnExit = properties.getProperty(AgentProperties.SAVE_ON_EXIT.name());
         if (saveOnExit != null) {
             configuration.setPurge(!Boolean.parseBoolean(saveOnExit));
@@ -93,17 +90,14 @@ public class AgentConfigsUtils {
         }
 
         Boolean keycloakEnabled = Boolean.valueOf(properties.getProperty(AgentProperties.KEYCLOAK_ENABLED.name()));
-        if (keycloakEnabled != null) {
-            configuration.setKeycloakEnabled(keycloakEnabled);
-
+        configuration.setKeycloakEnabled(keycloakEnabled);
+        if (keycloakEnabled) {
             configuration.setKeycloakRealm(properties.getProperty(AgentProperties.KEYCLOAK_REALM.name()));
             configuration.setKeycloakUrl(properties.getProperty(AgentProperties.KEYCLOAK_URL.name()));
             configuration.setKeycloakClient(properties.getProperty(AgentProperties.KEYCLOAK_CLIENT.name()));
-            configuration.setKeycloakUsername(properties.getProperty(AgentProperties.KEYCLOAK_USERNAME.name()));
-            configuration.setKeycloakPassword(properties.getProperty(AgentProperties.KEYCLOAK_PASSWORD.name()));
-        } else {
-            configuration.setKeycloakEnabled(false);
         }
+        Boolean basicAuthEnabled = Boolean.valueOf(properties.getProperty(AgentProperties.BASIC_AUTH_ENABLED.name()));
+        configuration.setBasicAuthEnabled(basicAuthEnabled);
     }
 }
 

@@ -201,11 +201,6 @@ public class VmListenerBackendTest {
         }
 
         @Override
-        public int getOrderValue() {
-            return 0;
-        }
-
-        @Override
         protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
             return listener;
         }

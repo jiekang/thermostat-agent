@@ -55,7 +55,7 @@ import com.redhat.thermostat.vm.memory.agent.internal.models.VmTlabStatDAO;
 @Component
 @Service(value = Backend.class)
 public class VmMemoryBackend extends VmListenerBackend {
-
+    
     private final ListenerCreator listenerCreator;
 
     @Reference
@@ -103,11 +103,6 @@ public class VmMemoryBackend extends VmListenerBackend {
     // DS bind method
     protected void bindWriterId(WriterID id) {
         this.writerId = id;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
     }
 
     @Override

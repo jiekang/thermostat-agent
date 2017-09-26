@@ -62,6 +62,16 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-test</artifactId>
       <version>${project.version}</version>
@@ -100,6 +110,10 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+    </dependency>
     <!-- declarative services -->
     <dependency>
       <groupId>org.apache.felix</groupId>
@@ -117,11 +131,10 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.agent.core</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.agent.internal.Activator</Bundle-Activator>
             <Export-Package>
                 com.redhat.thermostat.agent,
                 com.redhat.thermostat.agent.http,
-                com.redhat.thermostat.agent.http.internal.keycloak,
+                com.redhat.thermostat.agent.keycloak,
                 com.redhat.thermostat.agent.config,
                 com.redhat.thermostat.agent.dao,
                 com.redhat.thermostat.agent.utils,
@@ -130,6 +143,8 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.internal,
+              com.redhat.thermostat.agent.internal.http,
+              com.redhat.thermostat.agent.internal.locale,
               com.redhat.thermostat.backend.internal,
               com.redhat.thermostat.utils.management.internal
             </Private-Package>

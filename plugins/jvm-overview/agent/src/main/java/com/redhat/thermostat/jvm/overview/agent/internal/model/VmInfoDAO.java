@@ -59,5 +59,7 @@ public interface VmInfoDAO {
     void putVmInfo(VmInfo info);
 
     void putVmStoppedTime(String agentId, String vmId, long since);
+
+    void updateVmNativeLibs(String vmId, String[] newLibs);
 }
 

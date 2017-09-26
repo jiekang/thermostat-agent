@@ -37,7 +37,6 @@
 package com.redhat.thermostat.backend;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
-import com.redhat.thermostat.common.Ordered;
 
 /**
  * Represents a plugin that runs on the agent and performs monitoring of host
@@ -53,7 +52,7 @@ import com.redhat.thermostat.common.Ordered;
  * @see VmListenerBackend
  */
 @ExtensionPoint
-public interface Backend extends Ordered {
+public interface Backend {
 
     /**
      * @return the name of the {@link Backend}

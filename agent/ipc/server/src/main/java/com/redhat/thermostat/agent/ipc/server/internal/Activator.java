@@ -51,7 +51,6 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.storage.core.WriterID;
 
 public class Activator implements BundleActivator {
     
@@ -64,15 +63,14 @@ public class Activator implements BundleActivator {
     
     public void start(final BundleContext context) throws Exception {
         propBuilder = new ServerIPCPropertiesBuilder(context);
-        Class<?>[] deps = new Class<?>[] { CommonPaths.class, WriterID.class };
+        Class<?>[] deps = new Class<?>[] { CommonPaths.class };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
             public void dependenciesAvailable(DependencyProvider services) {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class);
-                WriterID writerID = (WriterID) services.get(WriterID.class);
                 File propFile = paths.getUserIPCConfigurationFile();
-                ipcService = new AgentIPCServiceImpl(propBuilder, context, propFile, writerID);
+                ipcService = new AgentIPCServiceImpl(propBuilder, context, propFile);
                 reg = context.registerService(AgentIPCService.class.getName(), ipcService, null);
             }
 

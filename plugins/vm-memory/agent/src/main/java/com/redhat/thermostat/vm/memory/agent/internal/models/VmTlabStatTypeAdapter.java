@@ -47,7 +47,7 @@ import java.util.List;
 public class VmTlabStatTypeAdapter extends TypeAdapter<List<VmTlabStat>> {
 
     private static final String AGENT_ID = "agentId";
-    private static final String VM_ID = "vmId";
+    private static final String JVM_ID = "jvmId";
     private static final String TIMESTAMP = "timeStamp";
     private static final String ALLOC_THREADS = "allocThreads";
     private static final String TOTAL_ALLOCATIONS = "totalAllocations";
@@ -79,8 +79,8 @@ public class VmTlabStatTypeAdapter extends TypeAdapter<List<VmTlabStat>> {
 
     public void writeStat(JsonWriter out, VmTlabStat stat) throws IOException {
         out.beginObject();
-        out.name(VM_ID);
-        out.value(stat.getVmId());
+        out.name(JVM_ID);
+        out.value(stat.getJvmId());
         out.name(AGENT_ID);
         out.value(stat.getAgentId());
         out.name(TIMESTAMP);

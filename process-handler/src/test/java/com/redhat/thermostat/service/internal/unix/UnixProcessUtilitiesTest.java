@@ -38,6 +38,7 @@ package com.redhat.thermostat.service.internal.unix;
 
 import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.service.process.UNIXSignal;
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +111,10 @@ public class UnixProcessUtilitiesTest {
 
         Assert.assertTrue(processArguments.contains("12345"));
         Assert.assertTrue(processArguments.contains("ps"));
-        Assert.assertTrue(processArguments.contains("--no-heading"));
+        if (!OS.IS_MACOS)
+            Assert.assertTrue(processArguments.contains("--no-heading"));
+        else
+            Assert.assertTrue(processArguments.contains("-ocomm="));
         Assert.assertTrue(processArguments.contains("-p"));
     }
 
@@ -133,6 +137,6 @@ public class UnixProcessUtilitiesTest {
 
         String result = process.getProcessName(12345);
         Assert.assertNull(result);
-    }    
+    }
 }
 

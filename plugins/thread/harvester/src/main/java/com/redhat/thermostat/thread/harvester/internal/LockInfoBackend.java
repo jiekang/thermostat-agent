@@ -58,11 +58,6 @@ public class LockInfoBackend extends VmListenerBackend {
     }
 
     @Override
-    public int getOrderValue() {
-        return ORDER_THREAD_GROUP + 10;
-    }
-
-    @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
         Objects.requireNonNull(lockDao);
         return new LockInfoUpdater(lockDao, writerId, vmId);
