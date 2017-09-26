@@ -50,6 +50,8 @@ import com.redhat.thermostat.backend.PollingBackend;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmMapperServiceImpl;
+import com.redhat.thermostat.jvm.overview.agent.model.VmMapperService;
 
 /**
  * Convenience {@link com.redhat.thermostat.backend.Backend} class for implementations that will take some

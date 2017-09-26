@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.backend.BackendException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.jvm.overview.agent.internal.VmMonitor;
 import com.redhat.thermostat.storage.core.WriterID;
 
 /**

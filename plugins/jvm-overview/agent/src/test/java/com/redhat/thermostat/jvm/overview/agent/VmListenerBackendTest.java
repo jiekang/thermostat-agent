@@ -48,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import java.net.URISyntaxException;
 
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListener.Status;
+import com.redhat.thermostat.jvm.overview.agent.internal.VmMonitor;
 import org.junit.Before;
 import org.junit.Test;
 

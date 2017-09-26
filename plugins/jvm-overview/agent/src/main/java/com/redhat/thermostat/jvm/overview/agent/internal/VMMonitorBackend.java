@@ -43,6 +43,8 @@ import com.redhat.thermostat.common.portability.ProcessUserInfoBuilderFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.jvm.overview.agent.VmBlacklist;
 import com.redhat.thermostat.jvm.overview.agent.internal.model.VmInfoDAO;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmMapperServiceImpl;
+import com.redhat.thermostat.jvm.overview.agent.model.VmMapperService;
 import com.redhat.thermostat.storage.core.WriterID;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -50,6 +52,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
@@ -80,6 +83,8 @@ public class VMMonitorBackend extends BaseBackend {
 
     private MonitoredHost host;
     private JvmStatHostListener hostListener;
+    private VmMapperServiceImpl vmMapperService;
+    private ServiceRegistration<VmMapperService> mapperRegistration;
 
     public VMMonitorBackend() {
         super("VM Basic Monitor Backend",
@@ -90,13 +95,18 @@ public class VMMonitorBackend extends BaseBackend {
 
     @Activate
     private void _activate_(BundleContext context) {
-        notifier = new VmStatusChangeNotifier(context);
+
+        vmMapperService = new VmMapperServiceImpl();
+        mapperRegistration = context.registerService(VmMapperService.class, vmMapperService, null);
+
+        notifier = new VmStatusChangeNotifier(context, vmMapperService);
         notifier.start();
     }
 
     @Deactivate
     private void _deactivate_() {
         notifier.stop();
+        mapperRegistration.unregister();
     }
 
     @Override

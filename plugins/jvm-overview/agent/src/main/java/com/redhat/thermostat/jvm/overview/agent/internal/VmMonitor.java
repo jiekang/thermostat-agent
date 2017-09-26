@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.jvm.overview.agent;
+package com.redhat.thermostat.jvm.overview.agent.internal;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -43,7 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.backend.BackendException;
-import com.redhat.thermostat.jvm.overview.agent.internal.VmListenerWrapper;
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
@@ -138,7 +138,7 @@ public class VmMonitor {
     void setHost(MonitoredHost host) {
         this.host = host;
     }
-    
+
     /*
      * For testing purposes only.
      */

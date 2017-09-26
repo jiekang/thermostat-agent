@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListener;
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListener.Status;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmMapperServiceImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
@@ -66,8 +67,12 @@ public class VmStatusChangeNotifier {
     private final Map<VmStatusListener, Set<Integer>> listeners = new ConcurrentHashMap<>();
 
     private final ServiceTracker tracker;
+    private VmMapperServiceImpl vmMapperService;
 
-    public VmStatusChangeNotifier(BundleContext bundleContext) {
+    public VmStatusChangeNotifier(BundleContext bundleContext, VmMapperServiceImpl vmMapperService) {
+
+        this.vmMapperService = vmMapperService;
+
         this.activePids = new HashMap<>();
 
         tracker = new ServiceTracker(bundleContext, VmStatusListener.class, null) {
@@ -128,6 +133,7 @@ public class VmStatusChangeNotifier {
 
             if (newStatus == Status.VM_STARTED) {
                 activePids.put(pid, vmId);
+                vmMapperService.cache(vmId, pid);
             } else {
                 activePids.remove(pid);
             }

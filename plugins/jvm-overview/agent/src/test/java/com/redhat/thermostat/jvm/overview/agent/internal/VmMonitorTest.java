@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.jvm.overview.agent;
+package com.redhat.thermostat.jvm.overview.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -51,6 +51,7 @@ import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.jvm.overview.agent.VmUpdateListener;
 import com.redhat.thermostat.jvm.overview.agent.internal.TestLogHandler;
 import com.redhat.thermostat.jvm.overview.agent.internal.VmListenerWrapper;
 import org.junit.After;

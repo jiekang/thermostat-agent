@@ -34,19 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.jvm.overview.agent.model;
+package com.redhat.thermostat.jvm.overview.agent.internal.model;
 
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.jvm.overview.agent.model.VmId;
+import com.redhat.thermostat.lang.schema.models.Pid;
+import org.junit.Test;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-/**
- * Provides a way to load the current hosts and VMs.
- */
-public interface HostsVMsLoader {
+public class VmMapperServiceImplTest {
+    @Test
+    public void cacheNewVm() throws Exception {
+        Map<String, Pid> cache = new HashMap<>();
+        VmMapperServiceImpl service = new VmMapperServiceImpl(cache);
+        assertTrue(cache.isEmpty());
 
-    Collection<HostRef> getHosts();
-    Collection<VmRef> getVMs(HostRef host);
+        service.cache("42", 4242);
+        assertTrue(cache.containsKey("42"));
+        assertEquals(new Pid(4242), cache.get("42"));
+
+        assertEquals(new Pid(4242), service.getPid("42"));
+        assertEquals(new Pid(4242), service.getPid(new VmId("42")));
+    }
+
+    @Test
+    public void requestingNonExistingVmsReturnsSimplyNullNotExceptions() throws Exception {
+        Map<String, Pid> cache = new HashMap<>();
+        VmMapperServiceImpl service = new VmMapperServiceImpl(cache);
+
+        assertEquals(null, service.getPid("42"));
+        assertEquals(null, service.getPid(new VmId("42")));
+    }
 }
-

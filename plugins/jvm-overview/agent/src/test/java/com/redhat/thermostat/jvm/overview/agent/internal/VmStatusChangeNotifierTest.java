@@ -44,6 +44,8 @@ import java.util.ConcurrentModificationException;
 
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListener;
 import com.redhat.thermostat.jvm.overview.agent.VmStatusListener.Status;
+import com.redhat.thermostat.jvm.overview.agent.internal.model.VmMapperServiceImpl;
+import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -51,13 +53,20 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class VmStatusChangeNotifierTest {
 
+    private VmMapperServiceImpl vmMapperService;
+
+    @Before
+    public void setUp() {
+        vmMapperService = mock(VmMapperServiceImpl.class);
+    }
+
     @Test
     public void verifyWorksWithoutAnyListeners() {
         final String VM_ID = "vmId";
         final int VM_PID = 2;
         StubBundleContext bundleContext = new StubBundleContext();
 
-        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext);
+        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext, vmMapperService);
         notifier.start();
         notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID, VM_PID);
 
@@ -73,11 +82,12 @@ public class VmStatusChangeNotifierTest {
         VmStatusListener listener = mock(VmStatusListener.class);
         bundleContext.registerService(VmStatusListener.class, listener, null);
 
-        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext);
+        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext, vmMapperService);
         notifier.start();
         notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID, VM_PID);
 
         verify(listener).vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
+        verify(vmMapperService).cache(VM_ID, VM_PID);
 
         notifier.notifyVmStatusChange(Status.VM_STOPPED, VM_ID, VM_PID);
 
@@ -90,7 +100,7 @@ public class VmStatusChangeNotifierTest {
         final int VM_PID = 2;
         StubBundleContext bundleContext = new StubBundleContext();
 
-        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext);
+        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext, vmMapperService);
         notifier.start();
         notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID, VM_PID);
 
@@ -109,7 +119,7 @@ public class VmStatusChangeNotifierTest {
     @Test
     public void canAddListenersWhileFiringEvent() throws InterruptedException {
         StubBundleContext bundleContext = new StubBundleContext();
-        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext);
+        VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext, vmMapperService);
         
         // Add > 2 listeners. One of them registers another listener in vmStatusChanged()
         // Thus provoking ConcurrentModificationException.
